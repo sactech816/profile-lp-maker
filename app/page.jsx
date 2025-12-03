@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 // --- 設定エリア (ここだけ書き換えてください) ---
-// 管理者として扱うメールアドレスを設定します（大文字小文字を区別します）
+// 管理者として扱うメールアドレスを設定します
 const ADMIN_EMAIL = "info@kei-sho.co.jp"; 
 // -------------------------------------------
 
@@ -40,6 +40,26 @@ const calculateResult = (answers, results) => {
 };
 
 // --- Components ---
+
+// 共通ヘッダーコンポーネント
+const Header = ({ setPage, isAdmin, setShowAuth, user, onLogout }) => (
+    <div className="bg-white border-b sticky top-0 z-50 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div className="font-bold text-xl flex items-center gap-2 text-indigo-700 cursor-pointer" onClick={()=>setPage('portal')}>
+                <Sparkles className="text-pink-500"/> 診断クイズメーカー
+            </div>
+            <div className="flex items-center gap-4 text-sm font-bold text-gray-600">
+                <button onClick={()=>setPage('price')} className="hidden md:block hover:text-indigo-600">料金プラン</button>
+                <button onClick={()=>setPage('howto')} className="hidden md:block hover:text-indigo-600">作り方</button>
+                {isAdmin && (
+                    <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full text-indigo-700 border border-indigo-200">
+                        <Crown size={14}/> <span className="text-xs">管理者モード</span>
+                    </div>
+                )}
+            </div>
+        </div>
+    </div>
+);
 
 // 1. Auth Modal (管理者用ログイン)
 const AuthModal = ({ isOpen, onClose, setUser }) => {
@@ -76,37 +96,56 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
 };
 
 // 2. Pages
-const PricePage = ({ onBack }) => (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 font-sans">
-        <button onClick={onBack} className="mb-8 flex items-center gap-2 text-gray-600 font-bold hover:text-indigo-600 transition-colors"><ArrowLeft/> トップへ戻る</button>
-        <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">料金プラン</h1>
-            <p className="text-gray-600 mb-12">現在はベータ版のため、基本機能はすべて無料でご利用いただけます。</p>
-            <div className="grid md:grid-cols-3 gap-8 text-left">
-                <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-indigo-500 relative transform scale-105 z-10">
-                    <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-indigo-500 text-white px-3 py-1 rounded-full text-xs font-bold">BETA FREE</span>
-                    <h3 className="text-2xl font-bold mb-2 text-gray-900">Standard</h3>
-                    <div className="text-4xl font-extrabold mb-4 text-gray-900">¥0<span className="text-sm font-medium text-gray-500">/月</span></div>
-                    <ul className="space-y-3 mb-8 text-sm text-gray-600">
-                        <li className="flex gap-2"><CheckCircle size={16} className="text-green-500"/>診断作成数 無制限</li>
-                        <li className="flex gap-2"><CheckCircle size={16} className="text-green-500"/>AI自動生成機能</li>
-                    </ul>
-                    <button className="w-full py-3 rounded-lg font-bold bg-indigo-600 text-white">現在のプラン</button>
+const PricePage = ({ onBack, isAdmin, setPage }) => (
+    <div className="min-h-screen bg-gray-50 font-sans">
+        <Header setPage={setPage} isAdmin={isAdmin} />
+        <div className="py-12 px-4">
+            <div className="max-w-4xl mx-auto text-center">
+                <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">料金プラン</h1>
+                <p className="text-gray-600 mb-12">現在はベータ版のため、基本機能はすべて無料でご利用いただけます。</p>
+                <div className="grid md:grid-cols-3 gap-8 text-left">
+                    <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-indigo-500 relative transform scale-105 z-10">
+                        <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-indigo-500 text-white px-3 py-1 rounded-full text-xs font-bold">BETA FREE</span>
+                        <h3 className="text-2xl font-bold mb-2 text-gray-900">Standard</h3>
+                        <div className="text-4xl font-extrabold mb-4 text-gray-900">¥0<span className="text-sm font-medium text-gray-500">/月</span></div>
+                        <ul className="space-y-3 mb-8 text-sm text-gray-600">
+                            <li className="flex gap-2"><CheckCircle size={16} className="text-green-500"/>診断作成数 無制限</li>
+                            <li className="flex gap-2"><CheckCircle size={16} className="text-green-500"/>AI自動生成機能</li>
+                        </ul>
+                        <button className="w-full py-3 rounded-lg font-bold bg-indigo-600 text-white">現在のプラン</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 );
 
-const HowToPage = ({ onBack }) => (
-    <div className="min-h-screen bg-white py-12 px-4 font-sans">
-        <button onClick={onBack} className="mb-8 flex items-center gap-2 text-gray-600 font-bold hover:text-indigo-600 max-w-4xl mx-auto"><ArrowLeft/> トップへ戻る</button>
-        <div className="max-w-3xl mx-auto">
-            <h1 className="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-4">売れる診断クイズの作り方</h1>
-            <div className="space-y-10">
-                <section><h2 className="text-lg font-bold text-indigo-700 mb-2">1. ゴールを決める</h2><p className="text-gray-600 leading-relaxed">「誰に」「どうなって欲しいか」を明確にします。</p></section>
-                <section><h2 className="text-lg font-bold text-indigo-700 mb-2">2. 結果パターンを作る</h2><p className="text-gray-600 leading-relaxed">まずは診断結果（A, B, Cタイプ）を考えます。</p></section>
-                <section><h2 className="text-lg font-bold text-indigo-700 mb-2">3. 質問で振り分ける</h2><p className="text-gray-600 leading-relaxed">AI機能を使えば、テーマを入れるだけで質問まで自動で作れます。</p></section>
+const HowToPage = ({ onBack, isAdmin, setPage }) => (
+    <div className="min-h-screen bg-white font-sans">
+        <Header setPage={setPage} isAdmin={isAdmin} />
+        <div className="py-12 px-4 max-w-3xl mx-auto">
+            <h1 className="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-4">診断クイズの作り方・規約</h1>
+            
+            <div className="space-y-8 text-gray-800 leading-relaxed">
+                <p>このツールは、ビジネス向けの診断コンテンツを手軽に作成するためのツールです。以下の固定された構成で、内容を自由に変更できます。</p>
+                
+                <ul className="list-disc pl-5 space-y-1 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <li><strong>質問：</strong> 5問</li>
+                    <li><strong>選択肢：</strong> 各質問に4つ</li>
+                    <li><strong>結果パターン：</strong> 3種類</li>
+                </ul>
+
+                <div>
+                    <h2 className="text-xl font-bold text-indigo-700 mb-4">本ツールをご利用いただくにあたり</h2>
+                    <p className="mb-2">以下の点にご同意ください。</p>
+                    <ul className="list-disc pl-5 space-y-3">
+                        <li><strong>ツール本体について:</strong> 本書購入者様のみご利用可能です。ツール自体の再配布、販売、改変は固く禁じます。</li>
+                        <li><strong>作成したコンテンツの利用:</strong> 個人・商用を問わず自由にご利用いただけます。ただし、フッターのコピーライト表記は削除しないでください（削除希望の場合は別途ご連絡ください）。</li>
+                        <li><strong>禁止事項:</strong> 法律に触れる内容や、他者を誹謗中傷するようなコンテンツの作成には利用しないでください。</li>
+                        <li><strong>免責事項:</strong> 本ツールの利用によって生じたいかなる損害についても、提供者は一切の責任を負いません。</li>
+                    </ul>
+                    <p className="mt-4 text-sm text-gray-500">※本規約は予告なく変更される場合があります。</p>
+                </div>
             </div>
         </div>
     </div>
@@ -145,23 +184,7 @@ const Portal = ({ quizzes, isLoading, onPlay, onCreate, user, setShowAuth, onLog
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-20">
-      {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-50 shadow-sm">
-          <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-              <div className="font-bold text-xl flex items-center gap-2 text-indigo-700 cursor-pointer" onClick={()=>setPage('portal')}>
-                  <Sparkles className="text-pink-500"/> 診断クイズメーカー
-              </div>
-              <div className="flex items-center gap-4 text-sm font-bold text-gray-600">
-                  <button onClick={()=>setPage('price')} className="hidden md:block hover:text-indigo-600">料金プラン</button>
-                  <button onClick={()=>setPage('howto')} className="hidden md:block hover:text-indigo-600">作り方</button>
-                  {isAdmin && (
-                      <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full text-indigo-700 border border-indigo-200">
-                          <Crown size={14}/> <span className="text-xs">管理者モード</span>
-                      </div>
-                  )}
-              </div>
-          </div>
-      </div>
+      <Header setPage={setPage} isAdmin={isAdmin} />
 
       {/* Hero */}
       <div className="bg-gradient-to-br from-indigo-900 to-blue-800 text-white py-16 px-6 text-center relative overflow-hidden">
@@ -253,13 +276,13 @@ const Portal = ({ quizzes, isLoading, onPlay, onCreate, user, setShowAuth, onLog
 // 4. Result View
 const ResultView = ({ quiz, result, onRetry, onBack }) => {
   return (
-    <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden my-8 animate-fade-in border border-gray-100">
+    <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden my-8 animate-fade-in border border-gray-100 flex flex-col min-h-[80vh]">
         <div className="bg-indigo-700 text-white p-10 text-center relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full bg-white opacity-10" style={{backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
             <Trophy className="mx-auto mb-4 text-yellow-300 relative z-10" size={56} />
             <h2 className="text-3xl font-extrabold mt-2 relative z-10">{result.title}</h2>
         </div>
-        <div className="p-8 md:p-10">
+        <div className="p-8 md:p-10 flex-grow">
             <div className="prose text-gray-800 leading-relaxed whitespace-pre-wrap mb-10 text-sm md:text-base">
                 {result.description}
             </div>
@@ -301,6 +324,13 @@ const ResultView = ({ quiz, result, onRetry, onBack }) => {
                     <Home size={18}/> TOP
                 </button>
             </div>
+        </div>
+        
+        {/* Result Footer */}
+        <div className="bg-gray-50 p-6 text-center border-t">
+            <a href="https://shindan-quiz.makers.tokyo/" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-indigo-600 font-bold">
+                &copy; 2025 Shindan Quiz Maker.
+            </a>
         </div>
     </div>
   );
@@ -662,6 +692,9 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
 
+  // 管理者判定
+  const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
   const fetchQuizzes = async () => {
     if(!supabase) return;
     setIsLoading(true);
@@ -704,7 +737,11 @@ const App = () => {
           } else {
              result = await supabase.from('quizzes').insert([payload]).select();
           }
+          
           if(result.error) throw result.error;
+          // 安全対策: データが返ってきていない場合はエラー扱いにする
+          if(!result.data || result.data.length === 0) throw new Error("更新できませんでした。管理者権限を確認してください。");
+          
           alert('保存しました！');
           await fetchQuizzes();
           return result.data[0].id;
@@ -742,8 +779,8 @@ const App = () => {
                 onDelete={handleDelete}
             />
         )}
-        {view === 'price' && <PricePage onBack={()=>setView('portal')} />}
-        {view === 'howto' && <HowToPage onBack={()=>setView('portal')} />}
+        {view === 'price' && <PricePage onBack={()=>setView('portal')} isAdmin={isAdmin} setPage={setView} />}
+        {view === 'howto' && <HowToPage onBack={()=>setView('portal')} isAdmin={isAdmin} setPage={setView} />}
         {view === 'quiz' && (
             <QuizPlayer 
                 quiz={selectedQuiz} 
