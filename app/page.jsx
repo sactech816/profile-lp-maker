@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { 
-  Play, Edit3, CreditCard, MessageSquare, CheckCircle, ChevronRight, 
-  Trash2, ArrowLeft, Save, RefreshCw, Loader2, Trophy, 
-  Home, ThumbsUp, ExternalLink, X, Crown, LogIn, LogOut, User, Sparkles, Lock, Share2
+  Play, Edit3, MessageSquare, CheckCircle, Trash2, ArrowLeft, Save, 
+  RefreshCw, Loader2, Trophy, Home, ThumbsUp, ExternalLink, X, 
+  Crown, Lock, Share2, Sparkles, Wand2
 } from 'lucide-react';
 
 // --- 設定エリア (ここだけ書き換えてください) ---
@@ -62,15 +62,14 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
             <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl relative animate-fade-in">
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X/></button>
-                <h2 className="text-xl font-bold mb-6 text-center text-gray-800">管理者ログイン</h2>
+                <h2 className="text-xl font-bold mb-6 text-center text-gray-900">管理者ログイン</h2>
                 <form onSubmit={handleLogin} className="space-y-4">
-                    <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="w-full border p-3 rounded-lg bg-gray-50" placeholder="admin@example.com" />
-                    <input type="password" required value={password} onChange={e=>setPassword(e.target.value)} className="w-full border p-3 rounded-lg bg-gray-50" placeholder="Password" />
+                    <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 text-gray-900" placeholder="admin@example.com" />
+                    <input type="password" required value={password} onChange={e=>setPassword(e.target.value)} className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 text-gray-900" placeholder="Password" />
                     <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-colors">
                         {loading ? '認証中...' : 'ログイン'}
                     </button>
                 </form>
-                <p className="text-xs text-center mt-4 text-gray-400">※一般ユーザーのログイン機能は現在停止中です</p>
             </div>
         </div>
     );
@@ -86,12 +85,11 @@ const PricePage = ({ onBack }) => (
             <div className="grid md:grid-cols-3 gap-8 text-left">
                 <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-indigo-500 relative transform scale-105 z-10">
                     <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-indigo-500 text-white px-3 py-1 rounded-full text-xs font-bold">BETA FREE</span>
-                    <h3 className="text-2xl font-bold mb-2">Standard</h3>
-                    <div className="text-4xl font-extrabold mb-4">¥0<span className="text-sm font-medium text-gray-500">/月</span></div>
+                    <h3 className="text-2xl font-bold mb-2 text-gray-900">Standard</h3>
+                    <div className="text-4xl font-extrabold mb-4 text-gray-900">¥0<span className="text-sm font-medium text-gray-500">/月</span></div>
                     <ul className="space-y-3 mb-8 text-sm text-gray-600">
                         <li className="flex gap-2"><CheckCircle size={16} className="text-green-500"/>診断作成数 無制限</li>
                         <li className="flex gap-2"><CheckCircle size={16} className="text-green-500"/>AI自動生成機能</li>
-                        <li className="flex gap-2"><CheckCircle size={16} className="text-green-500"/>結果ページへのリンク設置</li>
                     </ul>
                     <button className="w-full py-3 rounded-lg font-bold bg-indigo-600 text-white">現在のプラン</button>
                 </div>
@@ -106,9 +104,9 @@ const HowToPage = ({ onBack }) => (
         <div className="max-w-3xl mx-auto">
             <h1 className="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-4">売れる診断クイズの作り方</h1>
             <div className="space-y-10">
-                <section><h2 className="text-lg font-bold text-indigo-700 mb-2">1. ゴールを決める</h2><p className="text-gray-600 leading-relaxed">「誰に」「どうなって欲しいか」を明確にします。例えば「肌荒れに悩む人に、自社化粧品をおすすめする」など。</p></section>
-                <section><h2 className="text-lg font-bold text-indigo-700 mb-2">2. 結果パターンを作る</h2><p className="text-gray-600 leading-relaxed">まずは診断結果（A, B, Cタイプ）を考えます。ここからLINE登録や商品ページへ誘導するのがポイントです。</p></section>
-                <section><h2 className="text-lg font-bold text-indigo-700 mb-2">3. 質問で振り分ける</h2><p className="text-gray-600 leading-relaxed">AI機能を使えば、「美容」などのテーマを入れるだけで質問まで自動で作れます。</p></section>
+                <section><h2 className="text-lg font-bold text-indigo-700 mb-2">1. ゴールを決める</h2><p className="text-gray-600 leading-relaxed">「誰に」「どうなって欲しいか」を明確にします。</p></section>
+                <section><h2 className="text-lg font-bold text-indigo-700 mb-2">2. 結果パターンを作る</h2><p className="text-gray-600 leading-relaxed">まずは診断結果（A, B, Cタイプ）を考えます。</p></section>
+                <section><h2 className="text-lg font-bold text-indigo-700 mb-2">3. 質問で振り分ける</h2><p className="text-gray-600 leading-relaxed">AI機能を使えば、テーマを入れるだけで質問まで自動で作れます。</p></section>
             </div>
         </div>
     </div>
@@ -196,8 +194,8 @@ const Portal = ({ quizzes, isLoading, onPlay, onCreate, user, setShowAuth, onLog
                 </div>
                 
                 <div className="p-6 flex-grow flex flex-col">
-                  <h3 className="text-lg font-bold mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">{quiz.title}</h3>
-                  <p className="text-sm text-gray-500 line-clamp-3 flex-grow mb-4">{quiz.description}</p>
+                  <h3 className="text-lg font-bold mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2 text-gray-900">{quiz.title}</h3>
+                  <p className="text-sm text-gray-600 line-clamp-3 flex-grow mb-4">{quiz.description}</p>
                   
                   <div className="flex items-center justify-between border-t pt-4 mt-auto">
                       <span className="text-xs font-bold bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg flex items-center gap-1">
@@ -218,7 +216,6 @@ const Portal = ({ quizzes, isLoading, onPlay, onCreate, user, setShowAuth, onLog
       {/* Footer */}
       <footer className="bg-white border-t py-12 text-center text-sm text-gray-400">
           <p className="mb-4">&copy; 2025 Diagnosis Maker. All rights reserved.</p>
-          {/* 管理者ログインボタン(ひっそりと配置) */}
           {user ? (
               <button onClick={onLogout} className="text-xs underline hover:text-gray-600">管理者ログアウト</button>
           ) : (
@@ -296,7 +293,6 @@ const QuizPlayer = ({ quiz, onBack }) => {
   }
   
   const question = questions[currentStep];
-  const progress = Math.round(((currentStep)/questions.length)*100);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center py-6 font-sans">
@@ -315,7 +311,7 @@ const QuizPlayer = ({ quiz, onBack }) => {
             <h3 className="text-xl font-bold text-gray-900 mb-8 text-center leading-relaxed">{question.text}</h3>
             <div className="space-y-4">
                 {question.options.map((opt, idx) => (
-                    <button key={idx} onClick={() => handleAnswer(opt)} className="w-full p-4 text-left border-2 border-gray-100 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 text-gray-700 font-bold transition-all flex justify-between items-center group active:scale-95">
+                    <button key={idx} onClick={() => handleAnswer(opt)} className="w-full p-4 text-left border-2 border-gray-100 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 text-gray-800 font-bold transition-all flex justify-between items-center group active:scale-95">
                         <span className="flex-grow">{opt.label}</span>
                         <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-indigo-500 flex-shrink-0 ml-4"></div>
                     </button>
@@ -332,7 +328,6 @@ const Editor = ({ onBack, onSave, initialData }) => {
   const [activeTab, setActiveTab] = useState('basic');
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState(null);
-  const [showAiModal, setShowAiModal] = useState(false);
   const [aiTheme, setAiTheme] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -351,7 +346,7 @@ const Editor = ({ onBack, onSave, initialData }) => {
 
   const handleAiGenerate = async () => {
       const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-      if(!apiKey) return alert('APIキーが設定されていません。');
+      if(!apiKey) return alert('エラー: OpenAI APIキーが設定されていません。Vercelの環境変数を確認してください。');
       if(!aiTheme) return alert('どんな診断を作りたいかテーマを入力してください');
       setIsGenerating(true);
       try {
@@ -387,27 +382,49 @@ const Editor = ({ onBack, onSave, initialData }) => {
               body: JSON.stringify({ model: "gpt-3.5-turbo", messages: [{ role: "user", content: prompt }] })
           });
           
+          if (!res.ok) throw new Error('API request failed');
+
           const data = await res.json();
           const content = data.choices[0].message.content;
           const jsonStr = content.substring(content.indexOf('{'), content.lastIndexOf('}') + 1);
           const json = JSON.parse(jsonStr);
           
           setForm(prev => ({ ...prev, ...json, results: json.results.map(r=>({...r, link_url:"", link_text:""})) })); 
-          setShowAiModal(false); 
           alert('AI生成が完了しました！内容を確認・調整してください。');
       } catch(e) { alert('AI生成エラー: ' + e.message); } finally { setIsGenerating(false); }
   };
 
-  const Input = ({label, val, onChange, ph}) => (<div className="mb-4"><label className="text-xs font-bold text-gray-500 block mb-1">{label}</label><input className="w-full border border-gray-300 p-2 rounded font-bold focus:ring-2 focus:ring-indigo-500 outline-none" value={val||''} onChange={e=>onChange(e.target.value)} placeholder={ph}/></div>);
-  const Textarea = ({label, val, onChange}) => (<div className="mb-4"><label className="text-xs font-bold text-gray-500 block mb-1">{label}</label><textarea className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-indigo-500 outline-none" rows={3} value={val} onChange={e=>onChange(e.target.value)}/></div>);
+  const Input = ({label, val, onChange, ph}) => (
+    <div className="mb-4">
+        <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
+        <input 
+            className="w-full border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white placeholder-gray-400" 
+            value={val||''} 
+            onChange={e=>onChange(e.target.value)} 
+            placeholder={ph}
+        />
+    </div>
+  );
+  
+  const Textarea = ({label, val, onChange}) => (
+    <div className="mb-4">
+        <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
+        <textarea 
+            className="w-full border border-gray-300 p-3 rounded-lg text-black focus:ring-2 focus:ring-indigo-500 outline-none bg-white placeholder-gray-400" 
+            rows={3} 
+            value={val} 
+            onChange={e=>onChange(e.target.value)}
+        />
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-100 flex flex-col font-sans text-gray-900">
         {/* Editor Header */}
         <div className="bg-white border-b px-6 py-4 flex justify-between sticky top-0 z-50 shadow-sm">
             <div className="flex items-center gap-3">
-                <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full"><ArrowLeft/></button>
-                <h2 className="font-bold text-lg">
+                <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full text-gray-700"><ArrowLeft/></button>
+                <h2 className="font-bold text-lg text-gray-900">
                     {initialData ? 'クイズ編集(管理者)' : '新規クイズ作成'}
                 </h2>
             </div>
@@ -434,10 +451,28 @@ const Editor = ({ onBack, onSave, initialData }) => {
         
         <div className="flex flex-grow overflow-hidden">
             {/* Sidebar */}
-            <div className="w-64 bg-white border-r flex flex-col hidden md:flex">
-                <div className="p-4 space-y-1">
+            <div className="w-64 bg-white border-r flex flex-col hidden md:flex shrink-0">
+                
+                {/* AI Section (Top Left) */}
+                <div className="p-4 bg-gradient-to-b from-purple-50 to-white border-b">
+                    <div className="flex items-center gap-2 mb-2 text-purple-700 font-bold">
+                        <Sparkles size={16}/> AI自動生成
+                    </div>
+                    <textarea 
+                        className="w-full border border-purple-200 p-2 rounded-lg text-xs mb-2 focus:ring-2 focus:ring-purple-500 outline-none resize-none bg-white text-gray-900 placeholder-gray-400" 
+                        rows={2} 
+                        placeholder="テーマを入力 (例: 起業家タイプ診断)" 
+                        value={aiTheme} 
+                        onChange={e=>setAiTheme(e.target.value)} 
+                    />
+                    <button onClick={handleAiGenerate} disabled={isGenerating} className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg font-bold text-xs transition-all shadow flex items-center justify-center gap-1">
+                        {isGenerating ? <Loader2 className="animate-spin" size={12}/> : <Wand2 size={12}/>} 生成する
+                    </button>
+                </div>
+
+                <div className="p-4 space-y-1 overflow-y-auto">
                     {['basic','questions','results'].map(id=>(
-                        <button key={id} onClick={()=>setActiveTab(id)} className={`w-full px-4 py-3 text-left font-bold rounded-lg transition-colors flex items-center gap-2 ${activeTab===id?'bg-indigo-50 text-indigo-700':'text-gray-500 hover:bg-gray-50'}`}>
+                        <button key={id} onClick={()=>setActiveTab(id)} className={`w-full px-4 py-3 text-left font-bold rounded-lg transition-colors flex items-center gap-2 ${activeTab===id?'bg-indigo-50 text-indigo-700':'text-gray-600 hover:bg-gray-50'}`}>
                             {id==='basic' && <Edit3 size={16}/>}
                             {id==='questions' && <MessageSquare size={16}/>}
                             {id==='results' && <Trophy size={16}/>}
@@ -445,36 +480,45 @@ const Editor = ({ onBack, onSave, initialData }) => {
                         </button>
                     ))}
                 </div>
-                <div className="mt-auto p-4 border-t">
-                    <button onClick={()=>setShowAiModal(true)} className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
-                        <Sparkles size={18}/> AIで自動生成
-                    </button>
-                </div>
             </div>
 
             {/* Main Area */}
             <div className="flex-grow p-4 md:p-8 overflow-y-auto bg-gray-50">
                 {/* Mobile Tab */}
-                <div className="md:hidden flex gap-2 mb-4 overflow-x-auto pb-2">
-                    {['basic','questions','results'].map(id=>(
-                        <button key={id} onClick={()=>setActiveTab(id)} className={`px-4 py-2 rounded-full font-bold whitespace-nowrap ${activeTab===id?'bg-indigo-600 text-white':'bg-white border'}`}>{id}</button>
-                    ))}
-                    <button onClick={()=>setShowAiModal(true)} className="px-4 py-2 rounded-full font-bold bg-purple-100 text-purple-700 whitespace-nowrap flex gap-1"><Sparkles size={16}/> AI</button>
+                <div className="md:hidden flex flex-col gap-4 mb-4">
+                     <div className="p-4 bg-white rounded-xl shadow-sm border border-purple-100">
+                        <div className="flex gap-2 mb-2">
+                            <input 
+                                className="flex-grow border border-gray-300 p-2 rounded text-sm text-black" 
+                                placeholder="AI作成テーマ..." 
+                                value={aiTheme} 
+                                onChange={e=>setAiTheme(e.target.value)}
+                            />
+                            <button onClick={handleAiGenerate} disabled={isGenerating} className="bg-purple-600 text-white px-4 rounded font-bold text-sm whitespace-nowrap">
+                                {isGenerating ? '...' : '生成'}
+                            </button>
+                        </div>
+                     </div>
+                     <div className="flex gap-2 overflow-x-auto pb-2">
+                        {['basic','questions','results'].map(id=>(
+                            <button key={id} onClick={()=>setActiveTab(id)} className={`px-4 py-2 rounded-full font-bold whitespace-nowrap ${activeTab===id?'bg-indigo-600 text-white':'bg-white border text-gray-700'}`}>{id}</button>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="max-w-3xl mx-auto bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-gray-100 min-h-[500px]">
                     {activeTab === 'basic' && (
                         <div className="animate-fade-in">
-                            <h3 className="font-bold text-xl mb-6 border-b pb-2 flex items-center gap-2"><Edit3 className="text-gray-400"/> 基本情報</h3>
+                            <h3 className="font-bold text-xl mb-6 border-b pb-2 flex items-center gap-2 text-gray-900"><Edit3 className="text-gray-400"/> 基本情報</h3>
                             <Input label="タイトル" val={form.title} onChange={v=>setForm({...form, title:v})} ph="例：あなたのリーダータイプ診断" />
                             <Textarea label="説明文" val={form.description} onChange={v=>setForm({...form, description:v})} />
                             <Input label="カテゴリ" val={form.category} onChange={v=>setForm({...form, category:v})} ph="Business, Health, Love..." />
                             
                             <div className="mt-6">
-                                <label className="text-xs font-bold text-gray-500 block mb-2">テーマカラー</label>
+                                <label className="text-sm font-bold text-gray-900 block mb-2">テーマカラー</label>
                                 <div className="flex gap-3">
                                     {['bg-indigo-600', 'bg-pink-500', 'bg-blue-500', 'bg-green-500', 'bg-orange-500', 'bg-gray-800'].map(c => (
-                                        <button key={c} onClick={()=>setForm({...form, color:c})} className={`w-8 h-8 rounded-full ${c} ${form.color===c ? 'ring-2 ring-offset-2 ring-gray-400':''}`}></button>
+                                        <button key={c} onClick={()=>setForm({...form, color:c})} className={`w-10 h-10 rounded-full ${c} ${form.color===c ? 'ring-4 ring-offset-2 ring-gray-300':''}`}></button>
                                     ))}
                                 </div>
                             </div>
@@ -483,21 +527,21 @@ const Editor = ({ onBack, onSave, initialData }) => {
                     
                     {activeTab === 'questions' && (
                         <div className="space-y-8 animate-fade-in">
-                            <h3 className="font-bold text-xl mb-6 border-b pb-2 flex items-center gap-2"><MessageSquare className="text-gray-400"/> 質問設定 (5問)</h3>
+                            <h3 className="font-bold text-xl mb-6 border-b pb-2 flex items-center gap-2 text-gray-900"><MessageSquare className="text-gray-400"/> 質問設定 (5問)</h3>
                             {form.questions.map((q, i)=>(
                                 <div key={i} className="bg-gray-50 p-6 rounded-xl border border-gray-200">
                                     <div className="font-bold text-indigo-600 mb-2">Q{i+1}</div>
                                     <Input label="質問文" val={q.text} onChange={v=>{const n=[...form.questions];n[i].text=v;setForm({...form, questions:n})}} />
                                     <div className="space-y-3 mt-4">
                                         {q.options.map((o, j)=>(
-                                            <div key={j} className="flex gap-2 items-center bg-white p-2 rounded border">
+                                            <div key={j} className="flex gap-2 items-center bg-white p-2 rounded border border-gray-200">
                                                 <div className="bg-gray-200 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-gray-600">{j+1}</div>
-                                                <input className="flex-grow p-1 outline-none text-sm font-bold" value={o.label} onChange={e=>{const n=[...form.questions];n[i].options[j].label=e.target.value;setForm({...form, questions:n})}} placeholder={`選択肢${j+1}`} />
+                                                <input className="flex-grow p-1 outline-none text-sm font-bold text-gray-900 placeholder-gray-400" value={o.label} onChange={e=>{const n=[...form.questions];n[i].options[j].label=e.target.value;setForm({...form, questions:n})}} placeholder={`選択肢${j+1}`} />
                                                 <div className="flex gap-2 border-l pl-2">
                                                     {['A','B','C'].map(t=>(
                                                         <div key={t} className="flex flex-col items-center">
-                                                            <span className="text-[9px] text-gray-400">{t}</span>
-                                                            <input type="number" className="w-8 bg-gray-50 border text-center text-xs rounded" value={o.score[t]} onChange={e=>{const n=[...form.questions];n[i].options[j].score[t]=e.target.value;setForm({...form, questions:n})}} />
+                                                            <span className="text-[9px] text-gray-500">{t}</span>
+                                                            <input type="number" className="w-8 bg-gray-50 border border-gray-300 text-center text-xs rounded text-gray-900" value={o.score[t]} onChange={e=>{const n=[...form.questions];n[i].options[j].score[t]=e.target.value;setForm({...form, questions:n})}} />
                                                         </div>
                                                     ))}
                                                 </div>
@@ -511,7 +555,7 @@ const Editor = ({ onBack, onSave, initialData }) => {
 
                     {activeTab === 'results' && (
                         <div className="space-y-8 animate-fade-in">
-                            <h3 className="font-bold text-xl mb-6 border-b pb-2 flex items-center gap-2"><Trophy className="text-gray-400"/> 結果ページ設定</h3>
+                            <h3 className="font-bold text-xl mb-6 border-b pb-2 flex items-center gap-2 text-gray-900"><Trophy className="text-gray-400"/> 結果ページ設定</h3>
                             {form.results.map((r, i)=>(
                                 <div key={i} className="bg-gray-50 p-6 rounded-xl border border-gray-200 relative overflow-hidden">
                                     <div className="absolute top-0 right-0 bg-gray-200 text-gray-600 px-3 py-1 rounded-bl-lg font-bold text-xs">Type {r.type}</div>
@@ -532,35 +576,6 @@ const Editor = ({ onBack, onSave, initialData }) => {
                 </div>
             </div>
         </div>
-        
-        {/* AI Modal */}
-        {showAiModal && (
-            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] backdrop-blur-sm p-4">
-                <div className="bg-white p-8 rounded-2xl w-full max-w-lg relative shadow-2xl animate-fade-in">
-                    <button onClick={()=>setShowAiModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X/></button>
-                    <div className="text-center mb-6">
-                        <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Sparkles className="text-purple-600" size={32}/>
-                        </div>
-                        <h3 className="font-bold text-2xl text-gray-800">AIオートクイズ作成</h3>
-                        <p className="text-gray-500 mt-2 text-sm">テーマを入れるだけで、質問から結果まで一括生成します。</p>
-                    </div>
-                    
-                    <label className="text-xs font-bold text-gray-500 block mb-2">どんな診断を作りますか？</label>
-                    <textarea 
-                        className="w-full border border-gray-300 p-4 rounded-xl mb-6 focus:ring-2 focus:ring-purple-500 outline-none resize-none" 
-                        rows={3} 
-                        placeholder="例：似合うメガネ診断、起業家タイプ診断、恋愛観チェック..." 
-                        value={aiTheme} 
-                        onChange={e=>setAiTheme(e.target.value)} 
-                    />
-                    
-                    <button onClick={handleAiGenerate} disabled={isGenerating} className="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2">
-                        {isGenerating ? <><Loader2 className="animate-spin"/> AIが思考中...</> : '生成スタート'}
-                    </button>
-                </div>
-            </div>
-        )}
     </div>
   );
 };
@@ -575,7 +590,6 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
 
-  // 初期化 & データ取得
   const fetchQuizzes = async () => {
     if(!supabase) return;
     setIsLoading(true);
@@ -586,22 +600,17 @@ const App = () => {
 
   useEffect(() => {
       const init = async () => {
-          // URLパラメータによる直接アクセス判定
           const params = new URLSearchParams(window.location.search);
           const id = params.get('id');
           if(id && supabase) {
               const {data} = await supabase.from('quizzes').select('*').eq('id',id).single();
               if(data) { setSelectedQuiz(data); setView('quiz'); }
           }
-          
-          // ユーザーセッション確認
           if(supabase) {
               supabase.auth.getSession().then(({data:{session}})=>setUser(session?.user||null));
-              
               const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
                 setUser(session?.user || null);
               });
-              
               await fetchQuizzes();
               return () => subscription.unsubscribe();
           }
@@ -615,23 +624,17 @@ const App = () => {
           const payload = {
               title: form.title, description: form.description, category: form.category, color: form.color,
               questions: form.questions, results: form.results, 
-              // ログイン中ならIDを入れるが、未ログイン(ゲスト)でも保存OK(DB側でNULL許可している前提)
               user_id: user?.id || null 
           };
-          
           let result;
           if (id) {
-             // 更新 (管理者が編集する場合など)
              result = await supabase.from('quizzes').update(payload).eq('id',id).select(); 
           } else {
-             // 新規作成
              result = await supabase.from('quizzes').insert([payload]).select();
           }
-          
           if(result.error) throw result.error;
-          
           alert('保存しました！');
-          await fetchQuizzes(); // リスト更新
+          await fetchQuizzes();
           return result.data[0].id;
       } catch(e) { 
           alert('保存エラー: ' + e.message); 
@@ -653,7 +656,6 @@ const App = () => {
   return (
     <div>
         <AuthModal isOpen={showAuth} onClose={()=>setShowAuth(false)} setUser={setUser} />
-        
         {view === 'portal' && (
             <Portal 
                 quizzes={quizzes} 
@@ -668,17 +670,14 @@ const App = () => {
                 onDelete={handleDelete}
             />
         )}
-        
         {view === 'price' && <PricePage onBack={()=>setView('portal')} />}
         {view === 'howto' && <HowToPage onBack={()=>setView('portal')} />}
-        
         {view === 'quiz' && (
             <QuizPlayer 
                 quiz={selectedQuiz} 
                 onBack={()=>{setView('portal'); setSelectedQuiz(null); window.history.replaceState(null, '', window.location.pathname);}} 
             />
         )}
-        
         {view === 'editor' && (
             <Editor 
                 user={user} 
