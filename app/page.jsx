@@ -155,6 +155,7 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
 
 // --- Pages ---
 
+// 1. Dashboard (My Page)
 const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
     useEffect(() => { document.title = "マイページ | 診断クイズメーカー"; }, []);
     const [myQuizzes, setMyQuizzes] = useState([]);
@@ -244,6 +245,7 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {myQuizzes.map(quiz => (
                                     <div key={quiz.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow relative group">
+                                        {/* Image or Color */}
                                         <div className={`h-32 w-full overflow-hidden relative ${quiz.color || 'bg-indigo-600'}`}>
                                             {quiz.image_url && <img src={quiz.image_url} alt={quiz.title} className="w-full h-full object-cover"/>}
                                             <span className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded-full flex items-center gap-1">
@@ -272,6 +274,7 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
     );
 };
 
+// 2. Portal
 const Portal = ({ quizzes, isLoading, onPlay, onCreate, user, setShowAuth, onLogout, setPage, onEdit, onDelete }) => {
   useEffect(() => { document.title = "無料AI診断メーカー | 集客・販促に効くクイズ作成ツール"; }, []);
   const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
@@ -553,61 +556,64 @@ const QuizPlayer = ({ quiz, onBack }) => {
   // --- Render: Chat Mode (Updated to match HTML sample) ---
   if (quiz.layout === 'chat') {
       return (
-        <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
-            {/* LINE-like Header */}
-            <div className="bg-gradient-to-br from-[#00B900] to-[#00C851] p-4 text-white text-center relative shadow-sm z-10">
-                <div className="text-xs opacity-90 absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer" onClick={onBack}><ArrowLeft size={20}/></div>
-                <h1 className="font-bold text-sm">{quiz.title}</h1>
-                <div className="text-[10px] opacity-80">オンライン</div>
-                <div className="bg-white/30 h-1 mt-2 rounded-full overflow-hidden w-1/2 mx-auto">
-                    <div className="h-full bg-white transition-all duration-500" style={{width: `${progress}%`}}></div>
+        <div className="min-h-screen bg-gray-200 flex items-center justify-center font-sans">
+            {/* Phone Container */}
+            <div className="w-full max-w-md bg-[#f0f0f0] h-[100dvh] flex flex-col relative shadow-2xl overflow-hidden">
+                {/* LINE-like Header */}
+                <div className="bg-gradient-to-br from-[#00B900] to-[#00C851] p-4 text-white text-center relative shadow-sm z-10 shrink-0">
+                    <div className="text-xs opacity-90 absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer" onClick={onBack}><ArrowLeft size={20}/></div>
+                    <h1 className="font-bold text-sm">{quiz.title}</h1>
+                    <div className="text-[10px] opacity-80">オンライン</div>
+                    <div className="bg-white/30 h-1 mt-2 rounded-full overflow-hidden w-1/2 mx-auto">
+                        <div className="h-full bg-white transition-all duration-500" style={{width: `${progress}%`}}></div>
+                    </div>
                 </div>
-            </div>
 
-            {/* Chat Messages */}
-            <div className="flex-grow p-4 overflow-y-auto pb-48 bg-[#f0f0f0]">
-                {chatHistory.map((msg, i) => (
-                    <div key={i} className={`flex mb-4 animate-fade-in-up ${msg.type === 'user' ? 'justify-end' : 'items-start gap-2'}`}>
-                        {msg.type === 'bot' && (
+                {/* Chat Messages Area */}
+                <div className="flex-grow p-4 overflow-y-auto pb-72 bg-[#f0f0f0]">
+                    {chatHistory.map((msg, i) => (
+                        <div key={i} className={`flex mb-4 animate-fade-in-up ${msg.type === 'user' ? 'justify-end' : 'items-start gap-2'}`}>
+                            {msg.type === 'bot' && (
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00B900] to-[#00C851] flex items-center justify-center text-white flex-shrink-0 text-xl shadow-sm">🤖</div>
+                            )}
+                            <div className={`relative max-w-[85%] p-4 rounded-2xl shadow-sm text-sm font-medium leading-relaxed whitespace-pre-wrap
+                                ${msg.type === 'user' 
+                                    ? 'bg-[#00B900] text-white rounded-tr-sm' 
+                                    : 'bg-white text-gray-800 rounded-tl-sm'
+                                }`}>
+                                {msg.qNum && <div className="text-[10px] text-gray-400 mb-1">質問 {msg.qNum} / {playableQuestions.length}</div>}
+                                {msg.text}
+                            </div>
+                        </div>
+                    ))}
+                    
+                    {/* Typing Indicator */}
+                    {isTyping && (
+                        <div className="flex items-start gap-2 mb-4 animate-fade-in">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00B900] to-[#00C851] flex items-center justify-center text-white flex-shrink-0 text-xl shadow-sm">🤖</div>
-                        )}
-                        <div className={`relative max-w-[85%] p-4 rounded-2xl shadow-sm text-sm font-medium leading-relaxed whitespace-pre-wrap
-                            ${msg.type === 'user' 
-                                ? 'bg-[#00B900] text-white rounded-tr-sm' 
-                                : 'bg-white text-gray-800 rounded-tl-sm'
-                            }`}>
-                            {msg.qNum && <div className="text-[10px] text-gray-400 mb-1">質問 {msg.qNum} / {playableQuestions.length}</div>}
-                            {msg.text}
+                            <div className="bg-white p-4 rounded-2xl rounded-tl-sm shadow-sm flex gap-1 items-center h-[52px]">
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                            </div>
                         </div>
-                    </div>
-                ))}
-                
-                {/* Typing Indicator */}
-                {isTyping && (
-                    <div className="flex items-start gap-2 mb-4 animate-fade-in">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00B900] to-[#00C851] flex items-center justify-center text-white flex-shrink-0 text-xl shadow-sm">🤖</div>
-                        <div className="bg-white p-4 rounded-2xl rounded-tl-sm shadow-sm flex gap-1 items-center h-[52px]">
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        </div>
-                    </div>
-                )}
-                <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input Area (Options) */}
-            <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 z-20 pb-8 safe-area-bottom shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-                <div className="max-w-md mx-auto space-y-2">
-                    {/* Only show options if last message is from bot AND not typing */}
-                    {(!isTyping && (chatHistory.length === 0 || chatHistory[chatHistory.length-1].type === 'bot')) && (
-                        question.options.map((opt, idx) => (
-                            <button key={idx} onClick={() => handleAnswer(opt)} 
-                                className="w-full bg-white border-2 border-[#00B900] text-[#00B900] hover:bg-[#00B900] hover:text-white font-bold py-3 rounded-full transition-all active:scale-95 shadow-sm text-sm">
-                                {opt.label}
-                            </button>
-                        ))
                     )}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input Area (Options) - Fixed to bottom of container */}
+                <div className="absolute bottom-0 left-0 w-full bg-white border-t p-4 z-20 pb-8 safe-area-bottom shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+                    <div className="max-w-md mx-auto space-y-2">
+                        {/* Only show options if last message is from bot AND not typing */}
+                        {(!isTyping && (chatHistory.length === 0 || chatHistory[chatHistory.length-1].type === 'bot')) && (
+                            question.options.map((opt, idx) => (
+                                <button key={idx} onClick={() => handleAnswer(opt)} 
+                                    className="w-full bg-white border-2 border-[#00B900] text-[#00B900] hover:bg-[#00B900] hover:text-white font-bold py-3 rounded-full transition-all active:scale-95 shadow-sm text-sm">
+                                    {opt.label}
+                                </button>
+                            ))
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
