@@ -6,7 +6,7 @@ import {
   Play, Edit3, MessageSquare, CheckCircle, Trash2, ArrowLeft, Save, 
   RefreshCw, Loader2, Trophy, Home, ThumbsUp, ExternalLink, X, 
   Crown, Lock, Share2, Sparkles, Wand2, QrCode, MessageCircle, Mail, 
-  HelpCircle, ChevronDown, ChevronUp, Twitter, BookOpen, User, LogOut, LayoutDashboard, Image as ImageIcon, Layout
+  HelpCircle, ChevronDown, ChevronUp, Twitter, BookOpen, User, LogOut, LayoutDashboard, Image as ImageIcon, Layout, Smartphone
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Script from 'next/script';
@@ -155,7 +155,6 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
 
 // --- Pages ---
 
-// 1. Dashboard (My Page)
 const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
     useEffect(() => { document.title = "マイページ | 診断クイズメーカー"; }, []);
     const [myQuizzes, setMyQuizzes] = useState([]);
@@ -245,7 +244,6 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {myQuizzes.map(quiz => (
                                     <div key={quiz.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow relative group">
-                                        {/* Image or Color */}
                                         <div className={`h-32 w-full overflow-hidden relative ${quiz.color || 'bg-indigo-600'}`}>
                                             {quiz.image_url && <img src={quiz.image_url} alt={quiz.title} className="w-full h-full object-cover"/>}
                                             <span className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded-full flex items-center gap-1">
@@ -274,7 +272,6 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
     );
 };
 
-// 2. Portal
 const Portal = ({ quizzes, isLoading, onPlay, onCreate, user, setShowAuth, onLogout, setPage, onEdit, onDelete }) => {
   useEffect(() => { document.title = "無料AI診断メーカー | 集客・販促に効くクイズ作成ツール"; }, []);
   const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
@@ -375,10 +372,7 @@ const Portal = ({ quizzes, isLoading, onPlay, onCreate, user, setShowAuth, onLog
   );
 };
 
-// ... (FaqPage, PricePage, HowToPage remain same as before, omitted for brevity but include them if copy-pasting full file) ...
-// ※文字数制限のため、変更のない静的ページは省略しません。前回のコードと同じです。
-// 以下にフルセットを記述します。
-
+// ... Static Pages ...
 const FaqPage = ({ onBack, setPage, user, onLogout, setShowAuth }) => {
     useEffect(() => { document.title = "よくある質問 | 診断クイズメーカー"; }, []);
     const [openIndex, setOpenIndex] = useState(null);
@@ -466,13 +460,16 @@ const QuizPlayer = ({ quiz, onBack }) => {
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
   const [playableQuestions, setPlayableQuestions] = useState(null);
+  // Chat用state
   const [chatHistory, setChatHistory] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   
   useEffect(() => {
     if(supabase) supabase.rpc('increment_views', { row_id: quiz.id }).then(({error})=> error && console.error(error));
 
     const rawQuestions = typeof quiz.questions === 'string' ? JSON.parse(quiz.questions) : quiz.questions;
+    // Shuffle options
     const shuffleArray = (array) => {
         const newArr = [...array];
         for (let i = newArr.length - 1; i > 0; i--) {
@@ -484,15 +481,19 @@ const QuizPlayer = ({ quiz, onBack }) => {
     setPlayableQuestions(rawQuestions.map(q => ({ ...q, options: shuffleArray(q.options) })));
   }, []);
 
+  // Chat: スクロール
   useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatHistory, currentStep]);
+  }, [chatHistory, isTyping, currentStep]);
 
+  // Chat: 初期メッセージ (Q1)
   useEffect(() => {
       if (playableQuestions && currentStep === 0 && chatHistory.length === 0 && quiz.layout === 'chat') {
+          setIsTyping(true);
           setTimeout(() => {
-              setChatHistory([{ type: 'bot', text: playableQuestions[0].text }]);
-          }, 500);
+              setIsTyping(false);
+              setChatHistory([{ type: 'bot', text: playableQuestions[0].text, qNum: 1 }]);
+          }, 1500);
       }
   }, [playableQuestions, quiz.layout]);
 
@@ -503,19 +504,30 @@ const QuizPlayer = ({ quiz, onBack }) => {
     setAnswers(newAnswers);
 
     if (quiz.layout === 'chat') {
+        // User Answer
         setChatHistory(prev => [...prev, { type: 'user', text: option.label }]);
         
         if (currentStep + 1 < playableQuestions.length) {
+            // Next Question
+            setIsTyping(true);
             setTimeout(() => {
-                setChatHistory(prev => [...prev, { type: 'bot', text: playableQuestions[currentStep + 1].text }]);
+                setIsTyping(false);
+                setChatHistory(prev => [...prev, { type: 'bot', text: playableQuestions[currentStep + 1].text, qNum: currentStep + 2 }]);
                 setCurrentStep(currentStep + 1);
-            }, 800);
-        } else {
-            setTimeout(() => {
-                setResult(calculateResult(newAnswers, results));
             }, 1000);
+        } else {
+            // Finish -> Typing -> Result
+            setIsTyping(true);
+            setTimeout(() => {
+                setIsTyping(false);
+                setChatHistory(prev => [...prev, { type: 'bot', text: "診断ありがとうございます！\n結果を作成しています..." }]);
+                setTimeout(() => {
+                    setResult(calculateResult(newAnswers, results));
+                }, 2000);
+            }, 1500);
         }
     } else {
+        // Card Mode Flow
         if (currentStep + 1 < playableQuestions.length) { 
             setCurrentStep(currentStep + 1); 
         } else { 
@@ -538,43 +550,60 @@ const QuizPlayer = ({ quiz, onBack }) => {
   const question = playableQuestions[currentStep];
   const progress = Math.round(((currentStep)/playableQuestions.length)*100);
 
+  // --- Render: Chat Mode (Updated to match HTML sample) ---
   if (quiz.layout === 'chat') {
       return (
-        <div className="min-h-screen bg-gray-100 flex flex-col font-sans">
-            <div className="bg-white/90 backdrop-blur-md border-b p-4 sticky top-0 z-10 flex items-center gap-3">
-                <button onClick={onBack} className="text-gray-500"><ArrowLeft/></button>
-                <div className="flex-grow">
-                    <h2 className="font-bold text-sm text-gray-800 line-clamp-1">{quiz.title}</h2>
-                    <div className="w-full bg-gray-200 h-1 mt-1 rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500 transition-all duration-500" style={{width: `${progress}%`}}></div>
-                    </div>
+        <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
+            {/* LINE-like Header */}
+            <div className="bg-gradient-to-br from-[#00B900] to-[#00C851] p-4 text-white text-center relative shadow-sm z-10">
+                <div className="text-xs opacity-90 absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer" onClick={onBack}><ArrowLeft size={20}/></div>
+                <h1 className="font-bold text-sm">{quiz.title}</h1>
+                <div className="text-[10px] opacity-80">オンライン</div>
+                <div className="bg-white/30 h-1 mt-2 rounded-full overflow-hidden w-1/2 mx-auto">
+                    <div className="h-full bg-white transition-all duration-500" style={{width: `${progress}%`}}></div>
                 </div>
             </div>
-            <div className="flex-grow p-4 space-y-4 overflow-y-auto pb-40">
-                <div className="flex justify-center my-4">
-                    <span className="text-xs bg-gray-200 text-gray-500 px-3 py-1 rounded-full">診断スタート</span>
-                </div>
+
+            {/* Chat Messages */}
+            <div className="flex-grow p-4 overflow-y-auto pb-48 bg-[#f0f0f0]">
                 {chatHistory.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in-up`}>
-                        {msg.type === 'bot' && <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs mr-2 flex-shrink-0"><Sparkles size={14}/></div>}
-                        <div className={`max-w-[80%] p-3 rounded-2xl text-sm font-bold ${msg.type === 'user' ? 'bg-green-500 text-white rounded-tr-none' : 'bg-white text-gray-800 border border-gray-200 rounded-tl-none'}`}>
+                    <div key={i} className={`flex mb-4 animate-fade-in-up ${msg.type === 'user' ? 'justify-end' : 'items-start gap-2'}`}>
+                        {msg.type === 'bot' && (
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00B900] to-[#00C851] flex items-center justify-center text-white flex-shrink-0 text-xl shadow-sm">🤖</div>
+                        )}
+                        <div className={`relative max-w-[85%] p-4 rounded-2xl shadow-sm text-sm font-medium leading-relaxed whitespace-pre-wrap
+                            ${msg.type === 'user' 
+                                ? 'bg-[#00B900] text-white rounded-tr-sm' 
+                                : 'bg-white text-gray-800 rounded-tl-sm'
+                            }`}>
+                            {msg.qNum && <div className="text-[10px] text-gray-400 mb-1">質問 {msg.qNum} / {playableQuestions.length}</div>}
                             {msg.text}
                         </div>
                     </div>
                 ))}
-                {chatHistory.length > 0 && chatHistory[chatHistory.length-1].type === 'user' && !result && (
-                    <div className="flex justify-start animate-pulse">
-                         <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs mr-2"><Sparkles size={14}/></div>
-                         <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-tl-none text-gray-400 text-xs">...</div>
+                
+                {/* Typing Indicator */}
+                {isTyping && (
+                    <div className="flex items-start gap-2 mb-4 animate-fade-in">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00B900] to-[#00C851] flex items-center justify-center text-white flex-shrink-0 text-xl shadow-sm">🤖</div>
+                        <div className="bg-white p-4 rounded-2xl rounded-tl-sm shadow-sm flex gap-1 items-center h-[52px]">
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        </div>
                     </div>
                 )}
                 <div ref={messagesEndRef} />
             </div>
-            <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 z-20 pb-8 safe-area-bottom">
-                <div className="max-w-lg mx-auto grid gap-2">
-                    {(chatHistory.length === 0 || chatHistory[chatHistory.length-1].type === 'bot') && (
+
+            {/* Input Area (Options) */}
+            <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 z-20 pb-8 safe-area-bottom shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+                <div className="max-w-md mx-auto space-y-2">
+                    {/* Only show options if last message is from bot AND not typing */}
+                    {(!isTyping && (chatHistory.length === 0 || chatHistory[chatHistory.length-1].type === 'bot')) && (
                         question.options.map((opt, idx) => (
-                            <button key={idx} onClick={() => handleAnswer(opt)} className="w-full bg-white border-2 border-indigo-100 hover:bg-indigo-50 hover:border-indigo-300 text-indigo-700 font-bold py-3 rounded-xl transition-all active:scale-95 shadow-sm text-sm">
+                            <button key={idx} onClick={() => handleAnswer(opt)} 
+                                className="w-full bg-white border-2 border-[#00B900] text-[#00B900] hover:bg-[#00B900] hover:text-white font-bold py-3 rounded-full transition-all active:scale-95 shadow-sm text-sm">
                                 {opt.label}
                             </button>
                         ))
@@ -585,6 +614,7 @@ const QuizPlayer = ({ quiz, onBack }) => {
       );
   }
 
+  // --- Render: Card Mode (Existing) ---
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center py-6 font-sans">
       <SEO title={`${quiz.title} | 診断中`} description={quiz.description} image={quiz.image_url} />
@@ -592,6 +622,7 @@ const QuizPlayer = ({ quiz, onBack }) => {
           <button onClick={onBack} className="text-gray-500 font-bold flex items-center gap-1 hover:text-gray-800"><ArrowLeft size={16}/> 戻る</button>
       </div>
       <div className="max-w-md mx-auto w-full px-4">
+        {/* Colorful Header with Image */}
         <div className={`${quiz.color || 'bg-indigo-600'} text-white rounded-t-3xl text-center shadow-lg transition-colors duration-500 relative overflow-hidden`}>
              <div className="absolute top-0 left-0 w-full h-full bg-white opacity-10" style={{backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '15px 15px'}}></div>
              {quiz.image_url ? (
@@ -742,6 +773,7 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
           "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80",
           "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
           "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1606857521015-7f9fcf423740?auto=format&fit=crop&w=800&q=80"
       ];
       const selected = curatedImages[Math.floor(Math.random() * curatedImages.length)];
       setForm({...form, image_url: selected});
