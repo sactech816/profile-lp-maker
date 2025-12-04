@@ -6,13 +6,12 @@ import {
   Play, Edit3, MessageSquare, CheckCircle, Trash2, ArrowLeft, Save, 
   RefreshCw, Loader2, Trophy, Home, ThumbsUp, ExternalLink, X, 
   Crown, Lock, Share2, Sparkles, Wand2, QrCode, MessageCircle, Mail, 
-  HelpCircle, ChevronDown, ChevronUp, Twitter
+  HelpCircle, ChevronDown, ChevronUp, Twitter, BookOpen
 } from 'lucide-react';
-import Head from 'next/head';
 
 // --- 設定エリア (ここだけ書き換えてください) ---
 // 管理者として扱うメールアドレスを設定します
-const ADMIN_EMAIL = "admin@example.com"; 
+const ADMIN_EMAIL = "info@kei-sho.co.jp"; 
 // -------------------------------------------
 
 // --- Supabase Config ---
@@ -34,7 +33,6 @@ const SEO = ({ title, description }) => (
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
@@ -62,7 +60,30 @@ const calculateResult = (answers, results) => {
   return results.find(r => r.type === maxType) || results[0];
 };
 
-// --- Components ---
+// --- UI Components (Defined outside to prevent re-render focus loss) ---
+const Input = ({label, val, onChange, ph}) => (
+    <div className="mb-4">
+        <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
+        <input 
+            className="w-full border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white placeholder-gray-400 transition-shadow" 
+            value={val||''} 
+            onChange={e=>onChange(e.target.value)} 
+            placeholder={ph}
+        />
+    </div>
+);
+
+const Textarea = ({label, val, onChange}) => (
+    <div className="mb-4">
+        <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
+        <textarea 
+            className="w-full border border-gray-300 p-3 rounded-lg text-black focus:ring-2 focus:ring-indigo-500 outline-none bg-white placeholder-gray-400 transition-shadow" 
+            rows={3} 
+            value={val} 
+            onChange={e=>onChange(e.target.value)}
+        />
+    </div>
+  );
 
 const Header = ({ setPage, isAdmin }) => (
     <div className="bg-white border-b sticky top-0 z-50 shadow-sm">
@@ -113,17 +134,15 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
     );
 };
 
-// FAQ Page
+// Pages
 const FaqPage = ({ onBack, isAdmin, setPage }) => {
     const [openIndex, setOpenIndex] = useState(null);
     const faqs = [
-        { category: "一般・全般", q: "無料で使えますか？", a: "はい、現在はβ版としてすべての機能を無料で公開しています。将来的に一部機能を有料化する可能性がありますが、作成済みの診断は引き続きご利用いただけます。" },
+        { category: "一般・全般", q: "無料で使えますか？", a: "はい、現在はβ版としてすべての機能を無料で公開しています。作成済みの診断は引き続きご利用いただけます。" },
         { category: "一般・全般", q: "商用利用は可能ですか？", a: "可能です。作成した診断クイズをご自身のビジネス（集客、販促、商品紹介など）に自由にご活用ください。" },
-        { category: "操作・作成", q: "作った診断を修正したいのですが", a: "現在は「ゲスト作成機能」での提供となっているため、一度公開した診断をご自身で修正・削除することはできません。修正が必要な場合は、お問い合わせフォームより削除依頼を出していただき、再度新規作成をお願いいたします。（会員機能実装後に編集機能を追加予定です）" },
-        { category: "操作・作成", q: "画像は使えますか？", a: "現在はテキストのみのシンプルな構成となっております。画像のアップロード機能は今後のアップデートで対応予定です。" },
+        { category: "操作・作成", q: "作った診断を修正したいのですが", a: "現在はゲスト作成機能のため、一度公開した診断を修正・削除することはできません。修正が必要な場合は、お問い合わせフォームより削除依頼を出していただき、再度新規作成をお願いいたします。" },
         { category: "その他", q: "不具合を見つけた場合", a: "フッターの「お問い合わせ」リンクよりご報告いただけますと幸いです。" },
     ];
-
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             <Header setPage={setPage} isAdmin={isAdmin} />
@@ -133,21 +152,11 @@ const FaqPage = ({ onBack, isAdmin, setPage }) => {
                 <div className="space-y-4">
                     {faqs.map((faq, i) => (
                         <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                            <button 
-                                onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                                className="w-full px-6 py-4 text-left font-bold text-gray-800 flex justify-between items-center hover:bg-gray-50"
-                            >
-                                <span className="flex items-center gap-3">
-                                    <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded">{faq.category}</span>
-                                    {faq.q}
-                                </span>
+                            <button onClick={() => setOpenIndex(openIndex === i ? null : i)} className="w-full px-6 py-4 text-left font-bold text-gray-800 flex justify-between items-center hover:bg-gray-50">
+                                <span className="flex items-center gap-3"><span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded">{faq.category}</span>{faq.q}</span>
                                 {openIndex === i ? <ChevronUp size={20} className="text-gray-400"/> : <ChevronDown size={20} className="text-gray-400"/>}
                             </button>
-                            {openIndex === i && (
-                                <div className="px-6 py-4 bg-gray-50 text-gray-600 text-sm leading-relaxed border-t border-gray-100">
-                                    {faq.a}
-                                </div>
-                            )}
+                            {openIndex === i && <div className="px-6 py-4 bg-gray-50 text-gray-600 text-sm leading-relaxed border-t border-gray-100">{faq.a}</div>}
                         </div>
                     ))}
                 </div>
@@ -158,7 +167,7 @@ const FaqPage = ({ onBack, isAdmin, setPage }) => {
 
 const PricePage = ({ onBack, isAdmin, setPage }) => (
     <div className="min-h-screen bg-gray-50 font-sans">
-        <SEO title="料金プラン | 診断クイズメーカー" description="ビジネスを加速させる診断コンテンツの料金プラン。" />
+        <SEO title="料金プラン | 無料AI診断メーカー" description="ビジネスを加速させる診断コンテンツの料金プラン。" />
         <Header setPage={setPage} isAdmin={isAdmin} />
         <div className="py-12 px-4">
             <div className="max-w-4xl mx-auto text-center">
@@ -185,7 +194,7 @@ const PricePage = ({ onBack, isAdmin, setPage }) => (
 
 const HowToPage = ({ onBack, isAdmin, setPage }) => (
     <div className="min-h-screen bg-white font-sans">
-        <SEO title="使い方・規約 | 診断クイズメーカー" description="診断クイズの作り方と利用規約について。" />
+        <SEO title="使い方・規約 | 無料AI診断メーカー" description="診断クイズの作り方と利用規約について。" />
         <Header setPage={setPage} isAdmin={isAdmin} />
         <div className="py-12 px-4 max-w-3xl mx-auto">
             <button onClick={onBack} className="mb-6 flex items-center gap-1 text-gray-500 font-bold hover:text-indigo-600"><ArrowLeft size={16}/> 戻る</button>
@@ -202,7 +211,6 @@ const HowToPage = ({ onBack, isAdmin, setPage }) => (
                     <ul className="list-disc pl-5 space-y-3 text-sm">
                         <li><strong>ツール本体について:</strong> 本書購入者様のみご利用可能です。ツール自体の再配布、販売、改変は固く禁じます。</li>
                         <li><strong>作成したコンテンツの利用:</strong> 個人・商用を問わず自由にご利用いただけます。フッターのコピーライト表記は削除しないでください。</li>
-                        <li><strong>禁止事項:</strong> 法律に触れる内容や、他者を誹謗中傷するようなコンテンツの作成。</li>
                         <li><strong>免責事項:</strong> 本ツールの利用によって生じたいかなる損害についても、提供者は一切の責任を負いません。</li>
                     </ul>
                 </div>
@@ -236,7 +244,7 @@ const Portal = ({ quizzes, isLoading, onPlay, onCreate, user, setShowAuth, onLog
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-20">
-      <SEO title="診断クイズメーカー | AIで無料作成" description="登録不要！AIでビジネス用やエンタメ用の診断クイズを無料で作成できるツールです。" />
+      <SEO title="無料AI診断メーカー | 集客・販促に効くクイズ作成ツール" description="集客やエンタメに使える診断テストをAIが自動生成。登録不要、無料で今すぐ作成できます。LINE連携やQRコードも対応。" />
       <Header setPage={setPage} isAdmin={isAdmin} />
       <div className="bg-gradient-to-br from-indigo-900 to-blue-800 text-white py-16 px-6 text-center relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
@@ -327,21 +335,15 @@ const ResultView = ({ quiz, result, onRetry, onBack }) => {
     if(supabase) await supabase.rpc('increment_clicks', { row_id: quiz.id });
   };
 
-  // SNS Share Logic
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}?id=${quiz.slug || quiz.id}` : '';
   const shareText = `${quiz.title} | 診断結果は「${result.title}」でした！ #診断クイズメーカー`;
   
-  const handleShareX = () => {
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
-  };
-  
-  const handleShareLine = () => {
-      window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}`, '_blank');
-  };
+  const handleShareX = () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+  const handleShareLine = () => window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}`, '_blank');
 
   return (
     <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden my-8 animate-fade-in border border-gray-100 flex flex-col min-h-[80vh]">
-        <div className="bg-indigo-700 text-white p-10 text-center relative overflow-hidden">
+        <div className={`${quiz.color || 'bg-indigo-600'} text-white p-10 text-center relative overflow-hidden transition-colors duration-500`}>
             <div className="absolute top-0 left-0 w-full h-full bg-white opacity-10" style={{backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
             <Trophy className="mx-auto mb-4 text-yellow-300 relative z-10" size={56} />
             <h2 className="text-3xl font-extrabold mt-2 relative z-10">{result.title}</h2>
@@ -351,8 +353,7 @@ const ResultView = ({ quiz, result, onRetry, onBack }) => {
                 {result.description}
             </div>
             
-            {/* SNS Share Section */}
-            <div className="bg-gray-50 p-4 rounded-xl mb-8 text-center">
+            <div className="bg-gray-50 p-4 rounded-xl mb-8 text-center border border-gray-100">
                 <p className="text-xs font-bold text-gray-500 mb-3">結果をシェアする</p>
                 <div className="flex justify-center gap-3">
                     <button onClick={handleShareX} className="bg-black text-white p-3 rounded-full shadow hover:scale-110 transition-transform"><Twitter size={20}/></button>
@@ -430,6 +431,7 @@ const QuizPlayer = ({ quiz, onBack }) => {
   }
   
   const question = questions[currentStep];
+  const progress = Math.round(((currentStep)/questions.length)*100);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center py-6 font-sans">
@@ -438,20 +440,23 @@ const QuizPlayer = ({ quiz, onBack }) => {
           <button onClick={onBack} className="text-gray-500 font-bold flex items-center gap-1 hover:text-gray-800"><ArrowLeft size={16}/> 戻る</button>
       </div>
       <div className="max-w-md mx-auto w-full px-4">
-        <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{quiz.title}</h2>
-            <p className="text-sm text-gray-600 whitespace-pre-wrap">{quiz.description}</p>
+        {/* Colorful Header */}
+        <div className={`${quiz.color || 'bg-indigo-600'} text-white rounded-t-3xl p-6 text-center shadow-lg transition-colors duration-500 relative overflow-hidden`}>
+             <div className="absolute top-0 left-0 w-full h-full bg-white opacity-10" style={{backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '15px 15px'}}></div>
+             <h2 className="text-xl font-bold mb-2 relative z-10">{quiz.title}</h2>
+             <p className="text-xs opacity-90 relative z-10 whitespace-pre-wrap">{quiz.description}</p>
         </div>
 
-        <div className="mb-2 flex justify-between text-xs font-bold text-gray-500">
-            <span>Question {currentStep+1}</span><span>{questions.length}問中</span>
-        </div>
-        <div className="h-2 bg-gray-200 rounded-full mb-8 overflow-hidden">
-            <div className="h-full bg-indigo-600 transition-all duration-300 ease-out" style={{width:`${((currentStep+1)/questions.length)*100}%`}}></div>
-        </div>
-        
-        <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100 animate-slide-up">
-            <h3 className="text-xl font-bold text-gray-900 mb-8 text-center leading-relaxed">{question.text}</h3>
+        <div className="bg-white rounded-b-3xl shadow-xl p-8 border border-gray-100 border-t-0 mb-8 animate-slide-up">
+            <div className="mb-4 flex justify-between text-xs font-bold text-gray-400">
+                <span>Q{currentStep+1} / {questions.length}</span>
+                <span>{progress}%</span>
+            </div>
+            <div className="h-2 bg-gray-100 rounded-full mb-8 overflow-hidden">
+                <div className={`${quiz.color || 'bg-indigo-600'} h-full transition-all duration-300 ease-out`} style={{width:`${((currentStep+1)/questions.length)*100}%`}}></div>
+            </div>
+
+            <h3 className="text-lg font-bold text-gray-900 mb-8 text-center leading-relaxed">{question.text}</h3>
             <div className="space-y-4">
                 {question.options.map((opt, idx) => (
                     <button key={idx} onClick={() => handleAnswer(opt)} className="w-full p-4 text-left border-2 border-gray-100 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 text-gray-800 font-bold transition-all flex justify-between items-center group active:scale-95">
@@ -466,7 +471,7 @@ const QuizPlayer = ({ quiz, onBack }) => {
   );
 };
 
-const Editor = ({ onBack, onSave, initialData }) => {
+const Editor = ({ onBack, onSave, initialData, setPage }) => {
   const [activeTab, setActiveTab] = useState('基本設定');
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState(null);
@@ -488,7 +493,6 @@ const Editor = ({ onBack, onSave, initialData }) => {
   const [form, setForm] = useState(initialData || defaultForm);
 
   const handlePublish = () => { 
-      // slugがあればそれを、なければIDを使用
       const urlId = initialData?.slug || savedId || initialData?.id;
       const url = `${window.location.origin}?id=${urlId}`;
       navigator.clipboard.writeText(url); 
@@ -557,30 +561,6 @@ const Editor = ({ onBack, onSave, initialData }) => {
       } catch(e) { alert('AI生成エラー: ' + e.message); } finally { setIsGenerating(false); }
   };
 
-  const Input = ({label, val, onChange, ph}) => (
-    <div className="mb-4">
-        <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
-        <input 
-            className="w-full border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white placeholder-gray-400" 
-            value={val||''} 
-            onChange={e=>onChange(e.target.value)} 
-            placeholder={ph}
-        />
-    </div>
-  );
-  
-  const Textarea = ({label, val, onChange}) => (
-    <div className="mb-4">
-        <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
-        <textarea 
-            className="w-full border border-gray-300 p-3 rounded-lg text-black focus:ring-2 focus:ring-indigo-500 outline-none bg-white placeholder-gray-400" 
-            rows={3} 
-            value={val} 
-            onChange={e=>onChange(e.target.value)}
-        />
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col font-sans text-gray-900">
         <div className="bg-white border-b px-6 py-4 flex justify-between sticky top-0 z-50 shadow-sm">
@@ -596,16 +576,12 @@ const Editor = ({ onBack, onSave, initialData }) => {
                         <Share2 size={18}/> 公開URL
                     </button>
                 )}
-                <button 
-                    onClick={async ()=>{
+                <button onClick={async ()=>{
                         setIsSaving(true); 
                         const id = await onSave(form, savedId || initialData?.id); 
                         if(id) setSavedId(id); 
                         setIsSaving(false);
-                    }} 
-                    disabled={isSaving} 
-                    className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-700 shadow-md transition-all"
-                >
+                    }} disabled={isSaving} className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-700 shadow-md transition-all">
                     {isSaving ? <Loader2 className="animate-spin"/> : <Save/>} 保存
                 </button>
             </div>
@@ -619,10 +595,8 @@ const Editor = ({ onBack, onSave, initialData }) => {
                     </div>
                     <textarea 
                         className="w-full border border-purple-200 p-2 rounded-lg text-xs mb-2 focus:ring-2 focus:ring-purple-500 outline-none resize-none bg-white text-gray-900 placeholder-gray-400" 
-                        rows={2} 
-                        placeholder="テーマを入力 (例: 起業家タイプ診断)" 
-                        value={aiTheme} 
-                        onChange={e=>setAiTheme(e.target.value)} 
+                        rows={2} placeholder="テーマを入力 (例: 起業家タイプ診断)" 
+                        value={aiTheme} onChange={e=>setAiTheme(e.target.value)} 
                     />
                     <button onClick={handleAiGenerate} disabled={isGenerating} className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg font-bold text-xs transition-all shadow flex items-center justify-center gap-1">
                         {isGenerating ? <Loader2 className="animate-spin" size={12}/> : <Wand2 size={12}/>} 生成する
@@ -630,7 +604,7 @@ const Editor = ({ onBack, onSave, initialData }) => {
                     <p className="text-[10px] text-gray-500 mt-2 text-center">※生成には10〜30秒ほどかかります</p>
                 </div>
 
-                <div className="p-4 space-y-1 overflow-y-auto">
+                <div className="p-4 space-y-1 overflow-y-auto flex-grow">
                     {TABS.map(tab=>(
                         <button key={tab.id} onClick={()=>setActiveTab(tab.id)} className={`w-full px-4 py-3 text-left font-bold rounded-lg transition-colors flex items-center gap-2 ${activeTab===tab.id?'bg-indigo-50 text-indigo-700':'text-gray-600 hover:bg-gray-50'}`}>
                             <tab.icon size={16}/>
@@ -638,28 +612,23 @@ const Editor = ({ onBack, onSave, initialData }) => {
                         </button>
                     ))}
                 </div>
+                <div className="p-4 border-t">
+                    <button onClick={()=>setPage('howto')} className="w-full text-xs text-gray-500 hover:text-indigo-600 flex items-center justify-center gap-1">
+                        <BookOpen size={14}/> 使い方・規約を見る
+                    </button>
+                </div>
             </div>
 
             <div className="flex-grow p-4 md:p-8 overflow-y-auto bg-gray-50">
                 <div className="md:hidden flex flex-col gap-4 mb-4">
                      <div className="p-4 bg-white rounded-xl shadow-sm border border-purple-100">
                         <div className="flex gap-2 mb-2">
-                            <input 
-                                className="flex-grow border border-gray-300 p-2 rounded text-sm text-black" 
-                                placeholder="AI作成テーマ..." 
-                                value={aiTheme} 
-                                onChange={e=>setAiTheme(e.target.value)}
-                            />
-                            <button onClick={handleAiGenerate} disabled={isGenerating} className="bg-purple-600 text-white px-4 rounded font-bold text-sm whitespace-nowrap">
-                                {isGenerating ? '...' : '生成'}
-                            </button>
+                            <input className="flex-grow border border-gray-300 p-2 rounded text-sm text-black" placeholder="AI作成テーマ..." value={aiTheme} onChange={e=>setAiTheme(e.target.value)}/>
+                            <button onClick={handleAiGenerate} disabled={isGenerating} className="bg-purple-600 text-white px-4 rounded font-bold text-sm whitespace-nowrap">{isGenerating ? '...' : '生成'}</button>
                         </div>
-                        <p className="text-[10px] text-gray-500 text-center">※生成には10〜30秒ほどかかります</p>
                      </div>
                      <div className="flex gap-2 overflow-x-auto pb-2">
-                        {TABS.map(tab=>(
-                            <button key={tab.id} onClick={()=>setActiveTab(tab.id)} className={`px-4 py-2 rounded-full font-bold whitespace-nowrap ${activeTab===tab.id?'bg-indigo-600 text-white':'bg-white border text-gray-700'}`}>{tab.label}</button>
-                        ))}
+                        {TABS.map(tab=>(<button key={tab.id} onClick={()=>setActiveTab(tab.id)} className={`px-4 py-2 rounded-full font-bold whitespace-nowrap ${activeTab===tab.id?'bg-indigo-600 text-white':'bg-white border text-gray-700'}`}>{tab.label}</button>))}
                     </div>
                 </div>
 
@@ -771,8 +740,15 @@ const App = () => {
           const params = new URLSearchParams(window.location.search);
           const id = params.get('id');
           if(id && supabase) {
-              // slug(5文字ID)またはid(旧ID)で検索
-              const {data} = await supabase.from('quizzes').select('*').or(`slug.eq.${id},id.eq.${id}`).single();
+              // 1. まず slug (文字列) で検索
+              let { data, error } = await supabase.from('quizzes').select('*').eq('slug', id).single();
+              
+              // 2. なければ、もし数字なら id (数値) で検索
+              if (!data && !isNaN(id)) {
+                 const res = await supabase.from('quizzes').select('*').eq('id', id).single();
+                 data = res.data;
+              }
+
               if(data) { setSelectedQuiz(data); setView('quiz'); }
           }
           if(supabase) {
@@ -795,11 +771,7 @@ const App = () => {
               questions: form.questions, results: form.results, 
               user_id: user?.id || null 
           };
-          
-          // 新規作成時はランダムID（slug）を追加
-          if (!id && !form.slug) {
-              payload.slug = generateSlug();
-          }
+          if (!id && !form.slug) { payload.slug = generateSlug(); }
 
           let result;
           if (id) {
@@ -811,8 +783,7 @@ const App = () => {
           if(!result.data || result.data.length === 0) throw new Error("更新できませんでした。管理者権限を確認してください。");
           alert('保存しました！');
           await fetchQuizzes();
-          // 保存されたIDではなくslugを返す（あれば）
-          return result.data[0].slug || result.data[0].id;
+          return result.data[0].id; // 編集時はIDを返す
       } catch(e) { 
           alert('保存エラー: ' + e.message); 
       }
@@ -860,6 +831,7 @@ const App = () => {
             <Editor 
                 user={user} 
                 initialData={editingQuiz}
+                setPage={setView}
                 onBack={()=>{setView('portal'); setEditingQuiz(null);}} 
                 onSave={handleSave} 
             />
