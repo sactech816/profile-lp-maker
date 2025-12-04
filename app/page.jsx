@@ -5,19 +5,26 @@ import { createClient } from '@supabase/supabase-js';
 import { 
   Play, Edit3, MessageSquare, CheckCircle, Trash2, ArrowLeft, Save, 
   RefreshCw, Loader2, Trophy, Home, ThumbsUp, ExternalLink, X, 
-  Crown, Lock, Share2, Sparkles, Wand2, QrCode, MessageCircle, Mail, BarChart3
+  Crown, Lock, Share2, Sparkles, Wand2, QrCode, MessageCircle, Mail, 
+  HelpCircle, ChevronDown, ChevronUp, Twitter
 } from 'lucide-react';
 import Head from 'next/head';
 
 // --- 設定エリア (ここだけ書き換えてください) ---
 // 管理者として扱うメールアドレスを設定します
-const ADMIN_EMAIL = "info@kei-sho.co.jp"; 
+const ADMIN_EMAIL = "admin@example.com"; 
 // -------------------------------------------
 
 // --- Supabase Config ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey) : null;
+
+// --- Utility: ランダムな5文字のID生成 ---
+const generateSlug = () => {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  return Array.from({length: 5}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+};
 
 // --- SEO Component ---
 const SEO = ({ title, description }) => (
@@ -27,14 +34,10 @@ const SEO = ({ title, description }) => (
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebApplication",
-            "name": "診断クイズメーカー",
-            "description": "ビジネスやエンタメに使える診断コンテンツを無料で作成できるツール。",
-            "applicationCategory": "BusinessApplication",
-            "operatingSystem": "All"
-        })}} />
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
     </>
 );
 
@@ -68,11 +71,11 @@ const Header = ({ setPage, isAdmin }) => (
                 <Sparkles className="text-pink-500"/> 診断クイズメーカー
             </div>
             <div className="flex items-center gap-4 text-sm font-bold text-gray-600">
-                <button onClick={()=>setPage('price')} className="hidden md:block hover:text-indigo-600">料金プラン</button>
-                <button onClick={()=>setPage('howto')} className="hidden md:block hover:text-indigo-600">作り方</button>
+                <button onClick={()=>setPage('faq')} className="hidden md:block hover:text-indigo-600">よくある質問</button>
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSd8euNVubqlITrCF2_W7VVBjLd2mVxzOIcJ67pNnk3GPLnT_A/viewform" target="_blank" rel="noopener noreferrer" className="hidden md:block hover:text-indigo-600">お問い合わせ</a>
                 {isAdmin && (
                     <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full text-indigo-700 border border-indigo-200">
-                        <Crown size={14}/> <span className="text-xs">管理者モード</span>
+                        <Crown size={14}/> <span className="text-xs">管理者</span>
                     </div>
                 )}
             </div>
@@ -110,13 +113,57 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
     );
 };
 
+// FAQ Page
+const FaqPage = ({ onBack, isAdmin, setPage }) => {
+    const [openIndex, setOpenIndex] = useState(null);
+    const faqs = [
+        { category: "一般・全般", q: "無料で使えますか？", a: "はい、現在はβ版としてすべての機能を無料で公開しています。将来的に一部機能を有料化する可能性がありますが、作成済みの診断は引き続きご利用いただけます。" },
+        { category: "一般・全般", q: "商用利用は可能ですか？", a: "可能です。作成した診断クイズをご自身のビジネス（集客、販促、商品紹介など）に自由にご活用ください。" },
+        { category: "操作・作成", q: "作った診断を修正したいのですが", a: "現在は「ゲスト作成機能」での提供となっているため、一度公開した診断をご自身で修正・削除することはできません。修正が必要な場合は、お問い合わせフォームより削除依頼を出していただき、再度新規作成をお願いいたします。（会員機能実装後に編集機能を追加予定です）" },
+        { category: "操作・作成", q: "画像は使えますか？", a: "現在はテキストのみのシンプルな構成となっております。画像のアップロード機能は今後のアップデートで対応予定です。" },
+        { category: "その他", q: "不具合を見つけた場合", a: "フッターの「お問い合わせ」リンクよりご報告いただけますと幸いです。" },
+    ];
+
+    return (
+        <div className="min-h-screen bg-gray-50 font-sans">
+            <Header setPage={setPage} isAdmin={isAdmin} />
+            <div className="max-w-3xl mx-auto py-12 px-4">
+                <button onClick={onBack} className="mb-6 flex items-center gap-1 text-gray-500 font-bold hover:text-indigo-600"><ArrowLeft size={16}/> 戻る</button>
+                <h1 className="text-3xl font-extrabold text-gray-900 mb-8 text-center">よくある質問</h1>
+                <div className="space-y-4">
+                    {faqs.map((faq, i) => (
+                        <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <button 
+                                onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                                className="w-full px-6 py-4 text-left font-bold text-gray-800 flex justify-between items-center hover:bg-gray-50"
+                            >
+                                <span className="flex items-center gap-3">
+                                    <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded">{faq.category}</span>
+                                    {faq.q}
+                                </span>
+                                {openIndex === i ? <ChevronUp size={20} className="text-gray-400"/> : <ChevronDown size={20} className="text-gray-400"/>}
+                            </button>
+                            {openIndex === i && (
+                                <div className="px-6 py-4 bg-gray-50 text-gray-600 text-sm leading-relaxed border-t border-gray-100">
+                                    {faq.a}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const PricePage = ({ onBack, isAdmin, setPage }) => (
     <div className="min-h-screen bg-gray-50 font-sans">
         <SEO title="料金プラン | 診断クイズメーカー" description="ビジネスを加速させる診断コンテンツの料金プラン。" />
         <Header setPage={setPage} isAdmin={isAdmin} />
         <div className="py-12 px-4">
             <div className="max-w-4xl mx-auto text-center">
-                <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">料金プラン</h1>
+                <button onClick={onBack} className="mb-6 flex items-center gap-1 text-gray-500 font-bold hover:text-indigo-600 mx-auto"><ArrowLeft size={16}/> トップへ戻る</button>
+                <h1 className="text-3xl font-extrabold text-gray-900 mb-4">料金プラン</h1>
                 <p className="text-gray-600 mb-12">現在はベータ版のため、基本機能はすべて無料でご利用いただけます。</p>
                 <div className="grid md:grid-cols-3 gap-8 text-left">
                     <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-indigo-500 relative transform scale-105 z-10">
@@ -141,6 +188,7 @@ const HowToPage = ({ onBack, isAdmin, setPage }) => (
         <SEO title="使い方・規約 | 診断クイズメーカー" description="診断クイズの作り方と利用規約について。" />
         <Header setPage={setPage} isAdmin={isAdmin} />
         <div className="py-12 px-4 max-w-3xl mx-auto">
+            <button onClick={onBack} className="mb-6 flex items-center gap-1 text-gray-500 font-bold hover:text-indigo-600"><ArrowLeft size={16}/> 戻る</button>
             <h1 className="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-4">診断クイズの作り方・規約</h1>
             <div className="space-y-8 text-gray-800 leading-relaxed">
                 <p>このツールは、ビジネス向けの診断コンテンツを手軽に作成するためのツールです。</p>
@@ -254,8 +302,9 @@ const Portal = ({ quizzes, isLoading, onPlay, onCreate, user, setShowAuth, onLog
         )}
       </div>
       <footer className="bg-white border-t py-12 text-center text-sm text-gray-400">
-          <div className="mb-4 space-x-4">
-              <a href="https://forms.google.com/your-form-url" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 font-bold inline-flex items-center gap-1"><Mail size={14}/> お問い合わせ</a>
+          <div className="mb-6 flex justify-center gap-6">
+              <button onClick={()=>setPage('faq')} className="hover:text-indigo-600 font-bold">よくある質問</button>
+              <a href="https://docs.google.com/forms/d/e/1FAIpQLSd8euNVubqlITrCF2_W7VVBjLd2mVxzOIcJ67pNnk3GPLnT_A/viewform" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 font-bold flex items-center gap-1"><Mail size={14}/> お問い合わせ</a>
           </div>
           <p className="mb-4">&copy; 2025 Shindan Quiz Maker. All rights reserved.</p>
           {user ? (
@@ -277,6 +326,19 @@ const ResultView = ({ quiz, result, onRetry, onBack }) => {
   const handleLinkClick = async () => {
     if(supabase) await supabase.rpc('increment_clicks', { row_id: quiz.id });
   };
+
+  // SNS Share Logic
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}?id=${quiz.slug || quiz.id}` : '';
+  const shareText = `${quiz.title} | 診断結果は「${result.title}」でした！ #診断クイズメーカー`;
+  
+  const handleShareX = () => {
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+  };
+  
+  const handleShareLine = () => {
+      window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}`, '_blank');
+  };
+
   return (
     <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden my-8 animate-fade-in border border-gray-100 flex flex-col min-h-[80vh]">
         <div className="bg-indigo-700 text-white p-10 text-center relative overflow-hidden">
@@ -288,6 +350,17 @@ const ResultView = ({ quiz, result, onRetry, onBack }) => {
             <div className="prose text-gray-800 leading-relaxed whitespace-pre-wrap mb-10 text-sm md:text-base">
                 {result.description}
             </div>
+            
+            {/* SNS Share Section */}
+            <div className="bg-gray-50 p-4 rounded-xl mb-8 text-center">
+                <p className="text-xs font-bold text-gray-500 mb-3">結果をシェアする</p>
+                <div className="flex justify-center gap-3">
+                    <button onClick={handleShareX} className="bg-black text-white p-3 rounded-full shadow hover:scale-110 transition-transform"><Twitter size={20}/></button>
+                    <button onClick={handleShareLine} className="bg-[#06C755] text-white p-3 rounded-full shadow hover:scale-110 transition-transform"><MessageCircle size={20}/></button>
+                    <button onClick={()=>{navigator.clipboard.writeText(shareUrl); alert('URLをコピーしました');}} className="bg-gray-200 text-gray-600 p-3 rounded-full shadow hover:scale-110 transition-transform"><Share2 size={20}/></button>
+                </div>
+            </div>
+
             <div className="space-y-4 mb-8">
                 {result.link_url && (
                     <a href={result.link_url} onClick={handleLinkClick} target="_blank" rel="noopener noreferrer" className="block w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-center font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transform transition hover:scale-[1.02] active:scale-95">
@@ -305,6 +378,7 @@ const ResultView = ({ quiz, result, onRetry, onBack }) => {
                     </a>
                 )}
             </div>
+
             <div className="flex gap-4 border-t pt-6">
                 <button onClick={onRetry} className="flex-1 py-3 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors">
                     <RefreshCw size={18}/> 再診断
@@ -364,7 +438,6 @@ const QuizPlayer = ({ quiz, onBack }) => {
           <button onClick={onBack} className="text-gray-500 font-bold flex items-center gap-1 hover:text-gray-800"><ArrowLeft size={16}/> 戻る</button>
       </div>
       <div className="max-w-md mx-auto w-full px-4">
-        {/* 新追加: タイトルと説明の表示 */}
         <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">{quiz.title}</h2>
             <p className="text-sm text-gray-600 whitespace-pre-wrap">{quiz.description}</p>
@@ -415,8 +488,11 @@ const Editor = ({ onBack, onSave, initialData }) => {
   const [form, setForm] = useState(initialData || defaultForm);
 
   const handlePublish = () => { 
-      navigator.clipboard.writeText(`${window.location.origin}?id=${savedId}`); 
-      alert(`公開URLをコピーしました！\n${window.location.origin}?id=${savedId}`); 
+      // slugがあればそれを、なければIDを使用
+      const urlId = initialData?.slug || savedId || initialData?.id;
+      const url = `${window.location.origin}?id=${urlId}`;
+      navigator.clipboard.writeText(url); 
+      alert(`公開URLをコピーしました！\n${url}`); 
   };
 
   const handleAiGenerate = async () => {
@@ -425,7 +501,6 @@ const Editor = ({ onBack, onSave, initialData }) => {
       if(!aiTheme) return alert('どんな診断を作りたいかテーマを入力してください');
       setIsGenerating(true);
       try {
-          // AIへの指示を強化: 具体的な文字数と質を要求
           const prompt = `
             テーマ「${aiTheme}」の診断テストを作成してください。
             出力は以下のJSON形式のみで、余計な会話は一切含めないでください。
@@ -554,6 +629,7 @@ const Editor = ({ onBack, onSave, initialData }) => {
                     </button>
                     <p className="text-[10px] text-gray-500 mt-2 text-center">※生成には10〜30秒ほどかかります</p>
                 </div>
+
                 <div className="p-4 space-y-1 overflow-y-auto">
                     {TABS.map(tab=>(
                         <button key={tab.id} onClick={()=>setActiveTab(tab.id)} className={`w-full px-4 py-3 text-left font-bold rounded-lg transition-colors flex items-center gap-2 ${activeTab===tab.id?'bg-indigo-50 text-indigo-700':'text-gray-600 hover:bg-gray-50'}`}>
@@ -615,13 +691,11 @@ const Editor = ({ onBack, onSave, initialData }) => {
                                     <Input label="質問文" val={q.text} onChange={v=>{const n=[...form.questions];n[i].text=v;setForm({...form, questions:n})}} />
                                     <div className="space-y-3 mt-4">
                                         {q.options.map((o, j)=>(
-                                            // スマホレイアウト修正: flex-colで縦並び、PCはflex-row
                                             <div key={j} className="flex flex-col md:flex-row md:items-center gap-2 bg-white p-2 rounded border border-gray-200">
                                                 <div className="flex items-center gap-2 w-full md:w-auto flex-grow">
                                                     <div className="bg-gray-200 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">{j+1}</div>
                                                     <input className="flex-grow p-1 outline-none text-sm font-bold text-gray-900 placeholder-gray-400 min-w-0" value={o.label} onChange={e=>{const n=[...form.questions];n[i].options[j].label=e.target.value;setForm({...form, questions:n})}} placeholder={`選択肢${j+1}`} />
                                                 </div>
-                                                
                                                 <div className="flex gap-2 border-t md:border-t-0 md:border-l pt-2 md:pt-0 md:pl-2 justify-end">
                                                     {['A','B','C'].map(t=>(
                                                         <div key={t} className="flex flex-col items-center">
@@ -697,7 +771,8 @@ const App = () => {
           const params = new URLSearchParams(window.location.search);
           const id = params.get('id');
           if(id && supabase) {
-              const {data} = await supabase.from('quizzes').select('*').eq('id',id).single();
+              // slug(5文字ID)またはid(旧ID)で検索
+              const {data} = await supabase.from('quizzes').select('*').or(`slug.eq.${id},id.eq.${id}`).single();
               if(data) { setSelectedQuiz(data); setView('quiz'); }
           }
           if(supabase) {
@@ -720,6 +795,12 @@ const App = () => {
               questions: form.questions, results: form.results, 
               user_id: user?.id || null 
           };
+          
+          // 新規作成時はランダムID（slug）を追加
+          if (!id && !form.slug) {
+              payload.slug = generateSlug();
+          }
+
           let result;
           if (id) {
              result = await supabase.from('quizzes').update(payload).eq('id',id).select(); 
@@ -730,7 +811,8 @@ const App = () => {
           if(!result.data || result.data.length === 0) throw new Error("更新できませんでした。管理者権限を確認してください。");
           alert('保存しました！');
           await fetchQuizzes();
-          return result.data[0].id;
+          // 保存されたIDではなくslugを返す（あれば）
+          return result.data[0].slug || result.data[0].id;
       } catch(e) { 
           alert('保存エラー: ' + e.message); 
       }
@@ -765,6 +847,7 @@ const App = () => {
                 onDelete={handleDelete}
             />
         )}
+        {view === 'faq' && <FaqPage onBack={()=>setView('portal')} isAdmin={isAdmin} setPage={setView} />}
         {view === 'price' && <PricePage onBack={()=>setView('portal')} isAdmin={isAdmin} setPage={setView} />}
         {view === 'howto' && <HowToPage onBack={()=>setView('portal')} isAdmin={isAdmin} setPage={setView} />}
         {view === 'quiz' && (
