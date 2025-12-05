@@ -106,13 +106,14 @@ const QuizPlayer = ({ quiz, onBack }) => {
   const [chatHistory, setChatHistory] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [feedback, setFeedback] = useState(null);
-  
-  // ★追加: メール収集用ステート
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState('');
   const [emailSubmitting, setEmailSubmitting] = useState(false);
   
+  // ★修正: タイマーIDと「次の処理」を保存するRefを追加
   const messagesEndRef = useRef(null);
+  const timerRef = useRef(null);
+  const nextActionRef = useRef(null);
   
   useEffect(() => {
     if(supabase) supabase.rpc('increment_views', { row_id: quiz.id }).then(({error})=> error && console.error(error));
@@ -145,25 +146,26 @@ const QuizPlayer = ({ quiz, onBack }) => {
 
   const results = typeof quiz.results === 'string' ? JSON.parse(quiz.results) : quiz.results;
 
-  // 結果表示の直前にメールフォームを挟むロジック
   const showResultOrEmail = (finalAnswers) => {
-      // メール収集がONで、まだ表示していない場合
       if (quiz.collect_email && !showEmailForm) {
           setShowEmailForm(true);
-          // チャットモードならフォーム表示用メッセージを追加
           if (quiz.layout === 'chat') {
               setTimeout(() => {
                   setChatHistory(prev => [...prev, { type: 'bot', text: "診断結果が出ました！\n結果を受け取るメールアドレスを入力してください。" }]);
               }, 500);
           }
       } else {
-          // 通常通り結果を表示
           setResult(calculateResult(finalAnswers, results, quiz.mode));
       }
   };
 
   const proceedToNext = (newAnswers) => {
       setFeedback(null);
+      // タイマーリセット
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = null;
+      nextActionRef.current = null;
+
       if (currentStep + 1 < playableQuestions.length) {
           if (quiz.layout === 'chat') {
               setIsTyping(true);
@@ -204,12 +206,23 @@ const QuizPlayer = ({ quiz, onBack }) => {
     if (quiz.mode === 'test') {
         const isCorrect = option.score && option.score.A === 1;
         setFeedback(isCorrect ? 'correct' : 'incorrect');
-        setTimeout(() => {
-            proceedToNext(newAnswers);
+        
+        // ★修正: 「次に進む処理」をRefに保存し、タイマーで実行
+        nextActionRef.current = () => proceedToNext(newAnswers);
+        timerRef.current = setTimeout(() => {
+            if (nextActionRef.current) nextActionRef.current();
         }, 1500);
     } else {
         proceedToNext(newAnswers);
     }
+  };
+
+  // ★追加: フィードバックをクリックしたらスキップする処理
+  const handleSkipFeedback = () => {
+      if (timerRef.current && nextActionRef.current) {
+          clearTimeout(timerRef.current);
+          nextActionRef.current(); // 即実行
+      }
   };
 
   const handleEmailSubmit = async (e) => {
@@ -245,10 +258,14 @@ const QuizPlayer = ({ quiz, onBack }) => {
   const question = playableQuestions[currentStep];
   const progress = Math.round(((currentStep)/playableQuestions.length)*100);
 
+  // ★修正: オーバーレイ全体にクリックイベントを追加
   const FeedbackOverlay = () => {
       if (!feedback) return null;
       return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in">
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in cursor-pointer" 
+            onClick={handleSkipFeedback} // クリックでスキップ
+          >
               <div className={`bg-white p-8 rounded-3xl shadow-2xl transform scale-110 flex flex-col items-center animate-bounce-quick ${feedback==='correct' ? 'border-4 border-green-500' : 'border-4 border-red-500'}`}>
                   {feedback === 'correct' ? (
                       <>
@@ -261,12 +278,13 @@ const QuizPlayer = ({ quiz, onBack }) => {
                           <h2 className="text-3xl font-extrabold text-red-600">残念...</h2>
                       </>
                   )}
+                  {/* ガイド文を追加 */}
+                  <p className="text-xs text-gray-400 mt-2 font-bold animate-pulse">Tap to skip ▶</p>
               </div>
           </div>
       );
   };
 
-  // ★追加: メール入力フォーム (カード/チャット共通)
   if (showEmailForm) {
       return (
           <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
