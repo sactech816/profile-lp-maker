@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Script from 'next/script';
 import { supabase } from '../lib/supabase';
 import { generateSlug } from '../lib/utils';
-// ★修正: constants.js から読み込むように変更
 import { ADMIN_EMAIL } from '../lib/constants';
 
 import AuthModal from '../components/AuthModal';
@@ -12,11 +11,12 @@ import Portal from '../components/Portal';
 import Dashboard from '../components/Dashboard';
 import QuizPlayer from '../components/QuizPlayer';
 import Editor from '../components/Editor';
-// ★修正: EffectiveUsePage を追加
 import { FaqPage, PricePage, HowToPage, EffectiveUsePage } from '../components/StaticPages';
+import { Loader2 } from 'lucide-react'; // 追加
 
 const App = () => {
-  const [view, setView] = useState('portal'); 
+  // ★修正: 初期値を 'loading' に変更
+  const [view, setView] = useState('loading'); 
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [editingQuiz, setEditingQuiz] = useState(null);
   const [quizzes, setQuizzes] = useState([]);
@@ -26,7 +26,6 @@ const App = () => {
 
   const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-  // ... (fetchQuizzes, useEffectなどはそのまま) ...
   const fetchQuizzes = async () => {
     if(!supabase) return;
     setIsLoading(true);
@@ -37,24 +36,43 @@ const App = () => {
 
   useEffect(() => {
       const init = async () => {
+          // ユーザーセッション確認
+          if(supabase) {
+              const {data:{session}} = await supabase.auth.getSession();
+              setUser(session?.user||null);
+              
+              supabase.auth.onAuthStateChange((_event, session) => {
+                setUser(session?.user || null);
+              });
+          }
+
+          // URLチェック
           const params = new URLSearchParams(window.location.search);
           const id = params.get('id');
+          
           if(id && supabase) {
+              // slug(文字列)で検索
               let { data } = await supabase.from('quizzes').select('*').eq('slug', id).single();
+              // なければID(数値)で検索
               if (!data && !isNaN(id)) {
                  const res = await supabase.from('quizzes').select('*').eq('id', id).single();
                  data = res.data;
               }
-              if(data) { setSelectedQuiz(data); setView('quiz'); }
+
+              if(data) { 
+                  setSelectedQuiz(data); 
+                  setView('quiz'); 
+              } else {
+                  // ID指定があるが見つからない場合もポータルへ
+                  setView('portal');
+              }
+          } else {
+              // ID指定がない場合はポータルへ
+              setView('portal');
           }
-          if(supabase) {
-              supabase.auth.getSession().then(({data:{session}})=>setUser(session?.user||null));
-              const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-                setUser(session?.user || null);
-              });
-              await fetchQuizzes();
-              return () => subscription.unsubscribe();
-          }
+
+          // データ取得
+          await fetchQuizzes();
       };
       init();
   }, []);
@@ -80,6 +98,10 @@ const App = () => {
       let url = window.location.pathname;
       if (newView === 'quiz' && params.id) {
           url += `?id=${params.id}`;
+      }
+      // ポータルに戻るときはURLパラメータを消す
+      if (newView === 'portal') {
+          url = window.location.pathname;
       }
       window.history.pushState({ view: newView, ...params }, '', url);
       setView(newView);
@@ -137,6 +159,16 @@ const App = () => {
       }
   };
 
+  // ★修正: ローディング中の表示
+  if (view === 'loading') {
+      return (
+          <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-indigo-600">
+              <Loader2 className="animate-spin mb-4" size={48} />
+              <p className="font-bold">読み込み中...</p>
+          </div>
+      );
+  }
+
   return (
     <div>
         <Script
@@ -161,7 +193,6 @@ const App = () => {
         )}
         {view === 'dashboard' && <Dashboard user={user} setPage={(p) => navigateTo(p)} onLogout={async ()=>{ await supabase.auth.signOut(); navigateTo('portal');}} onEdit={(q)=>{setEditingQuiz(q); navigateTo('editor');}} onDelete={handleDelete} />}
         
-        {/* ★追加: 効果的な使い方ページへの分岐 */}
         {view === 'effective' && <EffectiveUsePage onBack={()=>navigateTo('portal')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ await supabase.auth.signOut(); alert('ログアウトしました'); }} setShowAuth={setShowAuth} />}
         
         {view === 'faq' && <FaqPage onBack={()=>navigateTo('portal')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ await supabase.auth.signOut(); alert('ログアウトしました'); }} setShowAuth={setShowAuth} />}
