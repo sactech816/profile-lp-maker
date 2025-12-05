@@ -646,9 +646,9 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
 
                 {/* 使い方リンク */}
                 <div className="p-4 border-b">
-                    <button onClick={()=>setPage('howto')} className="w-full px-3 py-2 text-left text-xs text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg flex items-center gap-2 transition-all">
-                        <BookOpen size={14}/> 使い方・規約を見る
-                    </button>
+                    <a href="/?page=howto" target="_blank" rel="noopener noreferrer" className="w-full px-3 py-2 text-left text-xs text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg flex items-center gap-2 transition-all block">
+                        <BookOpen size={14}/> 使い方・規約を見る（新しいタブ）
+                    </a>
                 </div>
 
                 <div className="flex-grow"></div>
@@ -844,20 +844,19 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
                                     <label className="text-sm font-bold text-gray-900 block mb-2">デザインテーマ</label>
                                     <div className="grid grid-cols-2 gap-2">
                                         {[
-                                            { name: 'モダン', color: 'bg-indigo-600', desc: 'スタイリッシュ' },
-                                            { name: '和風', color: 'bg-red-700', desc: '伝統的' },
-                                            { name: 'パステル', color: 'bg-pink-300', desc: '優しい' },
-                                            { name: 'サイバー', color: 'bg-cyan-500', desc: '未来的' },
-                                            { name: 'ナチュラル', color: 'bg-green-600', desc: '自然' },
-                                            { name: 'ダーク', color: 'bg-gray-900', desc: 'クール' }
+                                            { id: 'standard', name: 'スタンダード', color: 'bg-indigo-600', desc: 'シンプル' },
+                                            { id: 'cyberpunk', name: 'サイバーパンク', color: 'bg-black', desc: '未来的', border: 'border-green-500' },
+                                            { id: 'japanese', name: '和風・雅', color: 'bg-red-800', desc: '伝統的' },
+                                            { id: 'pastel', name: 'パステルポップ', color: 'bg-gradient-to-r from-pink-300 to-purple-300', desc: '優しい' },
+                                            { id: 'monotone', name: 'モノトーン', color: 'bg-gray-900', desc: 'クール' }
                                         ].map(theme => (
                                             <button 
-                                                key={theme.name} 
-                                                onClick={()=>setForm({...form, color:theme.color, theme: theme.name})} 
-                                                className={`p-3 rounded-lg border-2 text-left transition-all ${form.color===theme.color ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                                                key={theme.id} 
+                                                onClick={()=>setForm({...form, color:theme.color, theme: theme.id})} 
+                                                className={`p-3 rounded-lg border-2 text-left transition-all ${form.theme===theme.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
                                             >
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <div className={`w-4 h-4 rounded-full ${theme.color}`}></div>
+                                                    <div className={`w-4 h-4 rounded-full ${theme.color} ${theme.border || ''}`}></div>
                                                     <span className="font-bold text-sm">{theme.name}</span>
                                                 </div>
                                                 <span className="text-xs text-gray-500">{theme.desc}</span>

@@ -18,6 +18,7 @@ const Portal = ({ quizzes, isLoading, user, setShowAuth, onLogout, onPlay, onCre
     
     const [filter, setFilter] = useState('All');
     const [sortOrder, setSortOrder] = useState('newest');
+    const [rankingSort, setRankingSort] = useState('views'); // 'views' or 'trending'
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 9;
 
@@ -107,36 +108,62 @@ const Portal = ({ quizzes, isLoading, user, setShowAuth, onLogout, onPlay, onCre
                         <h2 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-2 mb-2">
                             <TrendingUp className="text-red-500"/> 人気ランキング
                         </h2>
-                        <p className="text-gray-500">今週最も遊ばれている診断</p>
+                        <div className="flex justify-center gap-2 mt-4">
+                            <button 
+                                onClick={() => setRankingSort('views')}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${rankingSort === 'views' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                            >
+                                今週のプレイ回数
+                            </button>
+                            <button 
+                                onClick={() => setRankingSort('trending')}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${rankingSort === 'trending' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                            >
+                                急上昇ランキング
+                            </button>
+                        </div>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[...localQuizzes]
-                            .sort((a, b) => (b.views_count || 0) - (a.views_count || 0))
+                            .sort((a, b) => {
+                                if (rankingSort === 'views') {
+                                    return (b.views_count || 0) - (a.views_count || 0);
+                                } else {
+                                    // 急上昇: いいね数と閲覧数の合計でソート
+                                    const scoreA = (a.likes_count || 0) * 2 + (a.views_count || 0);
+                                    const scoreB = (b.likes_count || 0) * 2 + (b.views_count || 0);
+                                    return scoreB - scoreA;
+                                }
+                            })
                             .slice(0, 3)
                             .map((quiz, index) => (
                                 <div 
                                     key={quiz.id} 
-                                    onClick={() => onPlay(quiz)}
-                                    className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all cursor-pointer overflow-hidden border-2 border-transparent hover:border-indigo-500 relative"
+                                    className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all overflow-hidden border-2 border-transparent hover:border-indigo-500 relative"
                                 >
                                     <div className={`absolute top-3 left-3 w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-lg z-10 ${index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500' : 'bg-gradient-to-br from-orange-400 to-orange-600'}`}>
                                         {index + 1}
                                     </div>
-                                    {quiz.image_url && (
-                                        <img src={quiz.image_url} alt="" className="w-full h-40 object-cover"/>
-                                    )}
-                                    <div className="p-5">
-                                        <h3 className="font-bold text-lg mb-2 line-clamp-2">{quiz.title}</h3>
-                                        <p className="text-sm text-gray-600 line-clamp-2 mb-3">{quiz.description}</p>
-                                        <div className="flex items-center justify-between text-xs text-gray-500">
-                                            <span className="flex items-center gap-1">
-                                                <Play size={14}/> {quiz.views_count || 0}回
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Heart size={14} className="text-red-500"/> {quiz.likes_count || 0}
-                                            </span>
+                                    <div onClick={() => onPlay(quiz)} className="cursor-pointer">
+                                        {quiz.image_url && (
+                                            <img src={quiz.image_url} alt="" className="w-full h-40 object-cover"/>
+                                        )}
+                                        <div className="p-5">
+                                            <h3 className="font-bold text-lg mb-2 line-clamp-2 text-gray-900">{quiz.title}</h3>
+                                            <p className="text-sm text-gray-600 line-clamp-2 mb-3">{quiz.description}</p>
                                         </div>
+                                    </div>
+                                    <div className="px-5 pb-5 flex items-center justify-between text-xs text-gray-500">
+                                        <span className="flex items-center gap-1">
+                                            <Play size={14}/> {quiz.views_count || 0}回
+                                        </span>
+                                        <button 
+                                            onClick={(e) => handleLike(e, quiz.id)}
+                                            className="flex items-center gap-1 hover:text-red-500 transition-colors"
+                                        >
+                                            <Heart size={14} className="text-red-500"/> {quiz.likes_count || 0}
+                                        </button>
                                     </div>
                                 </div>
                             ))
