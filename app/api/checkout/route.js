@@ -1,14 +1,34 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// APIキーが読み込めているか確認（ログに出ます）
+const apiKey = process.env.STRIPE_SECRET_KEY;
+if (!apiKey) {
+  console.error("❌ Stripe API Key is missing!");
+}
+
+const stripe = new Stripe(apiKey || '');
 
 export async function POST(req) {
   try {
     const { quizId, quizTitle, userId, email } = await req.json();
     
-    // 戻り先URL（開発環境と本番環境で自動切り替え）
-    const origin = req.headers.get('origin');
+    // 戻り先URLを確実に取得する
+    let origin = req.headers.get('origin');
+    
+    // もしOriginが取れない場合（サーバー設定による）、リファラーを使う
+    if (!origin) {
+        origin = req.headers.get('referer');
+        if (origin) {
+            origin = new URL(origin).origin;
+        }
+    }
+
+    console.log(`🚀 Starting Checkout for: ${quizTitle} (User: ${userId}) at ${origin}`);
+
+    if (!origin) {
+        throw new Error("Origin URL could not be determined.");
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -20,19 +40,17 @@ export async function POST(req) {
               name: `HTMLデータ提供: ${quizTitle}`,
               description: 'この診断クイズのHTMLデータをダウンロードします（寄付・応援）',
             },
-            // ★重要：ユーザーが価格を決められる設定（寄付）
             custom_unit_amount: {
               enabled: true,
-              minimum: 500, // 最低500円
+              minimum: 500, 
               maximum: 50000,
-              preset: 1000, // デフォルト1000円
+              preset: 1000,
             },
           },
           quantity: 1,
         },
       ],
       mode: 'payment',
-      // 決済成功時、URLに session_id をつけて戻す
       success_url: `${origin}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}&quiz_id=${quizId}`,
       cancel_url: `${origin}/dashboard?payment=cancel`,
       metadata: {
@@ -42,9 +60,12 @@ export async function POST(req) {
       customer_email: email,
     });
 
+    console.log("✅ Session Created:", session.url);
     return NextResponse.json({ url: session.url });
+
   } catch (err) {
-    console.error(err);
+    // ここで詳細なエラーをログに出す
+    console.error("🔥 Stripe Checkout Error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
