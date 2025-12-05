@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { User, LayoutDashboard, LogOut, Loader2, Play, ExternalLink, Edit3, Trash2, Trophy, MessageCircle, Layout, Table, BarChart2, Download, ShoppingCart, CheckCircle, Code, Users, Lock } from 'lucide-react';
+import { User, LayoutDashboard, LogOut, Loader2, Play, ExternalLink, Edit3, Trash2, Trophy, MessageCircle, Layout, Table, BarChart2, Download, ShoppingCart, CheckCircle, Code, Users, Lock, Copy } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Header from './Header';
 import { supabase } from '../lib/supabase';
 import { generateQuizHTML } from '../lib/htmlGenerator';
+import { generateSlug } from '../lib/utils';
 
-const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
+// ★修正: isAdmin を受け取るように変更
+const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin }) => {
     useEffect(() => { document.title = "マイページ | 診断クイズメーカー"; }, []);
     const [myQuizzes, setMyQuizzes] = useState([]);
     const [purchases, setPurchases] = useState([]); 
@@ -13,12 +15,16 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
     const [viewMode, setViewMode] = useState('graph');
     const [processingId, setProcessingId] = useState(null);
 
+    const fetchMyQuizzes = async () => {
+        if(!user) return;
+        const { data: quizzes } = await supabase.from('quizzes').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+        setMyQuizzes(quizzes || []);
+    };
+
     useEffect(() => {
         const init = async () => {
             if(!user) return;
-            
-            const { data: quizzes } = await supabase.from('quizzes').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-            setMyQuizzes(quizzes || []);
+            await fetchMyQuizzes();
 
             const { data: bought } = await supabase.from('purchases').select('quiz_id').eq('user_id', user.id);
             setPurchases(bought?.map(p => p.quiz_id) || []);
@@ -52,7 +58,7 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
     };
 
     const handlePurchase = async (quiz) => {
-        const inputPrice = window.prompt(`「${quiz.title}」のPro機能（HTML・埋め込み・リスト取得）を開放します。\n\n応援・寄付金額を入力してください（500円〜50,000円）。`, "1000");
+        const inputPrice = window.prompt(`「${quiz.title}」のPro機能を開放します。\n\n応援・寄付金額を入力してください（500円〜50,000円）。`, "1000");
         if (inputPrice === null) return;
         const price = parseInt(inputPrice, 10);
         if (isNaN(price) || price < 500 || price > 50000) {
@@ -98,18 +104,16 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
         URL.revokeObjectURL(url);
     };
 
-    const handleEmbed = (quiz, isPurchased) => {
-        if (!isPurchased) return alert("この機能を利用するには、寄付（購入）によるロック解除が必要です。");
-        
+    const handleEmbed = (quiz, isUnlocked) => {
+        if (!isUnlocked) return alert("この機能を利用するには、寄付（購入）によるロック解除が必要です。");
         const url = `${window.location.origin}?id=${quiz.slug || quiz.id}`;
         const code = `<iframe src="${url}" width="100%" height="600" style="border:none; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></iframe>`;
         navigator.clipboard.writeText(code);
         alert('埋め込みコードをコピーしました！\n\nWordPressなどの「カスタムHTML」ブロックに貼り付けてください。');
     };
 
-    const handleDownloadLeads = async (quiz, isPurchased) => {
-        if (!isPurchased) return alert("この機能を利用するには、寄付（購入）によるロック解除が必要です。");
-
+    const handleDownloadLeads = async (quiz, isUnlocked) => {
+        if (!isUnlocked) return alert("この機能を利用するには、寄付（購入）によるロック解除が必要です。");
         const { data, error } = await supabase.from('quiz_leads').select('email, created_at').eq('quiz_id', quiz.id);
         if(error || !data || data.length === 0) return alert('まだ登録されたメールアドレスはありません。');
         
@@ -123,6 +127,33 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
         link.setAttribute("download", `leads_${quiz.title}.csv`);
         document.body.appendChild(link);
         link.click();
+    };
+
+    const handleDuplicate = async (quiz) => {
+        if(!confirm(`「${quiz.title}」を複製しますか？`)) return;
+        try {
+            const newSlug = generateSlug();
+            const { error } = await supabase.from('quizzes').insert([{
+                user_id: user.id,
+                title: `${quiz.title} のコピー`,
+                description: quiz.description,
+                questions: quiz.questions,
+                results: quiz.results,
+                category: quiz.category,
+                mode: quiz.mode,
+                layout: quiz.layout,
+                color: quiz.color,
+                image_url: quiz.image_url,
+                collect_email: quiz.collect_email,
+                slug: newSlug
+            }]);
+            
+            if(error) throw error;
+            alert('複製しました！');
+            await fetchMyQuizzes();
+        } catch(e) {
+            alert('複製エラー: ' + e.message);
+        }
     };
 
     const graphData = myQuizzes.map(q => ({
@@ -142,13 +173,12 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
                 </div>
 
                 <div className="grid lg:grid-cols-3 gap-8">
-                    {/* Graph Section */}
                     <div className="lg:col-span-1 space-y-6">
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                             <div className="flex items-center gap-4 mb-4">
                                 <div className="bg-indigo-100 p-3 rounded-full text-indigo-600"><User size={24}/></div>
                                 <div>
-                                    <p className="text-xs text-gray-500 font-bold">ログイン中</p>
+                                    <p className="text-xs text-gray-500 font-bold">ログイン中 {isAdmin && <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] ml-1">ADMIN</span>}</p>
                                     <p className="text-sm font-bold text-gray-900 break-all">{user?.email}</p>
                                 </div>
                             </div>
@@ -240,7 +270,9 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
                         ) : (
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {myQuizzes.map(quiz => {
-                                    const isPurchased = purchases.includes(quiz.id);
+                                    // ★修正: 購入済み または 管理者 ならアンロック
+                                    const isUnlocked = purchases.includes(quiz.id) || isAdmin;
+                                    
                                     return (
                                     <div key={quiz.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow relative group">
                                         <div className={`h-32 w-full overflow-hidden relative ${quiz.color || 'bg-indigo-600'}`}>
@@ -261,20 +293,18 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
                                                 <span className="flex items-center gap-1"><ExternalLink size={12}/> {quiz.clicks_count||0}</span>
                                             </div>
                                             
-                                            {/* Action Buttons */}
                                             <div className="flex gap-2 mb-2">
                                                 <button onClick={()=>onEdit(quiz)} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Edit3 size={14}/> 編集</button>
-                                                
-                                                {/* 埋め込みボタン (Lock logic) */}
-                                                <button onClick={()=>handleEmbed(quiz, isPurchased)} className={`flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 ${isPurchased ? 'bg-blue-50 hover:bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
-                                                    {isPurchased ? <Code size={14}/> : <Lock size={14}/>} 埋め込み
-                                                </button>
+                                                <button onClick={()=>handleDuplicate(quiz)} className="flex-1 bg-purple-50 hover:bg-purple-100 text-purple-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Copy size={14}/> 複製</button>
                                             </div>
 
-                                            {/* Lead CSV Button (Only if enabled & Lock logic) */}
+                                            <button onClick={()=>handleEmbed(quiz, isUnlocked)} className={`w-full mb-2 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 ${isUnlocked ? 'bg-blue-50 hover:bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                                                {isUnlocked ? <Code size={14}/> : <Lock size={14}/>} 埋め込み
+                                            </button>
+
                                             {quiz.collect_email && (
-                                                <button onClick={()=>handleDownloadLeads(quiz, isPurchased)} className={`w-full mb-2 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 ${isPurchased ? 'bg-green-50 hover:bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
-                                                    {isPurchased ? <Download size={14}/> : <Lock size={14}/>} アドレス帳(CSV)
+                                                <button onClick={()=>handleDownloadLeads(quiz, isUnlocked)} className={`w-full mb-2 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 ${isUnlocked ? 'bg-green-50 hover:bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                                                    {isUnlocked ? <Download size={14}/> : <Lock size={14}/>} アドレス帳(CSV)
                                                 </button>
                                             )}
 
@@ -282,8 +312,7 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
                                                 <button onClick={()=>onDelete(quiz.id)} className="w-full bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Trash2 size={14}/> 削除</button>
                                             </div>
                                             
-                                            {/* Purchase / Download Button */}
-                                            {isPurchased ? (
+                                            {isUnlocked ? (
                                                 <button onClick={()=>handleDownload(quiz)} className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-xs hover:bg-green-600 flex items-center justify-center gap-1 animate-pulse">
                                                     <CheckCircle size={14}/> HTMLダウンロード
                                                 </button>

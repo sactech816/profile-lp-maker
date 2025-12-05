@@ -27,6 +27,7 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
 
+  // 管理者かどうかを判定
   const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   const fetchQuizzes = async () => {
@@ -39,6 +40,7 @@ const App = () => {
 
   useEffect(() => {
       const init = async () => {
+          // ユーザーセッションの確認
           if(supabase) {
               const {data:{session}} = await supabase.auth.getSession();
               setUser(session?.user||null);
@@ -47,19 +49,20 @@ const App = () => {
               });
           }
 
+          // URLパラメータのチェック
           const params = new URLSearchParams(window.location.search);
           const id = params.get('id');
-          const paymentStatus = params.get('payment'); // 決済ステータス取得
+          const paymentStatus = params.get('payment'); // Stripeからの戻り判定
           
           // 決済完了・キャンセル戻りならダッシュボードへ強制移動
           if (paymentStatus === 'success' || paymentStatus === 'cancel') {
               setView('dashboard');
           } 
-          // クイズIDがある場合
+          // クイズIDがある場合（シェアURLからのアクセス）
           else if(id && supabase) {
               // slug(文字列)で検索
               let { data } = await supabase.from('quizzes').select('*').eq('slug', id).single();
-              // なければID(数値)で検索
+              // なければID(数値)で検索（互換性のため）
               if (!data && !isNaN(id)) {
                  const res = await supabase.from('quizzes').select('*').eq('id', id).single();
                  data = res.data;
@@ -69,9 +72,11 @@ const App = () => {
                   setSelectedQuiz(data); 
                   setView('quiz'); 
               } else {
+                  // ID指定があるが見つからない場合はポータルへ
                   setView('portal');
               }
           } else {
+              // 何も指定がなければポータルへ
               setView('portal');
           }
           await fetchQuizzes();
@@ -79,6 +84,7 @@ const App = () => {
       init();
   }, []);
 
+  // ブラウザの「戻る」ボタン対応
   useEffect(() => {
       const handlePopState = (event) => {
           if (event.state && event.state.view) {
@@ -96,6 +102,7 @@ const App = () => {
       return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // 画面遷移ハンドラ
   const navigateTo = (newView, params = {}) => {
       let url = window.location.pathname;
       if (newView === 'quiz' && params.id) {
@@ -108,6 +115,7 @@ const App = () => {
       setView(newView);
   };
 
+  // 保存処理
   const handleSave = async (form, id) => {
       if(!supabase) return;
       try {
@@ -125,6 +133,7 @@ const App = () => {
               collect_email: form.collect_email || false
           };
           
+          // 新規作成時はSlugを生成
           if (!id && !form.slug) { 
               payload.slug = generateSlug(); 
           }
@@ -149,6 +158,7 @@ const App = () => {
       }
   };
 
+  // 削除処理
   const handleDelete = async (id) => {
       if(!confirm('本当に削除しますか？')) return;
       try {
@@ -161,6 +171,7 @@ const App = () => {
       }
   };
 
+  // ローディング画面
   if (view === 'loading') {
       return (
           <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-indigo-600">
@@ -189,21 +200,42 @@ const App = () => {
         
         {view === 'portal' && (
             <Portal 
-                quizzes={quizzes} isLoading={isLoading} user={user} setShowAuth={setShowAuth} onLogout={async ()=>{ await supabase.auth.signOut(); alert('ログアウトしました'); }} onPlay={(q)=>{ setSelectedQuiz(q); navigateTo('quiz', { id: q.slug || q.id }); }} onCreate={()=>{ setEditingQuiz(null); navigateTo('editor'); }} setPage={(p) => navigateTo(p)} onEdit={(q)=>{ setEditingQuiz(q); navigateTo('editor'); }} onDelete={handleDelete} isAdmin={isAdmin}
+                quizzes={quizzes} 
+                isLoading={isLoading} 
+                user={user} 
+                setShowAuth={setShowAuth} 
+                onLogout={async ()=>{ await supabase.auth.signOut(); alert('ログアウトしました'); }} 
+                onPlay={(q)=>{ setSelectedQuiz(q); navigateTo('quiz', { id: q.slug || q.id }); }} 
+                onCreate={()=>{ setEditingQuiz(null); navigateTo('editor'); }} 
+                setPage={(p) => navigateTo(p)} 
+                onEdit={(q)=>{ setEditingQuiz(q); navigateTo('editor'); }} 
+                onDelete={handleDelete} 
+                isAdmin={isAdmin}
             />
         )}
-        {view === 'dashboard' && <Dashboard user={user} setPage={(p) => navigateTo(p)} onLogout={async ()=>{ await supabase.auth.signOut(); navigateTo('portal');}} onEdit={(q)=>{setEditingQuiz(q); navigateTo('editor');}} onDelete={handleDelete} />}
         
+        {view === 'dashboard' && (
+            <Dashboard 
+                user={user} 
+                isAdmin={isAdmin} // 管理者権限を渡す
+                setPage={(p) => navigateTo(p)} 
+                onLogout={async ()=>{ await supabase.auth.signOut(); navigateTo('portal');}} 
+                onEdit={(q)=>{setEditingQuiz(q); navigateTo('editor');}} 
+                onDelete={handleDelete} 
+            />
+        )}
+        
+        {/* 静的ページ群 */}
         {view === 'effective' && <EffectiveUsePage onBack={()=>navigateTo('portal')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ await supabase.auth.signOut(); alert('ログアウトしました'); }} setShowAuth={setShowAuth} />}
         {view === 'logic' && <QuizLogicPage onBack={()=>navigateTo('portal')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ await supabase.auth.signOut(); alert('ログアウトしました'); }} setShowAuth={setShowAuth} />}
         {view === 'howto' && <HowToPage onBack={()=>navigateTo('portal')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ await supabase.auth.signOut(); alert('ログアウトしました'); }} setShowAuth={setShowAuth} />}
         
-        {/* 新規ページ群 */}
+        {/* お問い合わせ・規約関連 */}
         {view === 'contact' && <ContactPage onBack={()=>navigateTo('portal')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ await supabase.auth.signOut(); alert('ログアウトしました'); }} setShowAuth={setShowAuth} />}
         {view === 'legal' && <LegalPage onBack={()=>navigateTo('portal')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ await supabase.auth.signOut(); alert('ログアウトしました'); }} setShowAuth={setShowAuth} />}
         {view === 'privacy' && <PrivacyPage onBack={()=>navigateTo('portal')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ await supabase.auth.signOut(); alert('ログアウトしました'); }} setShowAuth={setShowAuth} />}
         
-        {/* 旧ページ互換 */}
+        {/* レガシー互換 */}
         {view === 'faq' && <FaqPage onBack={()=>navigateTo('portal')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ await supabase.auth.signOut(); alert('ログアウトしました'); }} setShowAuth={setShowAuth} />}
         {view === 'price' && <PricePage onBack={()=>navigateTo('portal')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ await supabase.auth.signOut(); alert('ログアウトしました'); }} setShowAuth={setShowAuth} />}
         
@@ -216,6 +248,7 @@ const App = () => {
                 }} 
             />
         )}
+        
         {view === 'editor' && (
             <Editor 
                 user={user} 
