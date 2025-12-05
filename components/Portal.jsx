@@ -1,31 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Search, Zap, TrendingUp, MessageCircle, 
     Sparkles, ArrowRight, Play, CheckCircle,
-    ChevronLeft, ChevronRight, Heart // ★Heart追加
+    ChevronLeft, ChevronRight, Heart
 } from 'lucide-react';
 import Header from './Header'; 
-import { supabase } from '../lib/supabase'; // ★いいね用に追加
+import { supabase } from '../lib/supabase';
 
 const Portal = ({ quizzes, isLoading, user, setShowAuth, onLogout, onPlay, onCreate, setPage, isAdmin }) => {
     
+    // ★追加: ローカルで表示・更新するためのステート
+    const [localQuizzes, setLocalQuizzes] = useState([]);
+    
     const [filter, setFilter] = useState('All');
-    const [sortOrder, setSortOrder] = useState('newest'); // ★追加: ソート状態
+    const [sortOrder, setSortOrder] = useState('newest');
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 9;
 
-    // カテゴリで絞り込み
-    const filteredQuizzes = filter === 'All' ? quizzes : quizzes.filter(q => q.category === filter);
+    // ★追加: 親(page.jsx)から新しいデータが来たら、ローカルデータを更新
+    useEffect(() => {
+        setLocalQuizzes(quizzes || []);
+    }, [quizzes]);
 
-    // ★追加: ソート処理
+    // ★修正: フィルタリング対象を quizzes ではなく localQuizzes に変更
+    const filteredQuizzes = filter === 'All' ? localQuizzes : localQuizzes.filter(q => q.category === filter);
+
     const sortedQuizzes = [...filteredQuizzes].sort((a, b) => {
         if (sortOrder === 'popular') {
-            return (b.views_count || 0) - (a.views_count || 0); // PV順
+            return (b.views_count || 0) - (a.views_count || 0);
         }
-        return new Date(b.created_at) - new Date(a.created_at); // 新着順
+        return new Date(b.created_at) - new Date(a.created_at);
     });
 
-    // ページネーション
     const totalPages = Math.ceil(sortedQuizzes.length / ITEMS_PER_PAGE);
     const displayQuizzes = sortedQuizzes.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
@@ -43,13 +49,20 @@ const Portal = ({ quizzes, isLoading, user, setShowAuth, onLogout, onPlay, onCre
         if (el) el.scrollIntoView({ behavior: 'smooth' });
     };
 
-    // ★追加: いいね処理
+    // ★修正: いいね処理（画面上の数字を即座に増やす）
     const handleLike = async (e, quizId) => {
         e.stopPropagation(); // カードクリック(onPlay)を阻止
+        
+        // 1. まず画面上の数字を+1する（ユーザーを待たせない）
+        setLocalQuizzes(prev => prev.map(q => 
+            q.id === quizId 
+                ? { ...q, likes_count: (q.likes_count || 0) + 1 } 
+                : q
+        ));
+
+        // 2. 裏でサーバーに書き込む
         if(supabase) {
             await supabase.rpc('increment_likes', { row_id: quizId });
-            // ※簡易的にリロードせずUI更新はしないが、次回ロード時に増える
-            // 本格実装ならここでローカルの数値を+1する
         }
     };
 
@@ -95,7 +108,7 @@ const Portal = ({ quizzes, isLoading, user, setShowAuth, onLogout, onPlay, onCre
                         </div>
                         
                         <div className="flex gap-4 items-center">
-                            {/* ★追加: ソートタブ */}
+                            {/* ソートタブ */}
                             <div className="flex bg-gray-100 p-1 rounded-lg">
                                 <button onClick={()=>setSortOrder('newest')} className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${sortOrder==='newest' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}>新着順</button>
                                 <button onClick={()=>setSortOrder('popular')} className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${sortOrder==='popular' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}>人気順</button>
@@ -151,9 +164,10 @@ const Portal = ({ quizzes, isLoading, user, setShowAuth, onLogout, onPlay, onCre
                                                         <Play size={10}/> {quiz.views_count||0}
                                                     </span>
                                                 </div>
-                                                {/* ★追加: いいねボタン */}
-                                                <button onClick={(e)=>handleLike(e, quiz.id)} className="text-gray-300 hover:text-pink-500 flex items-center gap-1 text-xs font-bold transition-colors">
-                                                    <Heart size={14} className={quiz.likes_count > 0 ? "fill-pink-500 text-pink-500" : ""}/> {quiz.likes_count||0}
+                                                {/* いいねボタン */}
+                                                <button onClick={(e)=>handleLike(e, quiz.id)} className="text-gray-300 hover:text-pink-500 flex items-center gap-1 text-xs font-bold transition-colors group/heart">
+                                                    <Heart size={14} className={`${quiz.likes_count > 0 ? "fill-pink-500 text-pink-500" : "group-hover/heart:text-pink-500"} transition-all`}/> 
+                                                    <span className={quiz.likes_count > 0 ? "text-pink-500" : ""}>{quiz.likes_count||0}</span>
                                                 </button>
                                             </div>
                                             <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">{quiz.title}</h3>
