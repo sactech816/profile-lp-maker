@@ -45,8 +45,13 @@ const App = () => {
 
           const params = new URLSearchParams(window.location.search);
           const id = params.get('id');
+          const paymentStatus = params.get('payment'); // 決済ステータス取得
           
-          if(id && supabase) {
+          // ★修正: 決済戻りならダッシュボードへ強制移動
+          if (paymentStatus === 'success' || paymentStatus === 'cancel') {
+              setView('dashboard');
+          } 
+          else if(id && supabase) {
               let { data } = await supabase.from('quizzes').select('*').eq('slug', id).single();
               if (!data && !isNaN(id)) {
                  const res = await supabase.from('quizzes').select('*').eq('id', id).single();

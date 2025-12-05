@@ -13,7 +13,6 @@ export async function POST(req) {
   try {
     const { quizId, quizTitle, userId, email } = await req.json();
     
-    // 戻り先URLの取得
     let origin = req.headers.get('origin');
     if (!origin) {
         origin = req.headers.get('referer');
@@ -22,11 +21,14 @@ export async function POST(req) {
         }
     }
 
-    console.log(`🚀 Starting Checkout for: ${quizTitle} (User: ${userId}) at ${origin}`);
-
-    if (!origin) {
-        throw new Error("Origin URL could not be determined.");
+    // Originが取得できない場合の安全策（本番環境URLを直接指定）
+    // ※Vercelの環境変数で NEXT_PUBLIC_BASE_URL を設定するのがベストですが、今回は固定で対応
+    if (!origin || origin === 'null') {
+        // ★ここをご自身の本番URLに書き換えてください（末尾の / は無し）
+        origin = 'https://diagnosis-xxxxxx.vercel.app'; 
     }
+
+    console.log(`🚀 Starting Checkout for: ${quizTitle} (User: ${userId}) at ${origin}`);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -38,16 +40,15 @@ export async function POST(req) {
               name: `HTMLデータ提供: ${quizTitle}`,
               description: 'この診断クイズのHTMLデータをダウンロードします（寄付・応援）',
             },
-            // ★修正: 自由価格(custom_unit_amount)を廃止し、固定価格(unit_amount)に変更
-            // unit_amount は「円」ではなく「銭」等の最小単位も考慮されますが、日本円(jpy)の場合はそのまま「円」です。
             unit_amount: 1000, 
           },
           quantity: 1,
         },
       ],
       mode: 'payment',
-      success_url: `${origin}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}&quiz_id=${quizId}`,
-      cancel_url: `${origin}/dashboard?payment=cancel`,
+      // ★修正: /dashboard を削除しました
+      success_url: `${origin}/?payment=success&session_id={CHECKOUT_SESSION_ID}&quiz_id=${quizId}`,
+      cancel_url: `${origin}/?payment=cancel`,
       metadata: {
         userId: userId,
         quizId: quizId,
