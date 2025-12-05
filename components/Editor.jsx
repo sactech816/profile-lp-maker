@@ -3,9 +3,10 @@ import {
     Edit3, MessageSquare, Trophy, Loader2, Save, Share2, 
     Sparkles, Wand2, BookOpen, Image as ImageIcon, 
     Layout, MessageCircle, ArrowLeft, Briefcase, GraduationCap, 
-    CheckCircle, Shuffle, Plus, Trash2, X, Link, QrCode
+    CheckCircle, Shuffle, Plus, Trash2, X, Link, QrCode, UploadCloud
 } from 'lucide-react';
 import { generateSlug } from '../lib/utils';
+import { supabase } from '../lib/supabase';
 
 const Input = ({label, val, onChange, ph}) => (
     <div className="mb-4">
@@ -38,6 +39,7 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
   const [savedId, setSavedId] = useState(null);
   const [aiTheme, setAiTheme] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const TABS = [
       { id: '基本設定', icon: Edit3, label: '基本設定' },
@@ -71,6 +73,14 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
               { type: "B", title: "中吉", description: "良いことがあるかも。", link_url:"", link_text:"", line_url:"", line_text:"", qr_url:"", qr_text:"" },
               { type: "C", title: "吉", description: "平凡こそ幸せ。", link_url:"", link_text:"", line_url:"", line_text:"", qr_url:"", qr_text:"" }
           ];
+      } else {
+          // ★修正: ビジネス診断に戻す場合の処理を追加
+          newCategory = "Business";
+          newResults = [
+              { type: "A", title: "結果A", description: "説明...", link_url:"", link_text:"", line_url:"", line_text:"", qr_url:"", qr_text:"" },
+              { type: "B", title: "結果B", description: "...", link_url:"", link_text:"", line_url:"", line_text:"", qr_url:"", qr_text:"" },
+              { type: "C", title: "結果C", description: "...", link_url:"", link_text:"", line_url:"", line_text:"", qr_url:"", qr_text:"" }
+          ];
       }
       setForm({ ...form, mode: newMode, category: newCategory, results: newResults });
   };
@@ -82,7 +92,6 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
       alert(`公開URLをコピーしました！\n${url}`); 
   };
 
-  // 質問・結果・選択肢の追加削除
   const addQuestion = () => {
       if(form.questions.length >= 10) return alert('質問は最大10個までです');
       setForm({
@@ -126,6 +135,35 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
       setForm({...form, results: newResults});
   };
 
+  const handleImageUpload = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!supabase) return alert("データベースに接続されていません");
+
+      setIsUploading(true);
+      try {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Math.random()}.${fileExt}`;
+          const filePath = `${user?.id || 'anonymous'}/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+              .from('quiz-thumbnails')
+              .upload(filePath, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data } = supabase.storage
+              .from('quiz-thumbnails')
+              .getPublicUrl(filePath);
+
+          setForm({ ...form, image_url: data.publicUrl });
+      } catch (error) {
+          alert('アップロードエラー: ' + error.message);
+      } finally {
+          setIsUploading(false);
+      }
+  };
+
   const handleRandomImage = () => {
       const curatedImages = [
           "https://images.unsplash.com/photo-1664575602276-acd073f104c1?auto=format&fit=crop&w=800&q=80",
@@ -164,7 +202,6 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
           const content = data.choices[0].message.content;
           const jsonStr = content.substring(content.indexOf('{'), content.lastIndexOf('}') + 1);
           const json = JSON.parse(jsonStr);
-          // AI生成データに既存フィールドをマージ
           setForm(prev => ({ 
               ...prev, ...json,
               results: json.results.map(r => ({...r, link_url:"", link_text:"", line_url:"", line_text:"", qr_url:"", qr_text:""}))
@@ -206,16 +243,9 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
                 <button onClick={async ()=>{
                         setIsSaving(true); 
                         const payload = {
-                            title: form.title, 
-                            description: form.description, 
-                            category: form.category, 
-                            color: form.color,
-                            questions: form.questions, 
-                            results: form.results, 
-                            user_id: user?.id || null,
-                            layout: form.layout || 'card',
-                            image_url: form.image_url || null,
-                            mode: form.mode || 'diagnosis'
+                            title: form.title, description: form.description, category: form.category, color: form.color,
+                            questions: form.questions, results: form.results, 
+                            user_id: user?.id || null, layout: form.layout || 'card', image_url: form.image_url || null, mode: form.mode || 'diagnosis'
                         };
                         const returnedId = await onSave(payload, savedId || initialData?.id);
                         if(returnedId) setSavedId(returnedId); 
@@ -227,7 +257,6 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
         </div>
         
         <div className="flex flex-col md:flex-row flex-grow overflow-hidden">
-            {/* Sidebar / Topbar */}
             <div className="bg-white border-b md:border-b-0 md:border-r flex flex-col w-full md:w-64 shrink-0">
                 <div className="p-4 bg-gradient-to-b from-purple-50 to-white border-b">
                     <div className="flex items-center gap-2 mb-2 text-purple-700 font-bold text-sm">
@@ -260,7 +289,6 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
                 </div>
             </div>
 
-            {/* Main Content */}
             <div className="flex-grow p-4 md:p-8 overflow-y-auto bg-gray-50">
                 <div className="max-w-3xl mx-auto bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-gray-100 min-h-[500px]">
                     {activeTab === '基本設定' && (
@@ -304,11 +332,22 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
                                     </div>
                                 </div>
                             </div>
+
                             <div className="mt-6 mb-6">
                                 <label className="text-sm font-bold text-gray-900 block mb-2">メイン画像</label>
-                                <div className="flex gap-2">
-                                    <input className="flex-grow border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white placeholder-gray-400" value={form.image_url||''} onChange={e=>setForm({...form, image_url:e.target.value})} placeholder="画像URL (https://...)"/>
-                                    <button onClick={handleRandomImage} className="bg-gray-100 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-200 flex items-center gap-1"><ImageIcon size={16}/> 自動</button>
+                                <div className="flex flex-col md:flex-row gap-2">
+                                    <input 
+                                        className="flex-grow border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white placeholder-gray-400" 
+                                        value={form.image_url||''} 
+                                        onChange={e=>setForm({...form, image_url:e.target.value})} 
+                                        placeholder="画像URL (https://...) またはアップロード"
+                                    />
+                                    <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap">
+                                        {isUploading ? <Loader2 className="animate-spin" size={16}/> : <UploadCloud size={16}/>}
+                                        <span>アップロード</span>
+                                        <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading}/>
+                                    </label>
+                                    <button onClick={handleRandomImage} className="bg-gray-100 px-4 py-3 rounded-lg text-sm font-bold hover:bg-gray-200 flex items-center justify-center gap-1 whitespace-nowrap"><ImageIcon size={16}/> 自動</button>
                                 </div>
                                 {form.image_url && <img src={form.image_url} alt="Preview" className="h-32 w-full object-cover rounded-lg mt-2 border"/>}
                             </div>
@@ -334,7 +373,6 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
                                             <button onClick={()=>addOption(i)} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 flex items-center gap-1"><Plus size={12}/> 追加</button>
                                         </div>
                                         
-                                        {/* 選択肢ヘッダー(モード別) */}
                                         <div className="flex text-xs text-gray-400 px-2 mt-2">
                                             <span className="flex-grow"></span>
                                             {form.mode === 'test' ? <span className="w-16 text-center text-orange-500 font-bold">正解</span> 
@@ -379,7 +417,7 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
                             </div>
                             
                             <div className={`p-4 rounded-lg mb-6 text-sm ${form.mode==='test'?'bg-orange-50 text-orange-800':form.mode==='fortune'?'bg-purple-50 text-purple-800':'bg-blue-50 text-blue-800'}`}>
-                                {form.mode === 'test' ? "正解数に応じて結果が変わります（範囲は自動で調整されます）" : form.mode === 'fortune' ? "結果はランダムに表示されます" : "獲得ポイントが多いタイプの結果が表示されます"}
+                                {form.mode === 'test' ? "正解数に応じて結果が変わります（上から順に高得点→低得点）" : form.mode === 'fortune' ? "結果はランダムに表示されます" : "獲得ポイントが多いタイプの結果が表示されます"}
                             </div>
                             
                             {form.results.map((r, i)=>(
@@ -391,7 +429,6 @@ const Editor = ({ onBack, onSave, initialData, setPage, user }) => {
                                     <Input label="タイトル" val={r.title} onChange={v=>{const n=[...form.results];n[i].title=v;setForm({...form, results:n})}} />
                                     <Textarea label="結果の説明文" val={r.description} onChange={v=>{const n=[...form.results];n[i].description=v;setForm({...form, results:n})}}/>
                                     
-                                    {/* 復活させたリンク設定エリア */}
                                     <div className="bg-white p-4 rounded-xl border border-gray-200 mt-4">
                                         <p className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2"><Link size={14}/> 誘導ボタン設定 (任意)</p>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

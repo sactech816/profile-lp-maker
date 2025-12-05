@@ -27,6 +27,35 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
         clicks: q.clicks_count || 0
     }));
 
+    // ボタンを押した時の処理
+const handlePurchase = async (quiz) => {
+    if (!confirm(`「${quiz.title}」のHTMLデータを購入・ダウンロードしますか？\n価格は決済画面で自由に設定できます（500円〜）。`)) return;
+
+    try {
+        const res = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                quizId: quiz.id,
+                quizTitle: quiz.title,
+                userId: user.id,
+                email: user.email
+            }),
+        });
+        const data = await res.json();
+        if (data.url) {
+            window.location.href = data.url; // Stripeへ移動
+        }
+    } catch (e) {
+        alert('決済エラーが発生しました');
+    }
+};
+
+// ... (JSX内のボタン配置箇所)
+<button onClick={() => handlePurchase(quiz)} className="...">
+    <Download size={14} /> HTML購入
+</button>
+
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             <Header setPage={setPage} user={user} onLogout={onLogout} />
@@ -126,6 +155,7 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
 
                 <div className="mt-12">
                     <h2 className="text-xl font-bold text-black mb-4 border-l-4 border-indigo-600 pl-4">作成した診断リスト</h2>
+                    {/* ... (My Quizzes List remains same as previous version) ... */}
                     {loading ? <div className="text-center py-10"><Loader2 className="animate-spin mx-auto text-indigo-600"/></div> : (
                         myQuizzes.length === 0 ? (
                             <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-300">
@@ -145,8 +175,8 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
                                         <div className="p-5">
                                             <h3 className="font-bold text-lg mb-2 line-clamp-1 text-black">{quiz.title}</h3>
                                             <div className="flex gap-4 text-xs text-gray-500 font-bold mb-4">
-                                                <span className="flex items-center gap-1"><Play size={12}/> {quiz.views_count||0}</span>
-                                                <span className="flex items-center gap-1"><ExternalLink size={12}/> {quiz.clicks_count||0}</span>
+                                                <span className="flex items-center gap-1"><Play size={12}/> {quiz.views_count||0} views</span>
+                                                <span className="flex items-center gap-1"><ExternalLink size={12}/> {quiz.clicks_count||0} clicks</span>
                                             </div>
                                             <div className="flex gap-2">
                                                 <button onClick={()=>onEdit(quiz)} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"><Edit3 size={14}/> 編集</button>
