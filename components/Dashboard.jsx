@@ -52,31 +52,45 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout }) => {
         }
     };
 
-    const handlePurchase = async (quiz) => {
-        if (!confirm(`「${quiz.title}」のHTMLデータをダウンロードしますか？\n\n次の画面で金額（寄付額）を自由に入力して決済してください。決済完了後にダウンロードボタンが有効になります。`)) return;
-        setProcessingId(quiz.id);
-        try {
-            const res = await fetch('/api/checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    quizId: quiz.id,
-                    quizTitle: quiz.title,
-                    userId: user.id,
-                    email: user.email
-                }),
-            });
-            const data = await res.json();
-            if (data.url) {
-                window.location.href = data.url;
-            } else {
-                throw new Error('決済URLの取得に失敗しました');
-            }
-        } catch (e) {
-            alert('エラー: ' + e.message);
-            setProcessingId(null);
+// 購入ボタン (Stripeへ移動)
+const handlePurchase = async (quiz) => {
+    // ★修正: 初期値を "1000" に設定
+    const inputPrice = window.prompt(`「${quiz.title}」のHTMLデータを購入します。\n\n応援・寄付金額を入力してください（500円〜50,000円）。`, "1000");
+    
+    // キャンセルされた場合
+    if (inputPrice === null) return;
+
+    // ★修正: 金額のバリデーション（500円以上、50,000円以下）
+    const price = parseInt(inputPrice, 10);
+    if (isNaN(price) || price < 500 || price > 50000) {
+        alert("金額は 500円以上、50,000円以下 の半角数字で入力してください。");
+        return;
+    }
+
+    setProcessingId(quiz.id);
+    try {
+        const res = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                quizId: quiz.id,
+                quizTitle: quiz.title,
+                userId: user.id,
+                email: user.email,
+                price: price // ここで金額を送る
+            }),
+        });
+        const data = await res.json();
+        if (data.url) {
+            window.location.href = data.url;
+        } else {
+            throw new Error('決済URLの取得に失敗しました');
         }
-    };
+    } catch (e) {
+        alert('エラー: ' + e.message);
+        setProcessingId(null);
+    }
+};
 
     const handleDownload = (quiz) => {
         const htmlContent = generateQuizHTML(quiz);
