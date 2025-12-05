@@ -96,7 +96,7 @@ export const QuizLogicPage = ({ onBack, setPage, user, onLogout, setShowAuth, is
     );
 };
 
-// --- HowTo Page ---
+// --- HowTo Page (Updated) ---
 export const HowToPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAdmin }) => {
     useEffect(() => { document.title = "使い方・機能一覧 | 診断クイズメーカー"; }, []);
     return (
@@ -104,20 +104,24 @@ export const HowToPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAdmi
             <Header setPage={setPage} user={user} onLogout={onLogout} setShowAuth={setShowAuth} isAdmin={isAdmin} />
             <div className="py-12 px-4 max-w-4xl mx-auto">
                 <button onClick={onBack} className="mb-6 flex items-center gap-1 text-gray-500 font-bold hover:text-indigo-600"><ArrowLeft size={16}/> 戻る</button>
-                <h1 className="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-4">機能一覧・使い方ガイド</h1>
+                <h1 className="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-4">機能一覧・使い方ガイド（2024年最新版）</h1>
                 
                 <div className="grid md:grid-cols-2 gap-8 mb-12">
                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
                         <div className="flex items-center gap-2 mb-4 text-gray-700 font-bold text-xl">
                             <Unlock size={24} className="text-blue-500"/> 基本機能 (無料)
                         </div>
-                        {/* ★修正: 文字色を濃く修正 */}
                         <ul className="space-y-4 text-sm text-gray-800">
-                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Zap size={16}/></span><span><strong>3つの作成モード:</strong> ビジネス診断 / 学習テスト / 占い</span></li>
-                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Sparkles size={16}/></span><span><strong>AI自動生成:</strong> テーマを入れるだけで全自動作成</span></li>
-                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><ImageIcon size={16}/></span><span><strong>画像機能:</strong> アップロード / 自動画像設定</span></li>
-                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><MessageCircle size={16}/></span><span><strong>デザイン切替:</strong> カード型 / チャット型(LINE風)</span></li>
-                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><BarChart2 size={16}/></span><span><strong>基本解析:</strong> 閲覧数、完了数、クリック数のグラフ</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Zap size={16}/></span><span><strong>ステップ形式エディタ:</strong> 初心者でも迷わない4ステップ作成</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Sparkles size={16}/></span><span><strong>AI自動生成:</strong> テーマ入力で質問・結果を自動作成</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><FileText size={16}/></span><span><strong>豊富なテンプレート:</strong> ビジネス・教育・占いの3カテゴリ</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><ImageIcon size={16}/></span><span><strong>画像機能:</strong> アップロード・自動選択・URL指定</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Smile size={16}/></span><span><strong>5種類のデザインテーマ:</strong> 和風・サイバー・パステルなど</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><MessageCircle size={16}/></span><span><strong>レイアウト切替:</strong> カード型 / チャット型(LINE風)</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Eye size={16}/></span><span><strong>リアルタイムプレビュー:</strong> 作成中に見た目を確認</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><TrendingUp size={16}/></span><span><strong>人気ランキング:</strong> プレイ回数・急上昇の2軸表示</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><BarChart2 size={16}/></span><span><strong>アクセス解析:</strong> 閲覧数・完了率・CTRをグラフ化</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Mail size={16}/></span><span><strong>リード獲得:</strong> 結果表示前にメールアドレス収集</span></li>
                         </ul>
                     </div>
 
@@ -139,12 +143,60 @@ export const HowToPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAdmi
 
                 <div className="space-y-8 text-gray-800 leading-relaxed border-t pt-8">
                     <section>
-                        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2"><Briefcase className="text-indigo-600"/> 1. ビジネス診断の作り方</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <Zap className="text-indigo-600"/> 診断作成の4ステップ
+                        </h2>
+                        <div className="space-y-4">
+                            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl border-2 border-indigo-200">
+                                <h3 className="font-bold text-lg mb-3 text-indigo-900">ステップ1: クイズの種類を選択</h3>
+                                <ul className="list-disc pl-5 space-y-2 text-sm text-gray-700">
+                                    <li><strong>ビジネス診断:</strong> 性格・タイプ診断（配点方式）</li>
+                                    <li><strong>学習テスト:</strong> 正解・不正解のクイズ</li>
+                                    <li><strong>占い:</strong> ランダム結果表示</li>
+                                </ul>
+                                <p className="mt-3 text-sm text-indigo-700">💡 テンプレート選択、AI自動生成、ゼロから作成の3つの方法から選べます</p>
+                            </div>
+                            
+                            <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
+                                <h3 className="font-bold text-lg mb-3 text-blue-900">ステップ2: 基本設定</h3>
+                                <ul className="list-disc pl-5 space-y-2 text-sm text-gray-700">
+                                    <li><strong>タイトル・説明文:</strong> SEOを意識したキャッチーな文言を</li>
+                                    <li><strong>デザインテーマ:</strong> 和風・サイバー・パステルなど5種類</li>
+                                    <li><strong>レイアウト:</strong> カード型 or チャット型</li>
+                                    <li><strong>メイン画像:</strong> アップロード・URL・自動選択</li>
+                                    <li><strong>高度な設定:</strong> リード獲得機能のON/OFF</li>
+                                </ul>
+                            </div>
+                            
+                            <div className="bg-green-50 p-6 rounded-xl border border-green-200">
+                                <h3 className="font-bold text-lg mb-3 text-green-900">ステップ3: 質問作成</h3>
+                                <ul className="list-disc pl-5 space-y-2 text-sm text-gray-700">
+                                    <li><strong>質問数:</strong> 最大10問（推奨は3〜5問）</li>
+                                    <li><strong>選択肢:</strong> 各質問に2〜6個の選択肢</li>
+                                    <li><strong>スコア配分:</strong> レスポンシブグリッドで見やすく入力</li>
+                                    <li><strong>テストモード:</strong> 正解にチェックを入れるだけ</li>
+                                </ul>
+                            </div>
+                            
+                            <div className="bg-orange-50 p-6 rounded-xl border border-orange-200">
+                                <h3 className="font-bold text-lg mb-3 text-orange-900">ステップ4: 結果ページ</h3>
+                                <ul className="list-disc pl-5 space-y-2 text-sm text-gray-700">
+                                    <li><strong>結果パターン:</strong> 最大10パターン（A〜J）</li>
+                                    <li><strong>誘導ボタン:</strong> リンク・LINE・QRコードの3種類</li>
+                                    <li><strong>完成・公開:</strong> URLが自動発行され、即座にシェア可能</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2"><Briefcase className="text-indigo-600"/> ビジネス診断の作り方</h2>
                         <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
                             <p className="mb-2 text-sm font-bold text-indigo-800">例：「あなたのリーダータイプ診断」</p>
                             <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
                                 <li><strong>配点方式:</strong> 選択肢ごとにA, B, C...のタイプに点数を割り振ります。</li>
                                 <li><strong>結果判定:</strong> 最終的に最も点数が高かったタイプの結果が表示されます。</li>
+                                <li><strong>複数パターン:</strong> 最大10タイプまで設定可能（A〜J）</li>
                             </ul>
                         </div>
                     </section>
@@ -191,10 +243,17 @@ export const FaqPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAdmin 
     useEffect(() => { document.title = "よくある質問 | 診断クイズメーカー"; }, []);
     const [openIndex, setOpenIndex] = useState(null);
     const faqs = [
-        { category: "一般・全般", q: "無料で使えますか？", a: "はい、作成・公開・分析の基本機能はすべて無料でご利用いただけます。" },
-        { category: "一般・全般", q: "商用利用は可能ですか？", a: "可能です。作成したコンテンツは、ご自身のビジネス（LINE誘導、集客）や教育現場で自由にご活用ください。" },
-        { category: "機能", q: "Pro機能（寄付）とは何ですか？", a: "クイズごとに任意の金額を寄付いただくことで、「HTMLダウンロード」「埋め込みコード発行」「収集したメールアドレスのCSVダウンロード」機能が開放されます。" },
-        { category: "機能", q: "どんな種類のクイズが作れますか？", a: "①「ビジネス診断（点数加算型）」、②「学習・検定（正解数判定型）」、③「占い（ランダム結果型）」の3種類を作成可能です。" },
+        { category: "一般", q: "無料で使えますか？", a: "はい、作成・公開・分析の基本機能はすべて無料でご利用いただけます。ステップ形式エディタ、AI自動生成、テンプレート、プレビュー、アクセス解析、人気ランキングなど、すべて無料です。" },
+        { category: "一般", q: "商用利用は可能ですか？", a: "可能です。作成したコンテンツは、ご自身のビジネス（LINE誘導、集客、リード獲得）や教育現場で自由にご活用ください。" },
+        { category: "機能", q: "ステップ形式エディタとは？", a: "2024年12月に実装された新機能です。①クイズの種類選択 → ②基本設定 → ③質問作成 → ④結果ページ の4ステップで、初心者でも迷わず診断を作成できます。" },
+        { category: "機能", q: "AI自動生成の精度は？", a: "テーマを入力するだけで、質問5問・結果3パターンを自動生成します。生成後に自由に編集できるため、たたき台として非常に便利です。" },
+        { category: "機能", q: "デザインテーマは何種類？", a: "スタンダード、サイバーパンク、和風・雅、パステルポップ、モノトーンの5種類から選べます。それぞれ異なる雰囲気で診断を演出できます。" },
+        { category: "機能", q: "プレビュー機能はありますか？", a: "はい、ヘッダーの「プレビュー」ボタンから、作成中の診断をリアルタイムで確認できます。保存前に見た目をチェックできるので安心です。" },
+        { category: "機能", q: "人気ランキングとは？", a: "トップページに「今週のプレイ回数ランキング」と「急上昇ランキング」が表示されます。人気の診断が可視化され、新規ユーザーの参考になります。" },
+        { category: "機能", q: "リード獲得機能とは？", a: "結果表示の前にメールアドレスの入力を求める機能です。診断を通じて自然な流れで顧客リストを獲得できます。" },
+        { category: "Pro機能", q: "Pro機能（寄付）とは？", a: "クイズごとに任意の金額（500円〜）を寄付いただくことで、「HTMLダウンロード」「埋め込みコード発行」「収集したメールアドレスのCSVダウンロード」機能が開放されます。" },
+        { category: "技術", q: "スマホでも使えますか？", a: "はい、完全レスポンシブ対応です。作成も閲覧もスマホで快適に行えます。" },
+        { category: "技術", q: "SEO対策はされていますか？", a: "はい、構造化データ、メタタグ、適切なタイトル設定など、基本的なSEO対策は実装済みです。" },
     ];
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
