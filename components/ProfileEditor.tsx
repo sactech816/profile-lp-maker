@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
     Edit3, Loader2, Save, Share2, ArrowLeft, Plus, Trash2, 
     X, Link, UploadCloud, Eye, User, FileText, GripVertical,
-    MoveUp, MoveDown
+    ChevronUp, ChevronDown
 } from 'lucide-react';
 import { generateSlug } from '../lib/utils';
 import { supabase } from '../lib/supabase';
@@ -105,7 +105,7 @@ function BlockRenderer({ block }: { block: ProfileBlock }) {
 }
 
 // 入力コンポーネント
-const Input = ({label, val, onChange, ph, type = "text"}) => (
+const Input = ({label, val, onChange, ph, type = "text"}: {label: string; val: string; onChange: (v: string) => void; ph?: string; type?: string}) => (
     <div className="mb-4">
         <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
         <input 
@@ -118,7 +118,7 @@ const Input = ({label, val, onChange, ph, type = "text"}) => (
     </div>
 );
 
-const Textarea = ({label, val, onChange, rows = 3}) => (
+const Textarea = ({label, val, onChange, rows = 3}: {label: string; val: string; onChange: (v: string) => void; rows?: number}) => (
     <div className="mb-4">
         <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
         <textarea 
@@ -130,7 +130,15 @@ const Textarea = ({label, val, onChange, rows = 3}) => (
     </div>
 );
 
-const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }) => {
+interface ProfileEditorProps {
+  onBack: () => void;
+  onSave?: (data: { slug: string; content: ProfileBlock[] }) => void;
+  initialSlug?: string | null;
+  user: any;
+  setShowAuth: (show: boolean) => void;
+}
+
+const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: ProfileEditorProps) => {
   useEffect(() => { 
     document.title = "プロフィール作成・編集 | プロフィールLPメーカー"; 
     window.scrollTo(0, 0);
@@ -138,7 +146,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }) => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [savedSlug, setSavedSlug] = useState(initialSlug || null);
+  const [savedSlug, setSavedSlug] = useState<string | null>(initialSlug || null);
   const [isUploading, setIsUploading] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
 
@@ -572,7 +580,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }) => {
                           className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
                           title="上に移動"
                         >
-                          <MoveUp size={14}/>
+                          <ChevronUp size={14}/>
                         </button>
                         <button 
                           onClick={() => moveLink(index, 'down')}
@@ -580,7 +588,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }) => {
                           className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
                           title="下に移動"
                         >
-                          <MoveDown size={14}/>
+                          <ChevronDown size={14}/>
                         </button>
                         <button 
                           onClick={() => removeLink(index)}
