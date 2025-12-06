@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { 
     Edit3, Loader2, Save, Share2, ArrowLeft, Plus, Trash2, 
     X, Link, UploadCloud, Eye, User, FileText, GripVertical,
-    ChevronUp, ChevronDown, Image as ImageIcon, Youtube, MoveUp, MoveDown, Sparkles
+    ChevronUp, ChevronDown, Image as ImageIcon, Youtube, MoveUp, MoveDown, Sparkles,
+    ChevronRight, Palette, Image as ImageIcon2
 } from 'lucide-react';
 import { generateSlug } from '../lib/utils';
 import { supabase } from '../lib/supabase';
@@ -61,6 +62,9 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
   const [showAIModal, setShowAIModal] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiForm, setAiForm] = useState({ occupation: '', target: '', strengths: '' });
+  const [theme, setTheme] = useState<{ gradient?: string; backgroundImage?: string }>({});
+  const [isUploadingBackground, setIsUploadingBackground] = useState(false);
+  const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
 
   // デフォルトのプロフィールコンテンツ
   const getDefaultContent = (): Block[] => [
@@ -95,6 +99,13 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
   ];
 
   const [blocks, setBlocks] = useState<Block[]>(getDefaultContent());
+  
+  // 新規ブロック追加時は自動的に展開
+  useEffect(() => {
+    if (selectedBlockId) {
+      setExpandedBlocks(prev => new Set([...prev, selectedBlockId]));
+    }
+  }, [selectedBlockId]);
 
   // Supabaseからデータを読み込む
   useEffect(() => {
@@ -166,7 +177,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
     })();
     
     setBlocks(prev => [...prev, newBlock]);
-    setSelectedBlockId(newBlock.id);
+    setExpandedBlocks(prev => new Set([...prev, newBlock.id]));
   };
 
   // ブロックの削除
@@ -238,7 +249,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
     ));
   };
 
-  // 画像アップロード
+  // 画像アップロード（ブロック用）
   const handleImageUpload = async (blockId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !supabase) return;
@@ -252,9 +263,6 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
-
-      // 既存のファイルを削除（オプション）
-      // await supabase.storage.from('profile-images').remove([filePath]);
 
       const { error: uploadError } = await supabase.storage.from('profile-images').upload(filePath, file, {
         upsert: true
@@ -275,6 +283,48 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
     } finally {
       setIsUploading(false);
     }
+  };
+
+  // 背景画像アップロード
+  const handleBackgroundImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase) return;
+    if (!user) {
+      alert('画像をアップロードするにはログインが必要です');
+      return;
+    }
+
+    setIsUploadingBackground(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `bg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage.from('images').upload(filePath, file, {
+        upsert: true
+      });
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('images').getPublicUrl(filePath);
+      setTheme(prev => ({ ...prev, backgroundImage: data.publicUrl }));
+    } catch (error: any) {
+      alert('背景画像のアップロードエラー: ' + error.message);
+    } finally {
+      setIsUploadingBackground(false);
+    }
+  };
+
+  // ブロックの展開/折りたたみ
+  const toggleBlock = (blockId: string) => {
+    setExpandedBlocks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(blockId)) {
+        newSet.delete(blockId);
+      } else {
+        newSet.add(blockId);
+      }
+      return newSet;
+    });
   };
 
   // AI生成機能
@@ -368,6 +418,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
         .upsert({
           slug,
           content: blocks,
+          theme: theme,
           user_id: user?.id || null,
           updated_at: new Date().toISOString()
         }, {
@@ -469,10 +520,45 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       case 'image':
         return (
           <div className="space-y-4">
-            <Input label="画像URL" val={block.data.url} onChange={v => updateBlock(block.id, { url: v })} ph="https://..." type="url" />
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">画像</label>
+              <div className="flex gap-2">
+                <Input 
+                  label="" 
+                  val={block.data.url} 
+                  onChange={v => updateBlock(block.id, { url: v })} 
+                  ph="画像URL (https://...)" 
+                  type="url"
+                />
+                <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap self-end border-2 border-dashed border-indigo-300">
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="animate-spin" size={16}/> アップロード中...
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud size={16}/> 画像を選択
+                    </>
+                  )}
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={(e) => handleImageUpload(block.id, e)} 
+                    disabled={isUploading}
+                  />
+                </label>
+              </div>
+            </div>
             <Input label="キャプション（オプション）" val={block.data.caption || ''} onChange={v => updateBlock(block.id, { caption: v })} ph="画像の説明" />
             {block.data.url && (
-              <img src={block.data.url} alt="Preview" className="w-full rounded-xl object-cover border border-gray-200"/>
+              <div className="mt-2">
+                <img 
+                  src={block.data.url} 
+                  alt="Preview" 
+                  className="w-full rounded-xl object-cover border border-gray-200"
+                />
+              </div>
             )}
           </div>
         );
@@ -575,6 +661,87 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           </div>
         </div>
 
+        {/* テーマ設定セクション */}
+        <div className="p-6 border-b bg-white">
+          <div className="flex items-center gap-2 mb-4">
+            <Palette className="text-indigo-600" size={20}/>
+            <h3 className="font-bold text-lg text-gray-900">テーマ設定</h3>
+          </div>
+          
+          {/* 背景パターン */}
+          <div className="mb-4">
+            <label className="text-sm font-bold text-gray-900 block mb-2">背景パターン</label>
+            <div className="grid grid-cols-5 gap-2">
+              {[
+                { id: 'sunset', name: 'Sunset', gradient: 'linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)' },
+                { id: 'ocean', name: 'Ocean', gradient: 'linear-gradient(-45deg, #1e3c72, #2a5298, #7e8ba3, #a8c0d0)' },
+                { id: 'berry', name: 'Berry', gradient: 'linear-gradient(-45deg, #f093fb, #f5576c, #c471ed, #f64f59)' },
+                { id: 'forest', name: 'Forest', gradient: 'linear-gradient(-45deg, #134e5e, #71b280, #134e5e, #71b280)' },
+                { id: 'purple', name: 'Purple', gradient: 'linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe)' }
+              ].map(preset => (
+                <button
+                  key={preset.id}
+                  onClick={() => setTheme(prev => ({ ...prev, gradient: preset.gradient, backgroundImage: undefined }))}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    theme.gradient === preset.gradient && !theme.backgroundImage
+                      ? 'border-indigo-500 ring-2 ring-indigo-200'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  title={preset.name}
+                >
+                  <div 
+                    className="w-full h-12 rounded"
+                    style={{ background: preset.gradient }}
+                  />
+                  <p className="text-xs font-bold text-gray-600 mt-1">{preset.name}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 背景画像 */}
+          <div>
+            <label className="text-sm font-bold text-gray-900 block mb-2">背景画像</label>
+            <div className="flex gap-2">
+              <label className="flex-1 bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-2 cursor-pointer border-2 border-dashed border-indigo-300">
+                {isUploadingBackground ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16}/> アップロード中...
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon2 size={16}/> 画像を選択
+                  </>
+                )}
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handleBackgroundImageUpload} 
+                  disabled={isUploadingBackground}
+                />
+              </label>
+              {theme.backgroundImage && (
+                <button
+                  onClick={() => setTheme(prev => ({ ...prev, backgroundImage: undefined }))}
+                  className="px-4 py-3 bg-red-50 text-red-700 rounded-lg font-bold hover:bg-red-100"
+                >
+                  削除
+                </button>
+              )}
+            </div>
+            {theme.backgroundImage && (
+              <div className="mt-2 relative">
+                <img 
+                  src={theme.backgroundImage} 
+                  alt="Background preview" 
+                  className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* ブロック追加ボタン */}
         <div className="p-6 border-b bg-gray-50">
           <div className="flex flex-wrap gap-2 mb-3">
@@ -606,62 +773,82 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
 
         {/* ブロック一覧 */}
         <div className="p-6 max-w-3xl mx-auto space-y-4">
-          {blocks.map((block, index) => (
-            <div key={block.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              {/* ブロックヘッダー */}
-              <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-b">
-                <div className="flex items-center gap-3">
-                  <GripVertical className="text-gray-400" size={18}/>
-                  <span className="font-bold text-sm text-gray-700">
-                    {block.type === 'header' && 'ヘッダー'}
-                    {block.type === 'text_card' && 'テキストカード'}
-                    {block.type === 'image' && '画像'}
-                    {block.type === 'youtube' && 'YouTube'}
-                    {block.type === 'links' && 'リンク集'}
-                  </span>
+          {blocks.map((block, index) => {
+            const isExpanded = expandedBlocks.has(block.id);
+            return (
+              <div key={block.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                {/* ブロックヘッダー（アコーディオン） */}
+                <div className="bg-gray-50 px-4 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div title="ドラッグして移動">
+                      <GripVertical className="text-gray-400 cursor-move" size={18}/>
+                    </div>
+                    <button
+                      onClick={() => toggleBlock(block.id)}
+                      className="flex items-center gap-2 flex-1 text-left hover:bg-gray-100 -ml-2 px-2 py-1 rounded transition-colors"
+                    >
+                      <ChevronRight 
+                        className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+                        size={16}
+                      />
+                      <span className="font-bold text-sm text-gray-700">
+                        {block.type === 'header' && 'ヘッダー'}
+                        {block.type === 'text_card' && 'テキストカード'}
+                        {block.type === 'image' && '画像'}
+                        {block.type === 'youtube' && 'YouTube'}
+                        {block.type === 'links' && 'リンク集'}
+                      </span>
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); moveBlock(block.id, 'up'); }}
+                      disabled={index === 0}
+                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                      title="上に移動"
+                    >
+                      <MoveUp size={16}/>
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); moveBlock(block.id, 'down'); }}
+                      disabled={index === blocks.length - 1}
+                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                      title="下に移動"
+                    >
+                      <MoveDown size={16}/>
+                    </button>
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        toggleBlock(block.id);
+                      }}
+                      className="p-1 text-indigo-400 hover:text-indigo-600"
+                      title={isExpanded ? '折りたたむ' : '展開'}
+                    >
+                      <Edit3 size={16}/>
+                    </button>
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        removeBlock(block.id);
+                      }}
+                      className="p-1 text-red-400 hover:text-red-600"
+                      title="削除"
+                    >
+                      <Trash2 size={16}/>
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button 
-                    onClick={() => moveBlock(block.id, 'up')}
-                    disabled={index === 0}
-                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                    title="上に移動"
-                  >
-                    <MoveUp size={16}/>
-                  </button>
-                  <button 
-                    onClick={() => moveBlock(block.id, 'down')}
-                    disabled={index === blocks.length - 1}
-                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                    title="下に移動"
-                  >
-                    <MoveDown size={16}/>
-                  </button>
-                  <button 
-                    onClick={() => setSelectedBlockId(selectedBlockId === block.id ? null : block.id)}
-                    className="p-1 text-indigo-400 hover:text-indigo-600"
-                    title={selectedBlockId === block.id ? '編集を閉じる' : '編集'}
-                  >
-                    <Edit3 size={16}/>
-                  </button>
-                  <button 
-                    onClick={() => removeBlock(block.id)}
-                    className="p-1 text-red-400 hover:text-red-600"
-                    title="削除"
-                  >
-                    <Trash2 size={16}/>
-                  </button>
-                </div>
-              </div>
 
-              {/* ブロック編集フォーム */}
-              {selectedBlockId === block.id && (
-                <div className="p-6">
-                  {renderBlockEditor(block)}
-                </div>
-              )}
-            </div>
-          ))}
+                {/* ブロック編集フォーム（アコーディオン） */}
+                {isExpanded && (
+                  <div className="p-6 border-t border-gray-200">
+                    {renderBlockEditor(block)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {blocks.length === 0 && (
             <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
@@ -680,7 +867,16 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
               <Eye size={16} className="text-purple-600"/> プレビュー
             </h3>
           </div>
-          <div className="profile-page-wrapper min-h-screen">
+          <div 
+            className="profile-page-wrapper min-h-screen"
+            style={{
+              background: theme.backgroundImage 
+                ? `url(${theme.backgroundImage}) center/cover no-repeat`
+                : theme.gradient || 'linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)',
+              backgroundSize: theme.backgroundImage ? 'cover' : '400% 400%',
+              animation: theme.backgroundImage ? 'none' : 'gradient 15s ease infinite'
+            }}
+          >
             <div className="container mx-auto max-w-lg p-4 md:p-8">
               <div className="w-full space-y-6 md:space-y-8">
                 {blocks.map((block, index) => (
