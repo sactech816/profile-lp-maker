@@ -33,12 +33,18 @@ export default async function ProfileLayout({
   } else if (supabase) {
     const { data } = await supabase
       .from('profiles')
-      .select('theme')
+      .select('settings')
       .eq('slug', slug)
       .single();
     
-    if (data?.theme) {
-      theme = data.theme;
+    // settingsからthemeを取得
+    if (data?.settings?.theme) {
+      theme = data.settings.theme;
+    }
+    
+    // 後方互換性: 古いデータでthemeが直接カラムにある場合（念のため）
+    if (!theme && (data as any)?.theme) {
+      theme = (data as any).theme;
     }
   }
   

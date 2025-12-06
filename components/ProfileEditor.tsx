@@ -140,14 +140,23 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           }
           setSavedSlug(data.slug);
           
-          // テーマ設定を読み込む
-          if (data.theme) {
-            setTheme(data.theme);
+          // 設定を読み込む（themeもsettingsに含まれる）
+          if (data.settings) {
+            const loadedSettings = data.settings;
+            // themeをsettingsから分離
+            if (loadedSettings.theme) {
+              setTheme(loadedSettings.theme);
+              // theme以外の設定を保存
+              const { theme: _, ...otherSettings } = loadedSettings;
+              setSettings(otherSettings);
+            } else {
+              setSettings(loadedSettings);
+            }
           }
           
-          // 設定を読み込む
-          if (data.settings) {
-            setSettings(data.settings);
+          // 後方互換性: 古いデータでthemeが直接カラムにある場合
+          if (data.theme && !data.settings?.theme) {
+            setTheme(data.theme);
           }
           
           // アナリティクスを取得
@@ -483,13 +492,18 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       const headerBlock = blocks.find(b => b.type === 'header');
       const name = headerBlock?.type === 'header' ? headerBlock.data.name : 'プロフィール';
 
+      // themeをsettingsに含める
+      const settingsWithTheme = {
+        ...settings,
+        theme: theme
+      };
+
       const { data, error } = await supabase
         .from('profiles')
         .upsert({
           slug,
           content: blocks,
-          theme: theme,
-          settings: settings,
+          settings: settingsWithTheme,
           user_id: user?.id || null,
           updated_at: new Date().toISOString()
         }, {
@@ -712,11 +726,11 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
 
       case 'kindle':
         const kindleImagePresets = [
-          'https://images-na.ssl-images-amazon.com/images/I/51aHbX9Q9zL._SX331_BO1,204,203,200_.jpg',
-          'https://images-na.ssl-images-amazon.com/images/I/81nzxODnaJL._AC_UL600_SR600,600_.jpg',
-          'https://images-na.ssl-images-amazon.com/images/I/71KilybDOoL._AC_UL600_SR600,600_.jpg',
-          'https://images-na.ssl-images-amazon.com/images/I/81YOuOGFCJL._AC_UL600_SR600,600_.jpg',
-          'https://images-na.ssl-images-amazon.com/images/I/71jG+e7roXL._AC_UL600_SR600,600_.jpg',
+          'https://m.media-amazon.com/images/I/51aHbX9Q9zL._SY346_.jpg',
+          'https://m.media-amazon.com/images/I/81nzxODnaJL._SY346_.jpg',
+          'https://m.media-amazon.com/images/I/71KilybDOoL._SY346_.jpg',
+          'https://m.media-amazon.com/images/I/81YOuOGFCJL._SY346_.jpg',
+          'https://m.media-amazon.com/images/I/71jG+e7roXL._SY346_.jpg',
         ];
         return (
           <div className="space-y-4">
@@ -1240,82 +1254,84 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
             <h3 className="font-bold text-lg text-gray-900">テーマ設定</h3>
           </div>
           
-          {/* 背景パターン */}
-          <div className="mb-4">
-            <label className="text-sm font-bold text-gray-900 block mb-2">背景パターン</label>
-            <div className="grid grid-cols-5 gap-2">
-              {[
-                { id: 'sunset', name: 'Sunset', gradient: 'linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)' },
-                { id: 'ocean', name: 'Ocean', gradient: 'linear-gradient(-45deg, #1e3c72, #2a5298, #7e8ba3, #a8c0d0)' },
-                { id: 'berry', name: 'Berry', gradient: 'linear-gradient(-45deg, #f093fb, #f5576c, #c471ed, #f64f59)' },
-                { id: 'forest', name: 'Forest', gradient: 'linear-gradient(-45deg, #134e5e, #71b280, #134e5e, #71b280)' },
-                { id: 'purple', name: 'Purple', gradient: 'linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe)' }
-              ].map(preset => (
-                <button
-                  key={preset.id}
-                  onClick={() => setTheme(prev => ({ ...prev, gradient: preset.gradient, backgroundImage: undefined }))}
-                  className={`p-3 rounded-lg border-2 transition-all overflow-hidden ${
-                    theme.gradient === preset.gradient && !theme.backgroundImage
-                      ? 'border-indigo-500 ring-2 ring-indigo-200'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  title={preset.name}
-                >
-                  <div 
-                    className="w-full h-12 rounded relative"
-                    style={{ 
-                      background: preset.gradient,
-                      backgroundSize: '400% 400%',
-                      animation: 'gradient 15s ease infinite'
-                    }}
-                  />
-                  <p className="text-xs font-bold text-gray-600 mt-1">{preset.name}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 背景画像 */}
-          <div>
-            <label className="text-sm font-bold text-gray-900 block mb-2">背景画像</label>
-            <div className="flex gap-2">
-              <label className="flex-1 bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-2 cursor-pointer border-2 border-dashed border-indigo-300">
-                {isUploadingBackground ? (
-                  <>
-                    <Loader2 className="animate-spin" size={16}/> アップロード中...
-                  </>
-                ) : (
-                  <>
-                    <ImageIcon2 size={16}/> 画像を選択
-                  </>
-                )}
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  accept="image/*" 
-                  onChange={handleBackgroundImageUpload} 
-                  disabled={isUploadingBackground}
-                />
-              </label>
-              {theme.backgroundImage && (
-                <button
-                  onClick={() => setTheme(prev => ({ ...prev, backgroundImage: undefined }))}
-                  className="px-4 py-3 bg-red-50 text-red-700 rounded-lg font-bold hover:bg-red-100"
-                >
-                  削除
-                </button>
-              )}
-            </div>
-            {theme.backgroundImage && (
-              <div className="mt-2 relative">
-                <img 
-                  src={theme.backgroundImage} 
-                  alt="Background preview" 
-                  className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                />
+          {/* 背景パターンと背景画像を1行に */}
+          <div className="flex items-end gap-4">
+            <div className="flex-1">
+              <label className="text-sm font-bold text-gray-900 block mb-2">背景パターン</label>
+              <div className="grid grid-cols-5 gap-2">
+                {[
+                  { id: 'sunset', name: 'Sunset', gradient: 'linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)' },
+                  { id: 'ocean', name: 'Ocean', gradient: 'linear-gradient(-45deg, #1e3c72, #2a5298, #7e8ba3, #a8c0d0)' },
+                  { id: 'berry', name: 'Berry', gradient: 'linear-gradient(-45deg, #f093fb, #f5576c, #c471ed, #f64f59)' },
+                  { id: 'forest', name: 'Forest', gradient: 'linear-gradient(-45deg, #134e5e, #71b280, #134e5e, #71b280)' },
+                  { id: 'purple', name: 'Purple', gradient: 'linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe)' }
+                ].map(preset => (
+                  <button
+                    key={preset.id}
+                    onClick={() => setTheme(prev => ({ ...prev, gradient: preset.gradient, backgroundImage: undefined }))}
+                    className={`p-2 rounded-lg border-2 transition-all overflow-hidden ${
+                      theme.gradient === preset.gradient && !theme.backgroundImage
+                        ? 'border-indigo-500 ring-2 ring-indigo-200'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    title={preset.name}
+                  >
+                    <div 
+                      className="w-full h-10 rounded relative"
+                      style={{ 
+                        background: preset.gradient,
+                        backgroundSize: '400% 400%',
+                        animation: 'gradient 15s ease infinite'
+                      }}
+                    />
+                    <p className="text-xs font-bold text-gray-600 mt-1 text-center">{preset.name}</p>
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
+            
+            <div className="flex-shrink-0">
+              <label className="text-sm font-bold text-gray-900 block mb-2">背景画像</label>
+              <div className="flex gap-2">
+                <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-2 cursor-pointer border-2 border-dashed border-indigo-300 whitespace-nowrap">
+                  {isUploadingBackground ? (
+                    <>
+                      <Loader2 className="animate-spin" size={16}/> アップロード中...
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon2 size={16}/> 画像を選択
+                    </>
+                  )}
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={handleBackgroundImageUpload} 
+                    disabled={isUploadingBackground}
+                  />
+                </label>
+                {theme.backgroundImage && (
+                  <button
+                    onClick={() => setTheme(prev => ({ ...prev, backgroundImage: undefined }))}
+                    className="px-4 py-3 bg-red-50 text-red-700 rounded-lg font-bold hover:bg-red-100 whitespace-nowrap"
+                  >
+                    削除
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
+          
+          {theme.backgroundImage && (
+            <div className="mt-2 relative">
+              <img 
+                src={theme.backgroundImage} 
+                alt="Background preview" 
+                className="w-full h-32 object-cover rounded-lg border border-gray-200"
+              />
+            </div>
+          )}
         </div>
 
         {/* ブロック追加ボタン */}

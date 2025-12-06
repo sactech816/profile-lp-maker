@@ -19,11 +19,22 @@ export function BlockRenderer({ block, profileId }: { block: Block; profileId?: 
       return (
         <header className="text-center space-y-4 pt-8 animate-fade-in">
           <div className="relative inline-block">
-            <img 
-              src={block.data.avatar || '/placeholder-avatar.png'} 
-              alt={`${block.data.name} プロフィール写真`}
-              className="w-32 h-32 md:w-36 md:h-36 rounded-full mx-auto shadow-xl border-4 border-white object-cover"
-            />
+            {block.data.avatar ? (
+              <img 
+                src={block.data.avatar} 
+                alt={`${block.data.name} プロフィール写真`}
+                className="w-32 h-32 md:w-36 md:h-36 rounded-full mx-auto shadow-xl border-4 border-white object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/placeholder-avatar.png';
+                }}
+              />
+            ) : (
+              <div className="w-32 h-32 md:w-36 md:h-36 rounded-full mx-auto shadow-xl border-4 border-white bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
+                <span className="text-white font-bold text-2xl">
+                  {block.data.name ? block.data.name.charAt(0) : '?'}
+                </span>
+              </div>
+            )}
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg">
             {block.data.name}
@@ -169,11 +180,20 @@ export function BlockRenderer({ block, profileId }: { block: Block; profileId?: 
           <div className="glass-card rounded-2xl p-6 shadow-2xl transform hover:scale-[1.02] transition-transform">
             <div className="flex flex-col md:flex-row gap-6">
               <div className="flex-shrink-0">
-                <img 
-                  src={block.data.imageUrl} 
-                  alt={block.data.title}
-                  className="w-full md:w-48 h-auto rounded-lg shadow-lg object-cover"
-                />
+                {block.data.imageUrl ? (
+                  <img 
+                    src={block.data.imageUrl} 
+                    alt={block.data.title}
+                    className="w-full md:w-48 h-auto rounded-lg shadow-lg object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/200x300?text=Book+Cover';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full md:w-48 h-64 bg-gray-200 rounded-lg shadow-lg flex items-center justify-center">
+                    <span className="text-gray-400 text-sm">画像なし</span>
+                  </div>
+                )}
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{block.data.title}</h3>
