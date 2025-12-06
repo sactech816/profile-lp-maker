@@ -204,7 +204,7 @@ const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, 
             <div className="max-w-6xl mx-auto py-12 px-4">
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-2">
-                        <LayoutDashboard/> マイページ
+                        <LayoutDashboard/> ダッシュボード
                     </h1>
                     <button 
                         onClick={onLogout} 
