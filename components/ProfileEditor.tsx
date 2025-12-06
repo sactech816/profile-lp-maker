@@ -343,12 +343,12 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('profile-images').upload(filePath, file, {
+      const { error: uploadError } = await supabase.storage.from('images').upload(filePath, file, {
         upsert: true
       });
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.from('profile-images').getPublicUrl(filePath);
+      const { data } = supabase.storage.from('images').getPublicUrl(filePath);
       
       // ブロックタイプに応じて更新
       const block = blocks.find(b => b.id === blockId);
@@ -693,21 +693,21 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                   <Input label="URL" val={link.url} onChange={v => updateLinkInBlock(block.id, index, 'url', v)} ph="https://..." type="url" />
                   <div>
                     <label className="text-sm font-bold text-gray-900 block mb-2">スタイル</label>
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {[
-                        { id: '', name: 'デフォルト', color: 'bg-gray-100 text-gray-700' },
-                        { id: 'orange', name: 'オレンジ', color: 'bg-orange-500 text-white' },
-                        { id: 'blue', name: 'ブルー', color: 'bg-blue-500 text-white' },
-                        { id: 'green', name: 'グリーン', color: 'bg-green-500 text-white' },
-                        { id: 'purple', name: 'パープル', color: 'bg-purple-500 text-white' },
+                        { id: '', name: 'デフォルト', bgColor: 'bg-gray-100', textColor: 'text-gray-700', borderColor: 'border-gray-300' },
+                        { id: 'orange', name: 'オレンジ', bgColor: 'bg-orange-500', textColor: 'text-white', borderColor: 'border-orange-600' },
+                        { id: 'blue', name: 'ブルー', bgColor: 'bg-blue-500', textColor: 'text-white', borderColor: 'border-blue-600' },
+                        { id: 'green', name: 'グリーン', bgColor: 'bg-green-500', textColor: 'text-white', borderColor: 'border-green-600' },
+                        { id: 'purple', name: 'パープル', bgColor: 'bg-purple-500', textColor: 'text-white', borderColor: 'border-purple-600' },
                       ].map(styleOption => (
                         <button
                           key={styleOption.id}
                           onClick={() => updateLinkInBlock(block.id, index, 'style', styleOption.id)}
-                          className={`px-3 py-2 rounded-lg font-bold text-xs transition-all ${
+                          className={`px-4 py-2 rounded-lg font-bold text-sm transition-all border-2 ${
                             link.style === styleOption.id
-                              ? `${styleOption.color} ring-2 ring-indigo-300`
-                              : `${styleOption.color} opacity-70 hover:opacity-100`
+                              ? `${styleOption.bgColor} ${styleOption.textColor} ${styleOption.borderColor} ring-2 ring-indigo-300 shadow-md`
+                              : `${styleOption.bgColor} ${styleOption.textColor} ${styleOption.borderColor} opacity-70 hover:opacity-100`
                           }`}
                         >
                           {styleOption.name}
@@ -770,10 +770,10 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                       const fileExt = file.name.split('.').pop();
                       const fileName = `kindle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                       const filePath = `${user.id}/${fileName}`;
-                      supabase.storage.from('profile-images').upload(filePath, file, { upsert: true })
+                      supabase.storage.from('images').upload(filePath, file, { upsert: true })
                         .then(({ error: uploadError }) => {
                           if (uploadError) throw uploadError;
-                          const { data } = supabase.storage.from('profile-images').getPublicUrl(filePath);
+                          const { data } = supabase.storage.from('images').getPublicUrl(filePath);
                           updateBlock(block.id, { imageUrl: data.publicUrl });
                         })
                         .catch((error: any) => alert('アップロードエラー: ' + error.message))
@@ -1070,10 +1070,10 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                             const fileExt = file.name.split('.').pop();
                             const fileName = `testimonial_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                             const filePath = `${user.id}/${fileName}`;
-                            supabase.storage.from('profile-images').upload(filePath, file, { upsert: true })
+                            supabase.storage.from('images').upload(filePath, file, { upsert: true })
                               .then(({ error: uploadError }) => {
                                 if (uploadError) throw uploadError;
-                                const { data } = supabase.storage.from('profile-images').getPublicUrl(filePath);
+                                const { data } = supabase.storage.from('images').getPublicUrl(filePath);
                                 setBlocks(prev => prev.map(b => 
                                   b.id === block.id && b.type === 'testimonial'
                                     ? { ...b, data: { items: b.data.items.map((it, i) => i === index ? { ...it, imageUrl: data.publicUrl } : it) } }
