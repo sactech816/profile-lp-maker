@@ -25,7 +25,7 @@ const Input = ({label, val, onChange, ph, type = "text"}: {label: string; val: s
     </div>
 );
 
-const Textarea = ({label, val, onChange, rows = 3}: {label: string; val: string; onChange: (v: string) => void; rows?: number}) => (
+const Textarea = ({label, val, onChange, rows = 3, ph}: {label: string; val: string; onChange: (v: string) => void; rows?: number; ph?: string}) => (
     <div className="mb-4">
         <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
         <textarea 
@@ -33,6 +33,7 @@ const Textarea = ({label, val, onChange, rows = 3}: {label: string; val: string;
             rows={rows} 
             value={val||''} 
             onChange={e=>onChange(e.target.value)}
+            placeholder={ph}
         />
     </div>
 );
@@ -249,18 +250,103 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
     setIsUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('profile-images').upload(filePath, file);
+      // 既存のファイルを削除（オプション）
+      // await supabase.storage.from('profile-images').remove([filePath]);
+
+      const { error: uploadError } = await supabase.storage.from('profile-images').upload(filePath, file, {
+        upsert: true
+      });
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('profile-images').getPublicUrl(filePath);
-      updateBlock(blockId, { avatar: data.publicUrl });
+      
+      // ブロックタイプに応じて更新
+      const block = blocks.find(b => b.id === blockId);
+      if (block?.type === 'header') {
+        updateBlock(blockId, { avatar: data.publicUrl });
+      } else if (block?.type === 'image') {
+        updateBlock(blockId, { url: data.publicUrl });
+      }
     } catch (error: any) {
       alert('アップロードエラー: ' + error.message);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  // AI生成機能
+  const handleAIGenerate = async () => {
+    if (!aiForm.occupation || !aiForm.target || !aiForm.strengths) {
+      alert('すべての項目を入力してください');
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const res = await fetch('/api/generate-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(aiForm),
+      });
+
+      if (!res.ok) throw new Error('AI生成に失敗しました');
+
+      const data = await res.json();
+
+      // ヘッダーブロックを更新または作成
+      let headerBlock = blocks.find(b => b.type === 'header');
+      if (!headerBlock) {
+        headerBlock = {
+          id: generateBlockId(),
+          type: 'header',
+          data: { avatar: '', name: '', title: '' }
+        };
+        setBlocks(prev => [headerBlock!, ...prev]);
+      }
+      updateBlock(headerBlock.id, {
+        title: data.catchphrase,
+        name: user?.email?.split('@')[0] || 'あなた'
+      });
+
+      // テキストカードブロックを追加または更新
+      let textCardBlock = blocks.find(b => b.type === 'text_card');
+      if (!textCardBlock) {
+        textCardBlock = {
+          id: generateBlockId(),
+          type: 'text_card',
+          data: { title: '自己紹介', text: '', align: 'center' }
+        };
+        setBlocks(prev => [...prev, textCardBlock!]);
+      }
+      updateBlock(textCardBlock.id, {
+        text: data.introduction
+      });
+
+      // リンクブロックを追加または更新
+      if (data.recommendedLinks && data.recommendedLinks.length > 0) {
+        let linksBlock = blocks.find(b => b.type === 'links');
+        if (!linksBlock) {
+          linksBlock = {
+            id: generateBlockId(),
+            type: 'links',
+            data: { links: [] }
+          };
+          setBlocks(prev => [...prev, linksBlock!]);
+        }
+        updateBlock(linksBlock.id, {
+          links: data.recommendedLinks
+        });
+      }
+
+      setShowAIModal(false);
+      alert('AI生成が完了しました！');
+    } catch (error: any) {
+      alert('AI生成エラー: ' + error.message);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
