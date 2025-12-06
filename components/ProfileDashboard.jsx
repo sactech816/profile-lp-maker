@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { User, LayoutDashboard, LogOut, Loader2, ExternalLink, Edit3, Trash2, Table, BarChart2, Copy, Plus, FileText } from 'lucide-react';
+import { User, LayoutDashboard, LogOut, Loader2, ExternalLink, Edit3, Trash2, Table, BarChart2, Copy, Plus, FileText, CheckCircle, ShoppingCart, Code, Download } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Header from './Header';
 import Footer from './Footer';
 import { supabase } from '../lib/supabase';
 import { generateSlug } from '../lib/utils';
+import { generateProfileHTML } from '../lib/profileHtmlGenerator';
+import { migrateOldContent } from '../lib/types';
 
 const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, onCreate }) => {
     useEffect(() => { 
@@ -15,8 +17,10 @@ const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, 
     }, []);
     
     const [myProfiles, setMyProfiles] = useState([]);
+    const [purchases, setPurchases] = useState([]);
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState('graph');
+    const [processingId, setProcessingId] = useState(null);
 
     // プロフィール名を取得（content配列からheaderブロックを探す）
     const getProfileName = (profile) => {
@@ -45,10 +49,109 @@ const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, 
         const init = async () => {
             if(!user) return;
             await fetchMyProfiles();
+            
+            // 購入履歴を取得
+            if (supabase) {
+                const { data: bought } = await supabase
+                    .from('profile_purchases')
+                    .select('profile_id')
+                    .eq('user_id', user.id);
+                setPurchases(bought?.map(p => p.profile_id) || []);
+            }
+
+            // 決済完了の確認
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('payment') === 'success' && params.get('session_id')) {
+                const profileId = params.get('profile_id');
+                await verifyPayment(params.get('session_id'), profileId);
+                window.history.replaceState(null, '', window.location.pathname);
+            }
+
             setLoading(false);
         };
         init();
     }, [user]);
+
+    const verifyPayment = async (sessionId, profileId) => {
+        try {
+            const res = await fetch('/api/verify-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId, profileId, userId: user.id }),
+            });
+            if (res.ok) {
+                alert('寄付ありがとうございます！Pro機能（HTML・埋め込み）が開放されました。');
+                setPurchases(prev => [...prev, profileId]);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handlePurchase = async (profile) => {
+        const profileName = getProfileName(profile);
+        const inputPrice = window.prompt(`「${profileName}」のPro機能を開放します。\n\n応援・寄付金額を入力してください（500円〜50,000円）。`, "1000");
+        if (inputPrice === null) return;
+        const price = parseInt(inputPrice, 10);
+        if (isNaN(price) || price < 500 || price > 50000) {
+            alert("金額は 500円以上、50,000円以下 の半角数字で入力してください。");
+            return;
+        }
+
+        setProcessingId(profile.id);
+        try {
+            const res = await fetch('/api/checkout-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    profileId: profile.id,
+                    profileName: profileName,
+                    userId: user.id,
+                    email: user.email,
+                    price: price 
+                }),
+            });
+            const data = await res.json();
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error('決済URLの取得に失敗しました');
+            }
+        } catch (e) {
+            alert('エラー: ' + e.message);
+            setProcessingId(null);
+        }
+    };
+
+    const handleDownload = (profile) => {
+        try {
+            // 旧形式のデータをマイグレーション
+            const migratedContent = migrateOldContent(profile.content);
+            const htmlContent = generateProfileHTML({
+                slug: profile.slug,
+                content: migratedContent
+            });
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${getProfileName(profile) || 'profile'}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            alert('HTML生成エラー: ' + e.message);
+        }
+    };
+
+    const handleEmbed = (profile, isUnlocked) => {
+        if (!isUnlocked) return alert("この機能を利用するには、寄付（購入）によるロック解除が必要です。");
+        const url = `${window.location.origin}/p/${profile.slug}`;
+        const code = `<iframe src="${url}" width="100%" height="600" style="border:none; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></iframe>`;
+        navigator.clipboard.writeText(code);
+        alert('埋め込みコードをコピーしました！\n\nWordPressなどの「カスタムHTML」ブロックに貼り付けてください。');
+    };
 
   // 新規プロフィール作成
   const handleCreate = () => {
@@ -294,10 +397,43 @@ const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, 
 
                                                 <button 
                                                     onClick={() => onDelete(profile.id)} 
-                                                    className="w-full bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
+                                                    className="w-full mb-2 bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
                                                 >
                                                     <Trash2 size={14}/> 削除
                                                 </button>
+                                                
+                                                {/* Pro機能 */}
+                                                {(() => {
+                                                    const isUnlocked = purchases.includes(profile.id) || isAdmin;
+                                                    return (
+                                                        <>
+                                                            <button 
+                                                                onClick={() => handleEmbed(profile, isUnlocked)} 
+                                                                className={`w-full mb-2 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 ${isUnlocked ? 'bg-blue-50 hover:bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}
+                                                            >
+                                                                <Code size={14}/> 埋め込み
+                                                            </button>
+                                                            
+                                                            {isUnlocked ? (
+                                                                <button 
+                                                                    onClick={() => handleDownload(profile)} 
+                                                                    className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-xs hover:bg-green-600 flex items-center justify-center gap-1 animate-pulse"
+                                                                >
+                                                                    <CheckCircle size={14}/> HTMLダウンロード
+                                                                </button>
+                                                            ) : (
+                                                                <button 
+                                                                    onClick={() => handlePurchase(profile)} 
+                                                                    disabled={processingId === profile.id} 
+                                                                    className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-xs hover:bg-orange-600 flex items-center justify-center gap-1"
+                                                                >
+                                                                    {processingId === profile.id ? <Loader2 className="animate-spin" size={14}/> : <ShoppingCart size={14}/>}
+                                                                    機能開放 / 寄付
+                                                                </button>
+                                                            )}
+                                                        </>
+                                                    );
+                                                })()}
                                             </div>
                                         </div>
                                     );

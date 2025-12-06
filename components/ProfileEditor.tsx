@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
     Edit3, Loader2, Save, Share2, ArrowLeft, Plus, Trash2, 
     X, Link, UploadCloud, Eye, User, FileText, GripVertical,
-    ChevronUp, ChevronDown, Image as ImageIcon, Youtube, MoveUp, MoveDown
+    ChevronUp, ChevronDown, Image as ImageIcon, Youtube, MoveUp, MoveDown, Sparkles
 } from 'lucide-react';
 import { generateSlug } from '../lib/utils';
 import { supabase } from '../lib/supabase';
@@ -57,6 +57,9 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
   const [isUploading, setIsUploading] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiForm, setAiForm] = useState({ occupation: '', target: '', strengths: '' });
 
   // デフォルトのプロフィールコンテンツ
   const getDefaultContent = (): Block[] => [
@@ -484,6 +487,14 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
 
         {/* ブロック追加ボタン */}
         <div className="p-6 border-b bg-gray-50">
+          <div className="flex flex-wrap gap-2 mb-3">
+            <button 
+              onClick={() => setShowAIModal(true)} 
+              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-4 py-2 rounded-lg font-bold text-sm hover:from-purple-600 hover:to-pink-600 flex items-center gap-2 shadow-md"
+            >
+              <Sparkles size={16}/> AIで自動生成
+            </button>
+          </div>
           <div className="flex flex-wrap gap-2">
             <button onClick={() => addBlock('header')} className="bg-white border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 flex items-center gap-2">
               <User size={16}/> ヘッダー
@@ -592,6 +603,71 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                     &copy; {new Date().getFullYear()} All Rights Reserved.
                   </p>
                 </footer>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI生成モーダル */}
+      {showAIModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-xl text-gray-900 flex items-center gap-2">
+                <Sparkles className="text-purple-600" size={20}/> AIで自動生成
+              </h3>
+              <button 
+                onClick={() => setShowAIModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-full"
+              >
+                <X size={20}/>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <Input 
+                label="職業" 
+                val={aiForm.occupation} 
+                onChange={v => setAiForm(prev => ({ ...prev, occupation: v }))} 
+                ph="例: フリーランスデザイナー" 
+              />
+              <Input 
+                label="ターゲット" 
+                val={aiForm.target} 
+                onChange={v => setAiForm(prev => ({ ...prev, target: v }))} 
+                ph="例: 起業を考えている20代のビジネスパーソン" 
+              />
+              <Textarea 
+                label="強み・特徴" 
+                val={aiForm.strengths} 
+                onChange={v => setAiForm(prev => ({ ...prev, strengths: v }))} 
+                rows={4}
+                ph="例: 10年のデザイン経験、ブランディングが得意"
+              />
+              
+              <div className="flex gap-2 pt-2">
+                <button 
+                  onClick={() => setShowAIModal(false)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-4 py-3 rounded-lg font-bold hover:bg-gray-200"
+                >
+                  キャンセル
+                </button>
+                <button 
+                  onClick={handleAIGenerate}
+                  disabled={isGenerating}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-3 rounded-lg font-bold hover:from-purple-600 hover:to-pink-600 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="animate-spin" size={18}/> 生成中...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={18}/> 生成する
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
