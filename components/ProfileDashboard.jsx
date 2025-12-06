@@ -302,23 +302,46 @@ const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, 
                                             <tr>
                                                 <th className="px-4 py-3 bg-gray-50">プロフィール名</th>
                                                 <th className="px-4 py-3 bg-gray-50">Slug</th>
+                                                <th className="px-4 py-3 text-right bg-gray-50">アクセス数</th>
+                                                <th className="px-4 py-3 text-right bg-gray-50">クリック数</th>
+                                                <th className="px-4 py-3 text-right bg-gray-50">クリック率</th>
+                                                <th className="px-4 py-3 text-right bg-gray-50">精読率</th>
+                                                <th className="px-4 py-3 text-right bg-gray-50">滞在時間</th>
                                                 <th className="px-4 py-3 text-right bg-gray-50">作成日</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {myProfiles.map(p => (
-                                                <tr key={p.id} className="border-b hover:bg-gray-50">
-                                                    <td className="px-4 py-3 font-medium text-gray-900 truncate max-w-[200px]">
-                                                        {getProfileName(p)}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-gray-600 font-mono text-xs">
-                                                        {p.slug}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right text-gray-500 text-xs">
-                                                        {p.created_at ? new Date(p.created_at).toLocaleDateString('ja-JP') : '-'}
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {myProfiles.map(p => {
+                                                const analytics = analyticsMap[p.id] || { views: 0, clicks: 0, clickRate: 0, readRate: 0, avgTimeSpent: 0 };
+                                                return (
+                                                    <tr key={p.id} className="border-b hover:bg-gray-50">
+                                                        <td className="px-4 py-3 font-medium text-gray-900 truncate max-w-[200px]">
+                                                            {getProfileName(p)}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-gray-600 font-mono text-xs">
+                                                            {p.slug}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-bold text-indigo-600">
+                                                            {analytics.views}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-bold text-indigo-600">
+                                                            {analytics.clicks}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-bold text-green-600">
+                                                            {analytics.clickRate > 0 ? `${analytics.clickRate}%` : '-'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-bold text-blue-600">
+                                                            {analytics.readRate > 0 ? `${analytics.readRate}%` : '-'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-bold text-purple-600">
+                                                            {analytics.avgTimeSpent > 0 ? `${analytics.avgTimeSpent}秒` : '-'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right text-gray-500 text-xs">
+                                                            {p.created_at ? new Date(p.created_at).toLocaleDateString('ja-JP') : '-'}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>

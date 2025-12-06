@@ -5,6 +5,7 @@ import { Block } from '@/lib/types';
 import { saveAnalytics } from '@/app/actions/analytics';
 import { saveLead } from '@/app/actions/leads';
 import { ChevronDown as ChevronDownIcon, Star } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 // YouTube URLから動画IDを抽出
 function extractYouTubeId(url: string): string | null {
@@ -412,7 +413,22 @@ function LineCardBlock({ block, profileId }: { block: Extract<Block, { type: 'li
             </svg>
           </div>
           <h3 className="text-2xl font-bold mb-2">{block.data.title || 'LINE公式アカウント'}</h3>
-          <p className="text-white/90 mb-6">{block.data.description || '最新情報をお届けします'}</p>
+          <p className="text-white/90 mb-4">{block.data.description || '最新情報をお届けします'}</p>
+          
+          {/* QRコード表示 */}
+          {block.data.url && (
+            <div className="mb-4 flex justify-center">
+              <div className="bg-white p-3 rounded-lg inline-block">
+                <QRCodeSVG 
+                  value={block.data.url}
+                  size={120}
+                  level="H"
+                  includeMargin={true}
+                />
+              </div>
+            </div>
+          )}
+          
           <button
             onClick={handleClick}
             className="bg-white text-[#06C755] font-bold px-8 py-4 rounded-full shadow-lg hover:bg-gray-100 transition-all transform hover:scale-105"

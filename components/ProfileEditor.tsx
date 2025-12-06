@@ -744,11 +744,11 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
 
       case 'kindle':
         const kindleImagePresets = [
-          'https://img.freepik.com/free-psd/3d-book-cover-mockup_125540-572.jpg?w=200',
-          'https://img.freepik.com/free-psd/3d-book-cover-mockup_125540-573.jpg?w=200',
-          'https://img.freepik.com/free-psd/3d-book-cover-mockup_125540-574.jpg?w=200',
-          'https://img.freepik.com/free-psd/3d-book-cover-mockup_125540-575.jpg?w=200',
-          'https://img.freepik.com/free-psd/3d-book-cover-mockup_125540-576.jpg?w=200',
+          'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=200&h=300&fit=crop',
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=300&fit=crop',
+          'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=300&fit=crop',
+          'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=200&h=300&fit=crop',
+          'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=200&h=300&fit=crop',
         ];
         return (
           <div className="space-y-4">
@@ -1109,12 +1109,12 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                       <label className="text-xs font-bold text-gray-700 block mb-1">プリセット画像から選択</label>
                       <div className="flex flex-wrap gap-2">
                         {[
-                          'https://img.freepik.com/free-vector/man-avatar-profile-round-icon_24640-14044.jpg?w=100',
-                          'https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?w=100',
-                          'https://img.freepik.com/free-vector/young-man-avatar-character_24877-9475.jpg?w=100',
-                          'https://img.freepik.com/free-vector/woman-avatar-profile-round-icon_24640-14042.jpg?w=100',
-                          'https://img.freepik.com/free-vector/businesswoman-character-avatar-isolated_24877-60110.jpg?w=100',
-                          'https://img.freepik.com/free-vector/young-woman-avatar-character_24877-9474.jpg?w=100',
+                          'https://ui-avatars.com/api/?name=Male+1&background=6366f1&color=fff&size=128&bold=true',
+                          'https://ui-avatars.com/api/?name=Male+2&background=3b82f6&color=fff&size=128&bold=true',
+                          'https://ui-avatars.com/api/?name=Male+3&background=8b5cf6&color=fff&size=128&bold=true',
+                          'https://ui-avatars.com/api/?name=Female+1&background=ec4899&color=fff&size=128&bold=true',
+                          'https://ui-avatars.com/api/?name=Female+2&background=f43f5e&color=fff&size=128&bold=true',
+                          'https://ui-avatars.com/api/?name=Female+3&background=14b8a6&color=fff&size=128&bold=true',
                         ].map((preset, idx) => (
                           <button
                             key={idx}
