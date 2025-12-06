@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Script from 'next/script';
+import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import { generateSlug } from '../lib/utils';
 import { ADMIN_EMAIL } from '../lib/constants';
@@ -23,6 +24,7 @@ import {
 import { Loader2 } from 'lucide-react';
 
 const App = () => {
+  const router = useRouter();
   const [view, setView] = useState('loading'); 
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [editingQuiz, setEditingQuiz] = useState(null);
@@ -97,15 +99,20 @@ const App = () => {
   // ブラウザの「戻る」ボタン対応
   useEffect(() => {
       const handlePopState = (event) => {
-          if (event.state && event.state.view) {
-              setView(event.state.view);
-              if (event.state.view === 'quiz' && event.state.id) {
-                  setView('portal');
-                  setSelectedQuiz(null);
-              }
+          // URLパラメータからページを読み取る
+          const params = new URLSearchParams(window.location.search);
+          const page = params.get('page');
+          const id = params.get('id');
+          
+          if (page) {
+              setView(page);
+          } else if (id) {
+              // クイズIDがある場合はquizビュー
+              setView('quiz');
+          } else if (window.location.pathname === '/dashboard') {
+              setView('dashboard');
           } else {
-              setView('portal');
-              setSelectedQuiz(null);
+              setView('landing');
           }
       };
       window.addEventListener('popstate', handlePopState);
@@ -114,13 +121,28 @@ const App = () => {
 
   // 画面遷移ハンドラ
   const navigateTo = (newView, params = {}) => {
-      let url = window.location.pathname;
+      let url = '/';
+      const urlParams = new URLSearchParams();
+      
+      // すべてのページをURLパラメータで管理（dashboardやprofile-editorも含む）
       if (newView === 'quiz' && params.id) {
-          url += `?id=${params.id}`;
+          urlParams.set('id', params.id);
+      } else if (newView === 'landing') {
+          // ランディングページはクエリパラメータなし
+          url = '/';
+      } else if (newView === 'portal') {
+          // ポータルページもクエリパラメータなし（レガシー互換）
+          url = '/';
+      } else {
+          // その他のページは?page=パラメータを使用
+          urlParams.set('page', newView);
       }
-      if (newView === 'portal') {
-          url = window.location.pathname;
+      
+      const queryString = urlParams.toString();
+      if (queryString) {
+          url += `?${queryString}`;
       }
+      
       window.history.pushState({ view: newView, ...params }, '', url);
       setView(newView);
   };
