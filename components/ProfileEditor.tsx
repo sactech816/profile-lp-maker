@@ -213,6 +213,12 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
             type: 'lead_form',
             data: { title: 'メルマガ登録', buttonText: '登録する' }
           };
+        case 'line_card':
+          return {
+            id: generateBlockId(),
+            type: 'line_card',
+            data: { title: 'LINE公式アカウント', description: '最新情報をお届けします', url: 'https://lin.ee/xxxxx', buttonText: '友だち追加' }
+          };
         case 'faq':
           return {
             id: generateBlockId(),
@@ -671,7 +677,30 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                   </div>
                   <Input label="ラベル" val={link.label} onChange={v => updateLinkInBlock(block.id, index, 'label', v)} ph="例: note" />
                   <Input label="URL" val={link.url} onChange={v => updateLinkInBlock(block.id, index, 'url', v)} ph="https://..." type="url" />
-                  <Input label="スタイル（オプション）" val={link.style} onChange={v => updateLinkInBlock(block.id, index, 'style', v)} ph="例: orange" />
+                  <div>
+                    <label className="text-sm font-bold text-gray-900 block mb-2">スタイル</label>
+                    <div className="grid grid-cols-5 gap-2">
+                      {[
+                        { id: '', name: 'デフォルト', color: 'bg-gray-100 text-gray-700' },
+                        { id: 'orange', name: 'オレンジ', color: 'bg-orange-500 text-white' },
+                        { id: 'blue', name: 'ブルー', color: 'bg-blue-500 text-white' },
+                        { id: 'green', name: 'グリーン', color: 'bg-green-500 text-white' },
+                        { id: 'purple', name: 'パープル', color: 'bg-purple-500 text-white' },
+                      ].map(styleOption => (
+                        <button
+                          key={styleOption.id}
+                          onClick={() => updateLinkInBlock(block.id, index, 'style', styleOption.id)}
+                          className={`px-3 py-2 rounded-lg font-bold text-xs transition-all ${
+                            link.style === styleOption.id
+                              ? `${styleOption.color} ring-2 ring-indigo-300`
+                              : `${styleOption.color} opacity-70 hover:opacity-100`
+                          }`}
+                        >
+                          {styleOption.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ))}
               {block.data.links.length === 0 && (
@@ -684,10 +713,10 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       case 'kindle':
         const kindleImagePresets = [
           'https://images-na.ssl-images-amazon.com/images/I/51aHbX9Q9zL._SX331_BO1,204,203,200_.jpg',
-          'https://images-na.ssl-images-amazon.com/images/I/51Y5Z5Z5Z5L._SX331_BO1,204,203,200_.jpg',
-          'https://images-na.ssl-images-amazon.com/images/I/51X5X5X5X5L._SX331_BO1,204,203,200_.jpg',
-          'https://images-na.ssl-images-amazon.com/images/I/51W5W5W5W5L._SX331_BO1,204,203,200_.jpg',
-          'https://images-na.ssl-images-amazon.com/images/I/51V5V5V5V5L._SX331_BO1,204,203,200_.jpg',
+          'https://images-na.ssl-images-amazon.com/images/I/81nzxODnaJL._AC_UL600_SR600,600_.jpg',
+          'https://images-na.ssl-images-amazon.com/images/I/71KilybDOoL._AC_UL600_SR600,600_.jpg',
+          'https://images-na.ssl-images-amazon.com/images/I/81YOuOGFCJL._AC_UL600_SR600,600_.jpg',
+          'https://images-na.ssl-images-amazon.com/images/I/71jG+e7roXL._AC_UL600_SR600,600_.jpg',
         ];
         return (
           <div className="space-y-4">
@@ -770,6 +799,16 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           <div className="space-y-4">
             <Input label="タイトル" val={block.data.title} onChange={v => updateBlock(block.id, { title: v })} ph="例: メルマガ登録" />
             <Input label="ボタンテキスト" val={block.data.buttonText} onChange={v => updateBlock(block.id, { buttonText: v })} ph="例: 登録する" />
+          </div>
+        );
+
+      case 'line_card':
+        return (
+          <div className="space-y-4">
+            <Input label="タイトル" val={block.data.title} onChange={v => updateBlock(block.id, { title: v })} ph="例: LINE公式アカウント" />
+            <Textarea label="説明" val={block.data.description} onChange={v => updateBlock(block.id, { description: v })} rows={3} ph="例: 最新情報をお届けします" />
+            <Input label="LINE URL" val={block.data.url} onChange={v => updateBlock(block.id, { url: v })} ph="例: https://lin.ee/xxxxx" type="url" />
+            <Input label="ボタンテキスト" val={block.data.buttonText} onChange={v => updateBlock(block.id, { buttonText: v })} ph="例: 友だち追加" />
           </div>
         );
 
@@ -978,7 +1017,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                   }} rows={4} ph="お客様の声を入力してください" />
                   <div className="mt-2">
                     <label className="text-sm font-bold text-gray-900 block mb-2">画像URL（オプション）</label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 mb-2">
                       <Input 
                         label="" 
                         val={item.imageUrl || ''} 
@@ -1033,6 +1072,33 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                           disabled={isUploading}
                         />
                       </label>
+                    </div>
+                    <div className="mb-2">
+                      <label className="text-xs font-bold text-gray-700 block mb-1">プリセット画像から選択</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces',
+                          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces',
+                          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces',
+                          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces',
+                          'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=faces',
+                          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces',
+                        ].map((preset, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setBlocks(prev => prev.map(b => 
+                                b.id === block.id && b.type === 'testimonial'
+                                  ? { ...b, data: { items: b.data.items.map((it, i) => i === index ? { ...it, imageUrl: preset } : it) } }
+                                  : b
+                              ));
+                            }}
+                            className="border-2 border-gray-200 rounded-full p-1 hover:border-indigo-500 transition-all"
+                          >
+                            <img src={preset} alt={`Preset ${idx + 1}`} className="w-12 h-12 object-cover rounded-full" />
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1330,6 +1396,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                         {block.type === 'links' && 'リンク集'}
                         {block.type === 'kindle' && 'Kindle書籍'}
                         {block.type === 'lead_form' && 'リード獲得フォーム'}
+                        {block.type === 'line_card' && 'LINE登録'}
                         {block.type === 'faq' && 'FAQ'}
                         {block.type === 'pricing' && '料金表'}
                         {block.type === 'testimonial' && 'お客様の声'}

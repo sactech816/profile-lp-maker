@@ -13,6 +13,7 @@ export type Block =
   | { id: string; type: 'links'; data: { links: LinkItem[] } }
   | { id: string; type: 'kindle'; data: { asin: string; imageUrl: string; title: string; description: string } }
   | { id: string; type: 'lead_form'; data: { title: string; buttonText: string } }
+  | { id: string; type: 'line_card'; data: { title: string; description: string; url: string; buttonText: string } }
   | { id: string; type: 'faq'; data: { items: { id: string; question: string; answer: string }[] } }
   | { id: string; type: 'pricing'; data: { plans: { id: string; title: string; price: string; features: string[]; isRecommended: boolean }[] } }
   | { id: string; type: 'testimonial'; data: { items: { id: string; name: string; role: string; comment: string; imageUrl?: string }[] } };

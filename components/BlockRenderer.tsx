@@ -102,8 +102,19 @@ export function BlockRenderer({ block, profileId }: { block: Block; profileId?: 
         <section className="space-y-4 animate-fade-in">
           <h3 className="text-center font-bold text-white drop-shadow-md mb-4">Follow Me & More Info</h3>
           {block.data.links.map((link, index) => {
-            const isOrange = link.style?.includes('orange') || link.label?.includes('Kindle') || link.label?.includes('Amazon');
             const isLine = link.url?.includes('lin.ee') || link.label?.includes('LINE');
+            
+            // スタイルに基づいてクラスを決定
+            let styleClass = 'bg-white/90 border-gray-200 text-gray-900';
+            if (link.style === 'orange') {
+              styleClass = 'bg-orange-500 hover:bg-orange-600 text-white border-orange-500';
+            } else if (link.style === 'blue') {
+              styleClass = 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500';
+            } else if (link.style === 'green') {
+              styleClass = 'bg-green-500 hover:bg-green-600 text-white border-green-500';
+            } else if (link.style === 'purple') {
+              styleClass = 'bg-purple-500 hover:bg-purple-600 text-white border-purple-500';
+            }
             
             const handleClick = async () => {
               if (profileId) {
@@ -118,7 +129,7 @@ export function BlockRenderer({ block, profileId }: { block: Block; profileId?: 
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={handleClick}
-                className={`link-button ${isOrange ? 'bg-orange-50 border-orange-200' : ''} ${isLine ? 'bg-[#06C755] hover:bg-[#05b34c] text-white' : ''}`}
+                className={`link-button ${styleClass} ${isLine ? 'bg-[#06C755] hover:bg-[#05b34c] text-white border-[#06C755]' : ''}`}
               >
                 {link.label?.includes('note') && <span className="mr-3 text-2xl">📓</span>}
                 {link.label?.includes('X') || link.label?.includes('Twitter') ? (
@@ -192,6 +203,9 @@ export function BlockRenderer({ block, profileId }: { block: Block; profileId?: 
 
     case 'lead_form':
       return <LeadFormBlock block={block} profileId={profileId} />;
+
+    case 'line_card':
+      return <LineCardBlock block={block} profileId={profileId} />;
 
     case 'faq':
       return <FAQBlock block={block} />;
@@ -353,6 +367,38 @@ function TestimonialBlock({ block }: { block: Extract<Block, { type: 'testimonia
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// LINE登録カードブロックコンポーネント
+function LineCardBlock({ block, profileId }: { block: Extract<Block, { type: 'line_card' }>; profileId?: string }) {
+  const handleClick = async () => {
+    if (profileId) {
+      await saveAnalytics(profileId, 'click', { url: block.data.url });
+    }
+    window.open(block.data.url, '_blank', 'noopener,noreferrer');
+  };
+
+  return (
+    <section className="animate-fade-in">
+      <div className="glass-card rounded-2xl p-6 shadow-lg bg-gradient-to-br from-[#06C755] to-[#05b34c]">
+        <div className="text-center text-white">
+          <div className="mb-4">
+            <svg className="w-16 h-16 mx-auto" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.63.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766-.028 1.08l-.164.38c-.213.5-.577.694-1.111.477-.636-.255-1.726-.581-2.448-1.005-.193-.127-.232-.127-.538-.08-2.09.35-4.11.63-4.475.63-.63 0-1.095-.389-1.095-1.057 0-.66.465-1.045 1.095-1.045.365 0 2.385-.28 4.475-.63.306-.05.345-.047.538.08.722.424 1.812.75 2.448 1.005.534.217.898.023 1.111-.477l.164-.38c.107-.314.148-.779.028-1.08-.135-.332-.667-.508-1.058-.59C4.27 19.156 0 15.125 0 10.314z"/>
+            </svg>
+          </div>
+          <h3 className="text-2xl font-bold mb-2">{block.data.title || 'LINE公式アカウント'}</h3>
+          <p className="text-white/90 mb-6">{block.data.description || '最新情報をお届けします'}</p>
+          <button
+            onClick={handleClick}
+            className="bg-white text-[#06C755] font-bold px-8 py-4 rounded-full shadow-lg hover:bg-gray-100 transition-all transform hover:scale-105"
+          >
+            {block.data.buttonText || '友だち追加'}
+          </button>
         </div>
       </div>
     </section>
