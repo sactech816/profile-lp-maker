@@ -4,105 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { 
     Edit3, Loader2, Save, Share2, ArrowLeft, Plus, Trash2, 
     X, Link, UploadCloud, Eye, User, FileText, GripVertical,
-    ChevronUp, ChevronDown
+    ChevronUp, ChevronDown, Image as ImageIcon, Youtube, MoveUp, MoveDown
 } from 'lucide-react';
 import { generateSlug } from '../lib/utils';
 import { supabase } from '../lib/supabase';
-
-// データ構造の型定義
-type ProfileBlock = 
-  | { type: 'header'; data: { avatarUrl: string; name: string; tagline: string } }
-  | { type: 'glass_card_text'; data: { title: string; text: string; alignment: 'left' | 'center' } }
-  | { type: 'link_list'; data: { links: { label: string; url: string; style: string }[] } };
-
-// プレビュー用のBlockRendererコンポーネント（ProfilePageから移植）
-function BlockRenderer({ block }: { block: ProfileBlock }) {
-  switch (block.type) {
-    case 'header':
-      return (
-        <header className="text-center space-y-4 pt-8 animate-fade-in">
-          <div className="relative inline-block">
-            <img 
-              src={block.data.avatarUrl || '/placeholder-avatar.png'} 
-              alt={`${block.data.name} プロフィール写真`}
-              className="w-32 h-32 md:w-36 md:h-36 rounded-full mx-auto shadow-xl border-4 border-white object-cover"
-            />
-          </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg">
-            {block.data.name}
-          </h1>
-          <p 
-            className="text-base md:text-lg text-white font-semibold px-4 drop-shadow-md"
-            dangerouslySetInnerHTML={{ __html: block.data.tagline.replace(/\n/g, '<br>') }}
-          />
-        </header>
-      );
-
-    case 'glass_card_text':
-      const alignmentClass = block.data.alignment === 'center' ? 'text-center' : 'text-left';
-      return (
-        <section className={`glass-card rounded-2xl p-6 shadow-lg animate-fade-in ${alignmentClass}`}>
-          {block.data.title && (
-            <h2 className="text-xl font-bold mb-4 accent-color">
-              {block.data.title}
-            </h2>
-          )}
-          <div 
-            className="text-gray-700 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: block.data.text.replace(/\n/g, '<br>') }}
-          />
-        </section>
-      );
-
-    case 'link_list':
-      return (
-        <section className="space-y-4 animate-fade-in">
-          <h3 className="text-center font-bold text-white drop-shadow-md mb-4">Follow Me & More Info</h3>
-          {block.data.links.map((link, index) => {
-            const isOrange = link.style?.includes('orange') || link.label?.includes('Kindle') || link.label?.includes('Amazon');
-            const isLine = link.url?.includes('lin.ee') || link.label?.includes('LINE');
-            
-            return (
-              <a
-                key={index}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`link-button ${isOrange ? 'bg-orange-50 border-orange-200' : ''} ${isLine ? 'bg-[#06C755] hover:bg-[#05b34c] text-white' : ''}`}
-              >
-                {link.label?.includes('note') && <span className="mr-3 text-2xl">📓</span>}
-                {link.label?.includes('X') || link.label?.includes('Twitter') ? (
-                  <svg className="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
-                  </svg>
-                ) : null}
-                {link.label?.includes('Facebook') ? (
-                  <svg className="w-6 h-6 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
-                  </svg>
-                ) : null}
-                {link.label?.includes('ホームページ') || link.label?.includes('公式HP') ? (
-                  <span className="mr-3 text-2xl">🏢</span>
-                ) : null}
-                {link.label?.includes('Kindle') || link.label?.includes('Amazon') ? (
-                  <span className="mr-3 text-2xl">📕</span>
-                ) : null}
-                <span className={`flex-1 text-left ${isOrange ? 'font-bold text-orange-800' : ''}`}>
-                  {link.label}
-                </span>
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isOrange ? 'text-orange-400' : 'text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
-              </a>
-            );
-          })}
-        </section>
-      );
-
-    default:
-      return null;
-  }
-}
+import { Block, generateBlockId, migrateOldContent } from '../lib/types';
+import { BlockRenderer } from './BlockRenderer';
 
 // 入力コンポーネント
 const Input = ({label, val, onChange, ph, type = "text"}: {label: string; val: string; onChange: (v: string) => void; ph?: string; type?: string}) => (
@@ -132,7 +39,7 @@ const Textarea = ({label, val, onChange, rows = 3}: {label: string; val: string;
 
 interface ProfileEditorProps {
   onBack: () => void;
-  onSave?: (data: { slug: string; content: ProfileBlock[] }) => void;
+  onSave?: (data: { slug: string; content: Block[] }) => void;
   initialSlug?: string | null;
   user: any;
   setShowAuth: (show: boolean) => void;
@@ -149,27 +56,31 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
   const [savedSlug, setSavedSlug] = useState<string | null>(initialSlug || null);
   const [isUploading, setIsUploading] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
 
   // デフォルトのプロフィールコンテンツ
-  const defaultContent: ProfileBlock[] = [
+  const getDefaultContent = (): Block[] => [
     {
+      id: generateBlockId(),
       type: 'header',
       data: {
-        avatarUrl: '',
+        avatar: '',
         name: 'あなたの名前',
-        tagline: 'キャッチコピーを入力してください'
+        title: 'キャッチコピーを入力してください'
       }
     },
     {
-      type: 'glass_card_text',
+      id: generateBlockId(),
+      type: 'text_card',
       data: {
         title: 'メインメッセージのタイトル',
         text: 'ここにメインメッセージの本文を入力してください。\n改行も可能です。',
-        alignment: 'center'
+        align: 'center'
       }
     },
     {
-      type: 'link_list',
+      id: generateBlockId(),
+      type: 'links',
       data: {
         links: [
           { label: 'note', url: 'https://note.com/example', style: '' },
@@ -179,7 +90,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
     }
   ];
 
-  const [profileContent, setProfileContent] = useState<ProfileBlock[]>(defaultContent);
+  const [blocks, setBlocks] = useState<Block[]>(getDefaultContent());
 
   // Supabaseからデータを読み込む
   useEffect(() => {
@@ -197,7 +108,9 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
         if (error) throw error;
         
         if (data && data.content) {
-          setProfileContent(data.content);
+          // 後方互換性のため、旧形式のデータをマイグレーション
+          const migratedContent = migrateOldContent(data.content);
+          setBlocks(migratedContent);
           setSavedSlug(data.slug);
         }
       } catch (error) {
@@ -211,111 +124,114 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
     loadProfile();
   }, [initialSlug]);
 
-  // Headerブロックの更新
-  const updateHeader = (field: 'avatarUrl' | 'name' | 'tagline', value: string) => {
-    setProfileContent(prev => {
-      const newContent = [...prev];
-      const headerIndex = newContent.findIndex(b => b.type === 'header');
-      if (headerIndex >= 0 && newContent[headerIndex].type === 'header') {
-        newContent[headerIndex] = {
-          ...newContent[headerIndex],
-          data: { ...newContent[headerIndex].data, [field]: value }
-        };
-      }
-      return newContent;
-    });
-  };
-
-  // GlassCardTextブロックの更新
-  const updateGlassCardText = (field: 'title' | 'text' | 'alignment', value: string) => {
-    setProfileContent(prev => {
-      const newContent = [...prev];
-      const textIndex = newContent.findIndex(b => b.type === 'glass_card_text');
-      if (textIndex >= 0 && newContent[textIndex].type === 'glass_card_text') {
-        newContent[textIndex] = {
-          ...newContent[textIndex],
-          data: { ...newContent[textIndex].data, [field]: value }
-        };
-      }
-      return newContent;
-    });
-  };
-
-  // リンクの追加
-  const addLink = () => {
-    setProfileContent(prev => {
-      const newContent = [...prev];
-      const linkIndex = newContent.findIndex(b => b.type === 'link_list');
-      if (linkIndex >= 0 && newContent[linkIndex].type === 'link_list') {
-        newContent[linkIndex] = {
-          ...newContent[linkIndex],
-          data: {
-            ...newContent[linkIndex].data,
-            links: [...newContent[linkIndex].data.links, { label: '新しいリンク', url: 'https://', style: '' }]
-          }
-        };
-      }
-      return newContent;
-    });
-  };
-
-  // リンクの削除
-  const removeLink = (index: number) => {
-    setProfileContent(prev => {
-      const newContent = [...prev];
-      const linkIndex = newContent.findIndex(b => b.type === 'link_list');
-      if (linkIndex >= 0 && newContent[linkIndex].type === 'link_list') {
-        newContent[linkIndex] = {
-          ...newContent[linkIndex],
-          data: {
-            ...newContent[linkIndex].data,
-            links: newContent[linkIndex].data.links.filter((_, i) => i !== index)
-          }
-        };
-      }
-      return newContent;
-    });
-  };
-
-  // リンクの更新
-  const updateLink = (index: number, field: 'label' | 'url' | 'style', value: string) => {
-    setProfileContent(prev => {
-      const newContent = [...prev];
-      const linkIndex = newContent.findIndex(b => b.type === 'link_list');
-      if (linkIndex >= 0 && newContent[linkIndex].type === 'link_list') {
-        const newLinks = [...newContent[linkIndex].data.links];
-        newLinks[index] = { ...newLinks[index], [field]: value };
-        newContent[linkIndex] = {
-          ...newContent[linkIndex],
-          data: { ...newContent[linkIndex].data, links: newLinks }
-        };
-      }
-      return newContent;
-    });
-  };
-
-  // リンクの並び替え
-  const moveLink = (index: number, direction: 'up' | 'down') => {
-    setProfileContent(prev => {
-      const newContent = [...prev];
-      const linkIndex = newContent.findIndex(b => b.type === 'link_list');
-      if (linkIndex >= 0 && newContent[linkIndex].type === 'link_list') {
-        const newLinks = [...newContent[linkIndex].data.links];
-        const newIndex = direction === 'up' ? index - 1 : index + 1;
-        if (newIndex >= 0 && newIndex < newLinks.length) {
-          [newLinks[index], newLinks[newIndex]] = [newLinks[newIndex], newLinks[index]];
-          newContent[linkIndex] = {
-            ...newContent[linkIndex],
-            data: { ...newContent[linkIndex].data, links: newLinks }
+  // ブロックの追加
+  const addBlock = (type: Block['type']) => {
+    const newBlock: Block = (() => {
+      switch (type) {
+        case 'header':
+          return {
+            id: generateBlockId(),
+            type: 'header',
+            data: { avatar: '', name: '', title: '' }
           };
-        }
+        case 'text_card':
+          return {
+            id: generateBlockId(),
+            type: 'text_card',
+            data: { title: '', text: '', align: 'center' }
+          };
+        case 'image':
+          return {
+            id: generateBlockId(),
+            type: 'image',
+            data: { url: '', caption: '' }
+          };
+        case 'youtube':
+          return {
+            id: generateBlockId(),
+            type: 'youtube',
+            data: { url: '' }
+          };
+        case 'links':
+          return {
+            id: generateBlockId(),
+            type: 'links',
+            data: { links: [] }
+          };
       }
-      return newContent;
+    })();
+    
+    setBlocks(prev => [...prev, newBlock]);
+    setSelectedBlockId(newBlock.id);
+  };
+
+  // ブロックの削除
+  const removeBlock = (blockId: string) => {
+    if (!confirm('このブロックを削除しますか？')) return;
+    setBlocks(prev => prev.filter(b => b.id !== blockId));
+    setSelectedBlockId(null);
+  };
+
+  // ブロックの並び替え
+  const moveBlock = (blockId: string, direction: 'up' | 'down') => {
+    setBlocks(prev => {
+      const index = prev.findIndex(b => b.id === blockId);
+      if (index === -1) return prev;
+      
+      const newIndex = direction === 'up' ? index - 1 : index + 1;
+      if (newIndex < 0 || newIndex >= prev.length) return prev;
+      
+      const newBlocks = [...prev];
+      [newBlocks[index], newBlocks[newIndex]] = [newBlocks[newIndex], newBlocks[index]];
+      return newBlocks;
     });
+  };
+
+  // ブロックの更新
+  const updateBlock = (blockId: string, updates: Partial<Block['data']>) => {
+    setBlocks(prev => prev.map(block => 
+      block.id === blockId 
+        ? { ...block, data: { ...block.data, ...updates } }
+        : block
+    ));
+  };
+
+  // リンクの追加（linksブロック内）
+  const addLinkToBlock = (blockId: string) => {
+    setBlocks(prev => prev.map(block => 
+      block.id === blockId && block.type === 'links'
+        ? { ...block, data: { links: [...block.data.links, { label: '新しいリンク', url: 'https://', style: '' }] } }
+        : block
+    ));
+  };
+
+  // リンクの削除（linksブロック内）
+  const removeLinkFromBlock = (blockId: string, linkIndex: number) => {
+    setBlocks(prev => prev.map(block => 
+      block.id === blockId && block.type === 'links'
+        ? { ...block, data: { links: block.data.links.filter((_, i) => i !== linkIndex) } }
+        : block
+    ));
+  };
+
+  // リンクの更新（linksブロック内）
+  const updateLinkInBlock = (blockId: string, linkIndex: number, field: 'label' | 'url' | 'style', value: string) => {
+    setBlocks(prev => prev.map(block => 
+      block.id === blockId && block.type === 'links'
+        ? {
+            ...block,
+            data: {
+              links: block.data.links.map((link, i) => 
+                i === linkIndex ? { ...link, [field]: value } : link
+              )
+            }
+          }
+        : block
+    ));
   };
 
   // 画像アップロード
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (blockId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !supabase) return;
     if (!user) {
@@ -333,7 +249,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('profile-images').getPublicUrl(filePath);
-      updateHeader('avatarUrl', data.publicUrl);
+      updateBlock(blockId, { avatar: data.publicUrl });
     } catch (error: any) {
       alert('アップロードエラー: ' + error.message);
     } finally {
@@ -351,14 +267,14 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
     setIsSaving(true);
     try {
       const slug = savedSlug || generateSlug();
-      const headerBlock = profileContent.find(b => b.type === 'header');
+      const headerBlock = blocks.find(b => b.type === 'header');
       const name = headerBlock?.type === 'header' ? headerBlock.data.name : 'プロフィール';
 
       const { data, error } = await supabase
         .from('profiles')
         .upsert({
           slug,
-          content: profileContent,
+          content: blocks,
           user_id: user?.id || null,
           updated_at: new Date().toISOString()
         }, {
@@ -373,7 +289,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       alert('保存しました！');
       
       if (onSave) {
-        onSave({ slug, content: profileContent });
+        onSave({ slug, content: blocks });
       }
     } catch (error: any) {
       console.error('保存エラー:', error);
@@ -394,25 +310,130 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
     alert(`公開URLをクリップボードにコピーしました！\n\n${url}`);
   };
 
-  // ブロックの取得（ヘルパー関数）
-  const getHeaderBlock = () => {
-    const block = profileContent.find(b => b.type === 'header');
-    return block?.type === 'header' ? block.data : defaultContent[0].type === 'header' ? defaultContent[0].data : { avatarUrl: '', name: '', tagline: '' };
-  };
+  // ブロック編集フォーム
+  const renderBlockEditor = (block: Block) => {
+    switch (block.type) {
+      case 'header':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">プロフィール画像</label>
+              <div className="flex gap-2">
+                <Input 
+                  label="" 
+                  val={block.data.avatar} 
+                  onChange={v => updateBlock(block.id, { avatar: v })} 
+                  ph="画像URL (https://...)" 
+                />
+                <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap self-end">
+                  {isUploading ? <Loader2 className="animate-spin" size={16}/> : <UploadCloud size={16}/>}
+                  <span>アップロード</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(block.id, e)} disabled={isUploading}/>
+                </label>
+              </div>
+              {block.data.avatar && (
+                <img src={block.data.avatar} alt="Preview" className="h-32 w-32 rounded-full object-cover mt-2 border-4 border-white shadow-lg"/>
+              )}
+            </div>
+            <Input label="名前" val={block.data.name} onChange={v => updateBlock(block.id, { name: v })} ph="あなたの名前" />
+            <Textarea label="キャッチコピー（肩書き）" val={block.data.title} onChange={v => updateBlock(block.id, { title: v })} rows={2} />
+          </div>
+        );
 
-  const getGlassCardTextBlock = () => {
-    const block = profileContent.find(b => b.type === 'glass_card_text');
-    return block?.type === 'glass_card_text' ? block.data : defaultContent[1].type === 'glass_card_text' ? defaultContent[1].data : { title: '', text: '', alignment: 'center' as const };
-  };
+      case 'text_card':
+        return (
+          <div className="space-y-4">
+            <Input label="タイトル" val={block.data.title} onChange={v => updateBlock(block.id, { title: v })} ph="メインメッセージのタイトル" />
+            <Textarea label="本文" val={block.data.text} onChange={v => updateBlock(block.id, { text: v })} rows={6} />
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">配置</label>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => updateBlock(block.id, { align: 'left' })}
+                  className={`flex-1 py-3 rounded-lg font-bold text-sm border transition-all ${
+                    block.data.align === 'left' 
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700' 
+                      : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  左寄せ
+                </button>
+                <button 
+                  onClick={() => updateBlock(block.id, { align: 'center' })}
+                  className={`flex-1 py-3 rounded-lg font-bold text-sm border transition-all ${
+                    block.data.align === 'center' 
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700' 
+                      : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  中央揃え
+                </button>
+              </div>
+            </div>
+          </div>
+        );
 
-  const getLinkListBlock = () => {
-    const block = profileContent.find(b => b.type === 'link_list');
-    return block?.type === 'link_list' ? block.data.links : [];
-  };
+      case 'image':
+        return (
+          <div className="space-y-4">
+            <Input label="画像URL" val={block.data.url} onChange={v => updateBlock(block.id, { url: v })} ph="https://..." type="url" />
+            <Input label="キャプション（オプション）" val={block.data.caption || ''} onChange={v => updateBlock(block.id, { caption: v })} ph="画像の説明" />
+            {block.data.url && (
+              <img src={block.data.url} alt="Preview" className="w-full rounded-xl object-cover border border-gray-200"/>
+            )}
+          </div>
+        );
 
-  const headerData = getHeaderBlock();
-  const glassCardData = getGlassCardTextBlock();
-  const links = getLinkListBlock();
+      case 'youtube':
+        return (
+          <div className="space-y-4">
+            <Input label="YouTube URL" val={block.data.url} onChange={v => updateBlock(block.id, { url: v })} ph="https://www.youtube.com/watch?v=..." type="url" />
+            <p className="text-xs text-gray-500">YouTubeの動画URLを貼り付けてください</p>
+          </div>
+        );
+
+      case 'links':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-gray-900">リンク ({block.data.links.length}件)</span>
+              <button 
+                onClick={() => addLinkToBlock(block.id)}
+                className="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg font-bold hover:bg-indigo-100 flex items-center gap-1"
+              >
+                <Plus size={14}/> 追加
+              </button>
+            </div>
+            <div className="space-y-3">
+              {block.data.links.map((link, index) => (
+                <div key={index} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <GripVertical className="text-gray-400" size={14}/>
+                    <span className="text-xs font-bold text-gray-500">リンク {index + 1}</span>
+                    <button 
+                      onClick={() => removeLinkFromBlock(block.id, index)}
+                      className="ml-auto p-1 text-red-400 hover:text-red-600"
+                      title="削除"
+                    >
+                      <Trash2 size={14}/>
+                    </button>
+                  </div>
+                  <Input label="ラベル" val={link.label} onChange={v => updateLinkInBlock(block.id, index, 'label', v)} ph="例: note" />
+                  <Input label="URL" val={link.url} onChange={v => updateLinkInBlock(block.id, index, 'url', v)} ph="https://..." type="url" />
+                  <Input label="スタイル（オプション）" val={link.style} onChange={v => updateLinkInBlock(block.id, index, 'style', v)} ph="例: orange" />
+                </div>
+              ))}
+              {block.data.links.length === 0 && (
+                <p className="text-center py-4 text-gray-400 text-sm">リンクがありません</p>
+              )}
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -461,173 +482,92 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           </div>
         </div>
 
-        {/* 編集フォーム */}
-        <div className="p-6 max-w-3xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-10 space-y-8">
-            
-            {/* 基本情報（Headerブロック） */}
-            <section>
-              <div className="flex items-center gap-2 mb-4">
-                <User className="text-indigo-600" size={20}/>
-                <h3 className="font-bold text-xl text-gray-900">基本情報</h3>
-              </div>
-              
-              <div className="mb-4">
-                <label className="text-sm font-bold text-gray-900 block mb-2">プロフィール画像</label>
-                <div className="flex gap-2">
-                  <Input 
-                    label="" 
-                    val={headerData.avatarUrl} 
-                    onChange={v => updateHeader('avatarUrl', v)} 
-                    ph="画像URL (https://...)" 
-                  />
-                  <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap self-end">
-                    {isUploading ? <Loader2 className="animate-spin" size={16}/> : <UploadCloud size={16}/>}
-                    <span>アップロード</span>
-                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading}/>
-                  </label>
-                </div>
-                {headerData.avatarUrl && (
-                  <img src={headerData.avatarUrl} alt="Preview" className="h-32 w-32 rounded-full object-cover mt-2 border-4 border-white shadow-lg"/>
-                )}
-              </div>
-
-              <Input 
-                label="名前" 
-                val={headerData.name} 
-                onChange={v => updateHeader('name', v)} 
-                ph="あなたの名前" 
-              />
-              <Textarea 
-                label="キャッチコピー（肩書き）" 
-                val={headerData.tagline} 
-                onChange={v => updateHeader('tagline', v)} 
-                rows={2}
-              />
-            </section>
-
-            {/* メインメッセージ（GlassCardTextブロック） */}
-            <section>
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="text-indigo-600" size={20}/>
-                <h3 className="font-bold text-xl text-gray-900">メインメッセージ</h3>
-              </div>
-
-              <Input 
-                label="タイトル" 
-                val={glassCardData.title} 
-                onChange={v => updateGlassCardText('title', v)} 
-                ph="メインメッセージのタイトル" 
-              />
-              <Textarea 
-                label="本文" 
-                val={glassCardData.text} 
-                onChange={v => updateGlassCardText('text', v)} 
-                rows={6}
-              />
-              <div className="mb-4">
-                <label className="text-sm font-bold text-gray-900 block mb-2">配置</label>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => updateGlassCardText('alignment', 'left')}
-                    className={`flex-1 py-3 rounded-lg font-bold text-sm border transition-all ${
-                      glassCardData.alignment === 'left' 
-                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700' 
-                        : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-                    }`}
-                  >
-                    左寄せ
-                  </button>
-                  <button 
-                    onClick={() => updateGlassCardText('alignment', 'center')}
-                    className={`flex-1 py-3 rounded-lg font-bold text-sm border transition-all ${
-                      glassCardData.alignment === 'center' 
-                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700' 
-                        : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-                    }`}
-                  >
-                    中央揃え
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            {/* リンク集（LinkListブロック） */}
-            <section>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Link className="text-indigo-600" size={20}/>
-                  <h3 className="font-bold text-xl text-gray-900">リンク集 ({links.length}件)</h3>
-                </div>
-                <button 
-                  onClick={addLink}
-                  className="text-sm bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg font-bold hover:bg-indigo-100 flex items-center gap-1 transition-all"
-                >
-                  <Plus size={16}/> 追加
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {links.map((link, index) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                    <div className="flex items-center gap-2 mb-3">
-                      <GripVertical className="text-gray-400" size={16}/>
-                      <span className="text-xs font-bold text-gray-500">リンク {index + 1}</span>
-                      <div className="flex gap-1 ml-auto">
-                        <button 
-                          onClick={() => moveLink(index, 'up')}
-                          disabled={index === 0}
-                          className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                          title="上に移動"
-                        >
-                          <ChevronUp size={14}/>
-                        </button>
-                        <button 
-                          onClick={() => moveLink(index, 'down')}
-                          disabled={index === links.length - 1}
-                          className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                          title="下に移動"
-                        >
-                          <ChevronDown size={14}/>
-                        </button>
-                        <button 
-                          onClick={() => removeLink(index)}
-                          className="p-1 text-red-400 hover:text-red-600"
-                          title="削除"
-                        >
-                          <Trash2 size={14}/>
-                        </button>
-                      </div>
-                    </div>
-                    <Input 
-                      label="ラベル" 
-                      val={link.label} 
-                      onChange={v => updateLink(index, 'label', v)} 
-                      ph="例: note, X (旧Twitter)" 
-                    />
-                    <Input 
-                      label="URL" 
-                      val={link.url} 
-                      onChange={v => updateLink(index, 'url', v)} 
-                      ph="https://..." 
-                      type="url"
-                    />
-                    <Input 
-                      label="スタイル（オプション）" 
-                      val={link.style} 
-                      onChange={v => updateLink(index, 'style', v)} 
-                      ph="例: orange (オレンジ色のボタン)" 
-                    />
-                  </div>
-                ))}
-                {links.length === 0 && (
-                  <div className="text-center py-8 text-gray-400">
-                    <p>リンクがありません。追加ボタンからリンクを追加してください。</p>
-                  </div>
-                )}
-              </div>
-            </section>
+        {/* ブロック追加ボタン */}
+        <div className="p-6 border-b bg-gray-50">
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => addBlock('header')} className="bg-white border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 flex items-center gap-2">
+              <User size={16}/> ヘッダー
+            </button>
+            <button onClick={() => addBlock('text_card')} className="bg-white border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 flex items-center gap-2">
+              <FileText size={16}/> テキストカード
+            </button>
+            <button onClick={() => addBlock('image')} className="bg-white border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 flex items-center gap-2">
+              <ImageIcon size={16}/> 画像
+            </button>
+            <button onClick={() => addBlock('youtube')} className="bg-white border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 flex items-center gap-2">
+              <Youtube size={16}/> YouTube
+            </button>
+            <button onClick={() => addBlock('links')} className="bg-white border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 flex items-center gap-2">
+              <Link size={16}/> リンク集
+            </button>
           </div>
+        </div>
+
+        {/* ブロック一覧 */}
+        <div className="p-6 max-w-3xl mx-auto space-y-4">
+          {blocks.map((block, index) => (
+            <div key={block.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              {/* ブロックヘッダー */}
+              <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-b">
+                <div className="flex items-center gap-3">
+                  <GripVertical className="text-gray-400" size={18}/>
+                  <span className="font-bold text-sm text-gray-700">
+                    {block.type === 'header' && 'ヘッダー'}
+                    {block.type === 'text_card' && 'テキストカード'}
+                    {block.type === 'image' && '画像'}
+                    {block.type === 'youtube' && 'YouTube'}
+                    {block.type === 'links' && 'リンク集'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={() => moveBlock(block.id, 'up')}
+                    disabled={index === 0}
+                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                    title="上に移動"
+                  >
+                    <MoveUp size={16}/>
+                  </button>
+                  <button 
+                    onClick={() => moveBlock(block.id, 'down')}
+                    disabled={index === blocks.length - 1}
+                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                    title="下に移動"
+                  >
+                    <MoveDown size={16}/>
+                  </button>
+                  <button 
+                    onClick={() => setSelectedBlockId(selectedBlockId === block.id ? null : block.id)}
+                    className="p-1 text-indigo-400 hover:text-indigo-600"
+                    title={selectedBlockId === block.id ? '編集を閉じる' : '編集'}
+                  >
+                    <Edit3 size={16}/>
+                  </button>
+                  <button 
+                    onClick={() => removeBlock(block.id)}
+                    className="p-1 text-red-400 hover:text-red-600"
+                    title="削除"
+                  >
+                    <Trash2 size={16}/>
+                  </button>
+                </div>
+              </div>
+
+              {/* ブロック編集フォーム */}
+              {selectedBlockId === block.id && (
+                <div className="p-6">
+                  {renderBlockEditor(block)}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {blocks.length === 0 && (
+            <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+              <p className="text-gray-500 mb-4">ブロックがありません</p>
+              <p className="text-sm text-gray-400">上記のボタンからブロックを追加してください</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -642,8 +582,8 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           <div className="profile-page-wrapper min-h-screen">
             <div className="container mx-auto max-w-lg p-4 md:p-8">
               <div className="w-full space-y-6 md:space-y-8">
-                {profileContent.map((block, index) => (
-                  <div key={index} className={index > 0 ? `delay-${Math.min(index, 10)}` : ''}>
+                {blocks.map((block, index) => (
+                  <div key={block.id} className={index > 0 ? `delay-${Math.min(index, 10)}` : ''}>
                     <BlockRenderer block={block} />
                   </div>
                 ))}
@@ -662,4 +602,3 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
 };
 
 export default ProfileEditor;
-
