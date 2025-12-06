@@ -73,7 +73,21 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
   const [settings, setSettings] = useState<{ gtmId?: string; fbPixelId?: string; lineTagId?: string }>({});
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
-  const [analytics, setAnalytics] = useState<{ views: number; clicks: number }>({ views: 0, clicks: 0 });
+  const [analytics, setAnalytics] = useState<{ 
+    views: number; 
+    clicks: number; 
+    avgScrollDepth: number; 
+    avgTimeSpent: number; 
+    readRate: number; 
+    clickRate: number;
+  }>({ 
+    views: 0, 
+    clicks: 0, 
+    avgScrollDepth: 0, 
+    avgTimeSpent: 0, 
+    readRate: 0, 
+    clickRate: 0 
+  });
   const [showTemplateModal, setShowTemplateModal] = useState(false);
 
   // デフォルトのプロフィールコンテンツ
@@ -134,17 +148,21 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
         
         if (data) {
           // 後方互換性のため、旧形式のデータをマイグレーション
-          if (data.content) {
+          if (data.content && Array.isArray(data.content)) {
+            const migratedContent = migrateOldContent(data.content);
+            setBlocks(migratedContent);
+          } else if (data.content && typeof data.content === 'object') {
+            // 旧形式のオブジェクトの場合もマイグレーション
             const migratedContent = migrateOldContent(data.content);
             setBlocks(migratedContent);
           }
-          setSavedSlug(data.slug);
+          setSavedSlug(data.slug || initialSlug);
           
           // 設定を読み込む（themeもsettingsに含まれる）
-          if (data.settings) {
+          if (data.settings && typeof data.settings === 'object') {
             const loadedSettings = data.settings;
             // themeをsettingsから分離
-            if (loadedSettings.theme) {
+            if (loadedSettings.theme && typeof loadedSettings.theme === 'object') {
               setTheme(loadedSettings.theme);
               // theme以外の設定を保存
               const { theme: _, ...otherSettings } = loadedSettings;
@@ -155,7 +173,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           }
           
           // 後方互換性: 古いデータでthemeが直接カラムにある場合
-          if (data.theme && !data.settings?.theme) {
+          if (data.theme && typeof data.theme === 'object' && (!data.settings || !data.settings.theme)) {
             setTheme(data.theme);
           }
           
@@ -726,11 +744,11 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
 
       case 'kindle':
         const kindleImagePresets = [
-          'https://m.media-amazon.com/images/I/51aHbX9Q9zL._SY346_.jpg',
-          'https://m.media-amazon.com/images/I/81nzxODnaJL._SY346_.jpg',
-          'https://m.media-amazon.com/images/I/71KilybDOoL._SY346_.jpg',
-          'https://m.media-amazon.com/images/I/81YOuOGFCJL._SY346_.jpg',
-          'https://m.media-amazon.com/images/I/71jG+e7roXL._SY346_.jpg',
+          'https://img.freepik.com/free-psd/3d-book-cover-mockup_125540-572.jpg?w=200',
+          'https://img.freepik.com/free-psd/3d-book-cover-mockup_125540-573.jpg?w=200',
+          'https://img.freepik.com/free-psd/3d-book-cover-mockup_125540-574.jpg?w=200',
+          'https://img.freepik.com/free-psd/3d-book-cover-mockup_125540-575.jpg?w=200',
+          'https://img.freepik.com/free-psd/3d-book-cover-mockup_125540-576.jpg?w=200',
         ];
         return (
           <div className="space-y-4">
@@ -1091,12 +1109,12 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                       <label className="text-xs font-bold text-gray-700 block mb-1">プリセット画像から選択</label>
                       <div className="flex flex-wrap gap-2">
                         {[
-                          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces',
-                          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces',
-                          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces',
-                          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces',
-                          'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=faces',
-                          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces',
+                          'https://img.freepik.com/free-vector/man-avatar-profile-round-icon_24640-14044.jpg?w=100',
+                          'https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?w=100',
+                          'https://img.freepik.com/free-vector/young-man-avatar-character_24877-9475.jpg?w=100',
+                          'https://img.freepik.com/free-vector/woman-avatar-profile-round-icon_24640-14042.jpg?w=100',
+                          'https://img.freepik.com/free-vector/businesswoman-character-avatar-isolated_24877-60110.jpg?w=100',
+                          'https://img.freepik.com/free-vector/young-woman-avatar-character_24877-9474.jpg?w=100',
                         ].map((preset, idx) => (
                           <button
                             key={idx}
@@ -1194,15 +1212,30 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
               {initialSlug ? 'プロフィール編集' : '新規プロフィール作成'}
             </h2>
             {savedSlug && analytics.views > 0 && (
-              <div className="flex items-center gap-4 ml-4 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
+              <div className="flex items-center gap-4 ml-4 text-sm text-gray-600 flex-wrap">
+                <div className="flex items-center gap-1" title="総アクセス数">
                   <Eye size={14}/>
                   <span className="font-bold">{analytics.views}</span>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1" title="総クリック数">
                   <BarChart2 size={14}/>
                   <span className="font-bold">{analytics.clicks}</span>
                 </div>
+                {analytics.clickRate > 0 && (
+                  <div className="flex items-center gap-1 text-green-600" title="クリック率">
+                    <span className="font-bold">{analytics.clickRate}%</span>
+                  </div>
+                )}
+                {analytics.readRate > 0 && (
+                  <div className="flex items-center gap-1 text-blue-600" title="精読率">
+                    <span className="font-bold">{analytics.readRate}%</span>
+                  </div>
+                )}
+                {analytics.avgTimeSpent > 0 && (
+                  <div className="flex items-center gap-1 text-purple-600" title="平均滞在時間">
+                    <span className="font-bold">{analytics.avgTimeSpent}秒</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1380,6 +1413,9 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
             </button>
             <button onClick={() => addBlock('testimonial')} className="bg-white border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 flex items-center gap-2">
               <MessageSquare size={16}/> お客様の声
+            </button>
+            <button onClick={() => addBlock('line_card')} className="bg-white border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 flex items-center gap-2">
+              <MessageSquare size={16}/> LINE登録
             </button>
           </div>
         </div>

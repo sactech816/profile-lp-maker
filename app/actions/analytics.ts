@@ -2,7 +2,16 @@
 
 import { supabase } from '@/lib/supabase';
 
-export async function saveAnalytics(profileId: string, eventType: 'view' | 'click', eventData?: { url?: string }) {
+export async function saveAnalytics(
+  profileId: string, 
+  eventType: 'view' | 'click' | 'scroll' | 'time' | 'read', 
+  eventData?: { 
+    url?: string; 
+    scrollDepth?: number; 
+    timeSpent?: number; 
+    readPercentage?: number;
+  }
+) {
   if (!supabase) return { error: 'Database not available' };
 
   try {
@@ -30,33 +39,62 @@ export async function saveAnalytics(profileId: string, eventType: 'view' | 'clic
 }
 
 export async function getAnalytics(profileId: string) {
-  if (!supabase) return { views: 0, clicks: 0 };
+  if (!supabase) return { views: 0, clicks: 0, avgScrollDepth: 0, avgTimeSpent: 0, readRate: 0, clickRate: 0 };
 
   try {
-    const { data: views, error: viewsError } = await supabase
+    const { data: allEvents, error } = await supabase
       .from('analytics')
       .select('*')
-      .eq('profile_id', profileId)
-      .eq('event_type', 'view');
+      .eq('profile_id', profileId);
 
-    const { data: clicks, error: clicksError } = await supabase
-      .from('analytics')
-      .select('*')
-      .eq('profile_id', profileId)
-      .eq('event_type', 'click');
-
-    if (viewsError || clicksError) {
-      console.error('Analytics fetch error:', viewsError || clicksError);
-      return { views: 0, clicks: 0 };
+    if (error) {
+      console.error('Analytics fetch error:', error);
+      return { views: 0, clicks: 0, avgScrollDepth: 0, avgTimeSpent: 0, readRate: 0, clickRate: 0 };
     }
 
+    const views = allEvents?.filter(e => e.event_type === 'view') || [];
+    const clicks = allEvents?.filter(e => e.event_type === 'click') || [];
+    const scrolls = allEvents?.filter(e => e.event_type === 'scroll') || [];
+    const times = allEvents?.filter(e => e.event_type === 'time') || [];
+    const reads = allEvents?.filter(e => e.event_type === 'read') || [];
+
+    // 平均スクロール深度を計算
+    const scrollDepths = scrolls
+      .map(e => e.event_data?.scrollDepth || 0)
+      .filter(d => d > 0);
+    const avgScrollDepth = scrollDepths.length > 0
+      ? Math.round(scrollDepths.reduce((a, b) => a + b, 0) / scrollDepths.length)
+      : 0;
+
+    // 平均滞在時間を計算（秒）
+    const timeSpents = times
+      .map(e => e.event_data?.timeSpent || 0)
+      .filter(t => t > 0);
+    const avgTimeSpent = timeSpents.length > 0
+      ? Math.round(timeSpents.reduce((a, b) => a + b, 0) / timeSpents.length)
+      : 0;
+
+    // 精読率を計算（readPercentage > 50%のビュー数 / 総ビュー数）
+    const readPercentages = reads
+      .map(e => e.event_data?.readPercentage || 0)
+      .filter(r => r > 0);
+    const readCount = readPercentages.filter(r => r >= 50).length;
+    const readRate = views.length > 0 ? Math.round((readCount / views.length) * 100) : 0;
+
+    // クリック率を計算（クリック数 / ビュー数）
+    const clickRate = views.length > 0 ? Math.round((clicks.length / views.length) * 100) : 0;
+
     return {
-      views: views?.length || 0,
-      clicks: clicks?.length || 0
+      views: views.length,
+      clicks: clicks.length,
+      avgScrollDepth,
+      avgTimeSpent,
+      readRate,
+      clickRate
     };
   } catch (error: any) {
     console.error('Analytics fetch error:', error);
-    return { views: 0, clicks: 0 };
+    return { views: 0, clicks: 0, avgScrollDepth: 0, avgTimeSpent: 0, readRate: 0, clickRate: 0 };
   }
 }
 

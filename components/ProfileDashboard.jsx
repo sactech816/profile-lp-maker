@@ -22,6 +22,7 @@ const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, 
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState('graph');
     const [processingId, setProcessingId] = useState(null);
+    const [analyticsMap, setAnalyticsMap] = useState({});
 
     // プロフィール名を取得（content配列からheaderブロックを探す）
     const getProfileName = (profile) => {
@@ -392,6 +393,40 @@ const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, 
                                                         </button>
                                                     </div>
                                                 </div>
+                                                
+                                                {/* アナリティクス情報 */}
+                                                {analyticsMap[profile.id] && analyticsMap[profile.id].views > 0 && (
+                                                    <div className="mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                                                        <div className="grid grid-cols-2 gap-2 text-xs">
+                                                            <div>
+                                                                <div className="text-gray-600 font-bold mb-1">アクセス数</div>
+                                                                <div className="text-indigo-600 font-extrabold text-lg">{analyticsMap[profile.id].views}</div>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-gray-600 font-bold mb-1">クリック数</div>
+                                                                <div className="text-indigo-600 font-extrabold text-lg">{analyticsMap[profile.id].clicks}</div>
+                                                            </div>
+                                                            {analyticsMap[profile.id].clickRate > 0 && (
+                                                                <div>
+                                                                    <div className="text-gray-600 font-bold mb-1">クリック率</div>
+                                                                    <div className="text-green-600 font-extrabold">{analyticsMap[profile.id].clickRate}%</div>
+                                                                </div>
+                                                            )}
+                                                            {analyticsMap[profile.id].readRate > 0 && (
+                                                                <div>
+                                                                    <div className="text-gray-600 font-bold mb-1">精読率</div>
+                                                                    <div className="text-blue-600 font-extrabold">{analyticsMap[profile.id].readRate}%</div>
+                                                                </div>
+                                                            )}
+                                                            {analyticsMap[profile.id].avgTimeSpent > 0 && (
+                                                                <div className="col-span-2">
+                                                                    <div className="text-gray-600 font-bold mb-1">平均滞在時間</div>
+                                                                    <div className="text-purple-600 font-extrabold">{analyticsMap[profile.id].avgTimeSpent}秒</div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 
                                                 <div className="flex gap-2 mb-2">
                                                     <button 
