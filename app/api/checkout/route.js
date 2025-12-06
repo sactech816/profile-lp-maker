@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const apiKey = process.env.STRIPE_SECRET_KEY;
-if (!apiKey) {
-  console.error("❌ Stripe API Key is missing!");
+// Stripeインスタンスを遅延初期化（ビルド時エラーを防ぐ）
+function getStripe() {
+  const apiKey = process.env.STRIPE_SECRET_KEY;
+  if (!apiKey) {
+    throw new Error("❌ Stripe API Key is missing!");
+  }
+  return new Stripe(apiKey);
 }
-
-const stripe = new Stripe(apiKey || '');
 
 export async function POST(req) {
   try {
@@ -31,6 +33,7 @@ export async function POST(req) {
 
     console.log(`🚀 Starting Checkout: ${quizTitle} / ${finalPrice}JPY / User:${userId}`);
 
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
