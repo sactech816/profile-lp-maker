@@ -149,8 +149,8 @@ const Portal = ({ quizzes, isLoading, user, setShowAuth, onLogout, onPlay, onCre
                                         {quiz.image_url ? (
                                             <img src={quiz.image_url} alt="" className="w-full h-40 object-cover"/>
                                         ) : (
-                                            <div className="w-full h-40 bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
-                                                <Sparkles size={48} className="text-indigo-300"/>
+                                            <div className={`w-full h-40 flex items-center justify-center ${quiz.color || 'bg-gradient-to-br from-indigo-100 to-purple-100'}`}>
+                                                <Sparkles size={48} className="text-white opacity-50"/>
                                             </div>
                                         )}
                                         <div className="p-5">

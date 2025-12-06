@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, User, LayoutDashboard, TrendingUp, Menu, X, LogOut, HelpCircle, FileText, Lightbulb, Mail, Shield, Scale } from 'lucide-react';
+import { Sparkles, User, LayoutDashboard, TrendingUp, Menu, X, LogOut, HelpCircle, FileText, Lightbulb, Mail, Shield, Scale, PlusCircle } from 'lucide-react';
 
 const Header = ({ setPage, user, onLogout, setShowAuth }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,6 +17,7 @@ const Header = ({ setPage, user, onLogout, setShowAuth }) => {
                 </div>
 
                 <div className="hidden md:flex items-center gap-4 text-sm font-bold text-gray-600">
+                    <button onClick={()=>handleNav('editor')} className="hover:text-pink-500 flex items-center gap-1"><PlusCircle size={16}/> 診断を作成</button>
                     <button onClick={()=>handleNav('logic')} className="hover:text-orange-500 flex items-center gap-1"><Lightbulb size={16}/> 作り方のコツ</button>
                     <button onClick={()=>handleNav('effective')} className="hover:text-indigo-600 flex items-center gap-1"><TrendingUp size={16}/> 活用法</button>
                     <button onClick={()=>handleNav('contact')} className="hover:text-indigo-600 flex items-center gap-1"><Mail size={16}/> お問い合わせ</button>
@@ -39,6 +40,7 @@ const Header = ({ setPage, user, onLogout, setShowAuth }) => {
             {isMenuOpen && (
                 <div className="md:hidden bg-white border-t absolute w-full left-0 top-16 shadow-xl py-4 px-6 flex flex-col gap-2 animate-fade-in z-50 h-[calc(100vh-64px)] overflow-y-auto pb-20">
                     <p className="text-xs font-bold text-gray-400 mt-4 mb-2">メニュー</p>
+                    <button onClick={()=>handleNav('editor')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-pink-600 font-bold"><PlusCircle size={20}/> 診断クイズを作成</button>
                     <button onClick={()=>handleNav('logic')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-orange-600 font-bold"><Lightbulb size={20}/> 売れる診断の作り方</button>
                     <button onClick={()=>handleNav('effective')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-indigo-600 font-bold"><TrendingUp size={20}/> 効果的な活用法</button>
                     <button onClick={()=>handleNav('contact')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-gray-700 font-bold"><Mail size={20}/> お問い合わせ</button>

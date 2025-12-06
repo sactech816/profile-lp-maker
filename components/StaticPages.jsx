@@ -8,6 +8,7 @@ import {
     Mail, Shield, Scale, ExternalLink, Smile, MessageCircle
 } from 'lucide-react';
 import Header from './Header';
+import Footer from './Footer';
 import SEO from './SEO';
 
 // --- Effective Use Page ---
@@ -18,18 +19,20 @@ export const EffectiveUsePage = ({ onBack, setPage, user, onLogout, setShowAuth,
         { icon: Share2, color: "text-blue-600", bg: "bg-blue-100", title: "1. SNS拡散（UGC）を狙う", text: "診断結果は「自分語り」ができる最高のコンテンツです。面白い結果はX(Twitter)やInstagramでシェアされやすく、広告費をかけずに認知が広がります。" },
         { icon: Search, color: "text-purple-600", bg: "bg-purple-100", title: "2. SEO & AI検索対策", text: "このポータルに掲載されることで、あなたのビジネスへの被リンク効果が期待できます。また、構造化データによりChatGPTなどのAI検索からの流入も狙えます。" },
         { icon: Megaphone, color: "text-green-600", bg: "bg-green-100", title: "3. 自然なリスト獲得", text: "いきなり売り込むのではなく、「診断結果のアドバイスを受け取る」という名目でLINE登録やメールアドレス入力を促すことで、登録率が劇的に向上します。" },
-        { icon: QrCode, color: "text-gray-800", bg: "bg-gray-100", title: "4. リアル店舗・イベントでの活用", text: "QRコードを発行してチラシや店頭に掲示しましょう。「待ち時間の暇つぶし」として診断を楽しんでもらいつつ、クーポン配布や会員登録へ誘導できます。" },
-        { icon: Users, color: "text-indigo-600", bg: "bg-indigo-100", title: "5. 顧客のセグメント分析", text: "「Aタイプ（初心者）」が多ければ初心者向けセミナーを、「Bタイプ（上級者）」が多ければ個別相談を案内するなど、属性に合わせた最適なセールスが可能になります。" },
-        { icon: GraduationCap, color: "text-orange-600", bg: "bg-orange-100", title: "6. 教育・社内研修ツールとして", text: "「学習モード」を使えば、楽しみながら知識定着を図るテストが作れます。お客様への啓蒙コンテンツや、社内マニュアルの理解度チェックにも最適です。" },
-        { icon: Repeat, color: "text-pink-600", bg: "bg-pink-100", title: "7. リピート訪問の促進", text: "「占いモード」で「今日の運勢」や「日替わりランチ診断」を作成すれば、ユーザーが毎日サイトを訪れる習慣（リテンション）を作ることができます。" }
+        { icon: Target, color: "text-red-600", bg: "bg-red-100", title: "4. あなたのサービスを告知できる", text: "診断結果ページに「詳しく見る」「LINE公式アカウント」「QRコード」などのボタンを設置できます。診断を通じて興味を持った見込み客に、自然な流れでサービスを紹介できます。" },
+        { icon: TrendingUp, color: "text-yellow-600", bg: "bg-yellow-100", title: "5. 集客のテストができる", text: "どんな診断が人気なのか、どんな導線でクリック率が高いのかをリアルタイムに分析できます。本格的な広告投資の前に、低コストで顧客の反応をテストしましょう。" },
+        { icon: QrCode, color: "text-gray-800", bg: "bg-gray-100", title: "6. リアル店舗・イベントでの活用", text: "QRコードを発行してチラシや店頭に掲示しましょう。「待ち時間の暇つぶし」として診断を楽しんでもらいつつ、クーポン配布や会員登録へ誘導できます。" },
+        { icon: Users, color: "text-indigo-600", bg: "bg-indigo-100", title: "7. 顧客のセグメント分析", text: "「Aタイプ（初心者）」が多ければ初心者向けセミナーを、「Bタイプ（上級者）」が多ければ個別相談を案内するなど、属性に合わせた最適なセールスが可能になります。" },
+        { icon: GraduationCap, color: "text-orange-600", bg: "bg-orange-100", title: "8. 教育・社内研修ツールとして", text: "「学習モード」を使えば、楽しみながら知識定着を図るテストが作れます。お客様への啓蒙コンテンツや、社内マニュアルの理解度チェックにも最適です。" },
+        { icon: Repeat, color: "text-pink-600", bg: "bg-pink-100", title: "9. リピート訪問の促進", text: "「占いモード」で「今日の運勢」や「日替わりランチ診断」を作成すれば、ユーザーが毎日サイトを訪れる習慣（リテンション）を作ることができます。" }
     ];
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             <Header setPage={setPage} user={user} onLogout={onLogout} setShowAuth={setShowAuth} isAdmin={isAdmin} />
             <div className="bg-indigo-900 text-white py-16 px-6 text-center">
-                <h1 className="text-3xl font-extrabold mb-4">診断クイズの<span className="text-yellow-300">効果的な活用法 7選</span></h1>
-                <p className="text-indigo-200 max-w-xl mx-auto">作成したコンテンツを最大限に活かし、集客と売上につなげるための具体的なアイデアをご紹介します。</p>
+                <h1 className="text-3xl font-extrabold mb-4">診断クイズの<span className="text-yellow-300">効果的な活用法 9選</span></h1>
+                <p className="text-indigo-200 max-w-xl mx-auto">作成したコンテンツを最大限に活かし、集客と売上につなげるための具体的なアイデアをご紹介します。あなたのビジネスを加速させるヒントが満載です。</p>
             </div>
             <div className="max-w-4xl mx-auto py-12 px-4 space-y-6">
                 <button onClick={onBack} className="flex items-center gap-1 text-gray-500 font-bold hover:text-indigo-600 mb-4"><ArrowLeft size={16}/> 戻る</button>
@@ -46,10 +49,38 @@ export const EffectiveUsePage = ({ onBack, setPage, user, onLogout, setShowAuth,
                         </div>
                     ))}
                 </div>
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-8 rounded-2xl border border-indigo-100 mt-8">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <Sparkles className="text-yellow-500"/> このポータルサイトで診断を作るメリット
+                    </h3>
+                    <ul className="space-y-3 text-sm text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <CheckCircle size={20} className="text-green-500 flex-shrink-0 mt-0.5"/>
+                            <span><strong>無料で始められる:</strong> アカウント登録だけで、すぐに高品質な診断コンテンツを作成できます。</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <CheckCircle size={20} className="text-green-500 flex-shrink-0 mt-0.5"/>
+                            <span><strong>即座にシェア可能:</strong> 作成した診断は自動的に公開され、URLが発行されます。SNSで即座にシェアして拡散できます。</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <CheckCircle size={20} className="text-green-500 flex-shrink-0 mt-0.5"/>
+                            <span><strong>ポータルサイトに掲載:</strong> 人気ランキングに掲載されることで、あなたの診断が多くのユーザーの目に触れ、自然な流入が期待できます。</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <CheckCircle size={20} className="text-green-500 flex-shrink-0 mt-0.5"/>
+                            <span><strong>被リンク効果:</strong> このポータルから外部サイトへのリンクを設置できるため、SEO効果も期待できます。</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <CheckCircle size={20} className="text-green-500 flex-shrink-0 mt-0.5"/>
+                            <span><strong>アクセス解析付き:</strong> 閲覧数、完了率、クリック率をリアルタイムで確認でき、改善のヒントが得られます。</span>
+                        </li>
+                    </ul>
+                </div>
                 <div className="text-center pt-8">
                     <button onClick={()=>setPage('editor')} className="bg-indigo-600 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-indigo-700 transition-all transform hover:scale-105">さっそく診断を作ってみる</button>
                 </div>
             </div>
+            <Footer setPage={setPage} onCreate={()=>setPage('editor')} />
         </div>
     );
 };
@@ -92,6 +123,7 @@ export const QuizLogicPage = ({ onBack, setPage, user, onLogout, setShowAuth, is
                     <button onClick={()=>setPage('editor')} className="bg-orange-500 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-orange-600 transition-all transform hover:scale-105">このロジックで作ってみる</button>
                 </div>
             </div>
+            <Footer setPage={setPage} onCreate={()=>setPage('editor')} />
         </div>
     );
 };
@@ -104,7 +136,7 @@ export const HowToPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAdmi
             <Header setPage={setPage} user={user} onLogout={onLogout} setShowAuth={setShowAuth} isAdmin={isAdmin} />
             <div className="py-12 px-4 max-w-4xl mx-auto">
                 <button onClick={onBack} className="mb-6 flex items-center gap-1 text-gray-500 font-bold hover:text-indigo-600"><ArrowLeft size={16}/> 戻る</button>
-                <h1 className="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-4">機能一覧・使い方ガイド（2024年最新版）</h1>
+                <h1 className="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-4">機能一覧・使い方ガイド</h1>
                 
                 <div className="grid md:grid-cols-2 gap-8 mb-12">
                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
@@ -226,14 +258,84 @@ export const HowToPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAdmi
 
                     <div className="border-t pt-8 mt-8">
                         <h2 className="text-xl font-bold text-gray-700 mb-4">利用規約・免責事項</h2>
-                        <ul className="list-disc pl-5 space-y-3 text-sm text-gray-600">
-                            <li><strong>ツール本体について:</strong> 本書購入者様のみご利用可能です。</li>
-                            <li><strong>作成したコンテンツの利用:</strong> 個人・商用を問わず自由にご利用いただけます。フッターのコピーライト表記は削除しないでください。</li>
-                            <li><strong>免責事項:</strong> 本ツールの利用によって生じたいかなる損害についても、提供者は一切の責任を負いません。</li>
-                        </ul>
+                        <div className="space-y-6 text-sm text-gray-700 leading-relaxed">
+                            <section>
+                                <h3 className="font-bold text-gray-900 mb-2">1. サービスの利用について</h3>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li>本サービスは、無料で診断クイズを作成・公開できるプラットフォームです。</li>
+                                    <li>ユーザー登録により、作成した診断の管理・編集・分析機能をご利用いただけます。</li>
+                                    <li>本サービスを利用するには、本規約に同意いただく必要があります。</li>
+                                </ul>
+                            </section>
+                            
+                            <section>
+                                <h3 className="font-bold text-gray-900 mb-2">2. コンテンツの権利と責任</h3>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li><strong>作成者の権利:</strong> ユーザーが作成した診断クイズの著作権は作成者に帰属します。</li>
+                                    <li><strong>商用利用:</strong> 作成したコンテンツは個人・商用を問わず自由にご利用いただけます。</li>
+                                    <li><strong>コピーライト表記:</strong> 診断結果画面のフッターにある「© Shindan Quiz Maker」の表記は削除しないでください。</li>
+                                    <li><strong>禁止事項:</strong> 公序良俗に反する内容、第三者の権利を侵害する内容、違法な内容を含む診断の作成・公開は禁止します。</li>
+                                    <li><strong>コンテンツの削除:</strong> 規約に違反する診断や、権利侵害の申し立てがあった診断は、予告なく削除する場合があります。</li>
+                                </ul>
+                            </section>
+
+                            <section>
+                                <h3 className="font-bold text-gray-900 mb-2">3. 著作権について</h3>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li>診断クイズ内で使用する画像・テキスト等は、ご自身が権利を有するもの、または適切なライセンスのもとで使用可能なものをご利用ください。</li>
+                                    <li>第三者の著作物を無断で使用した場合、使用者が一切の責任を負うものとします。</li>
+                                    <li>本プラットフォームのシステム・デザイン・ロゴ等の著作権は運営者に帰属します。</li>
+                                </ul>
+                            </section>
+
+                            <section>
+                                <h3 className="font-bold text-gray-900 mb-2">4. Pro機能（寄付）について</h3>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li>Pro機能は、クイズごとに任意の金額（500円〜）を寄付いただくことで開放されます。</li>
+                                    <li><strong>返金について:</strong> デジタルコンテンツの性質上、寄付完了後の返金・キャンセルには応じられません。</li>
+                                    <li>寄付いただいた金額は、サービスの維持・改善に使用されます。</li>
+                                    <li>決済はStripeを通じて安全に行われ、当サービスがクレジットカード情報を保持することはありません。</li>
+                                </ul>
+                            </section>
+
+                            <section>
+                                <h3 className="font-bold text-gray-900 mb-2">5. 免責事項</h3>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li>本サービスは現状のまま提供され、運営者はサービスの正確性・完全性・有用性について一切保証しません。</li>
+                                    <li>本サービスの利用によって生じたいかなる損害（直接・間接を問わず）についても、運営者は一切の責任を負いません。</li>
+                                    <li>サービスの中断・終了・データの消失等により生じた損害についても、運営者は責任を負いません。</li>
+                                    <li>診断を通じて収集した個人情報の管理責任は、診断作成者に帰属します。</li>
+                                </ul>
+                            </section>
+
+                            <section>
+                                <h3 className="font-bold text-gray-900 mb-2">6. サービスの変更・終了</h3>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li>運営者は、ユーザーへの事前通知なしに、サービス内容の変更・追加・削除を行うことができます。</li>
+                                    <li>運営者は、やむを得ない事情がある場合、サービスの全部または一部を終了することができます。</li>
+                                </ul>
+                            </section>
+
+                            <section>
+                                <h3 className="font-bold text-gray-900 mb-2">7. 規約の変更</h3>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li>本規約は、必要に応じて予告なく変更される場合があります。</li>
+                                    <li>変更後もサービスを継続してご利用いただくことで、変更後の規約に同意したものとみなします。</li>
+                                </ul>
+                            </section>
+
+                            <section>
+                                <h3 className="font-bold text-gray-900 mb-2">8. 準拠法・管轄裁判所</h3>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li>本規約は日本法に準拠し、解釈されます。</li>
+                                    <li>本サービスに関する紛争については、運営者の所在地を管轄する裁判所を専属的合意管轄とします。</li>
+                                </ul>
+                            </section>
+                        </div>
                     </div>
                 </div>
             </div>
+            <Footer setPage={setPage} onCreate={()=>setPage('editor')} />
         </div>
     );
 };
@@ -273,6 +375,7 @@ export const FaqPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAdmin 
                     ))}
                 </div>
             </div>
+            <Footer setPage={setPage} onCreate={()=>setPage('editor')} />
         </div>
     );
 };
@@ -298,6 +401,7 @@ export const ContactPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAd
                     <Mail size={20}/> お問い合わせフォームを開く
                 </a>
             </div>
+            <Footer setPage={setPage} onCreate={()=>setPage('editor')} />
         </div>
     );
 };
@@ -396,6 +500,7 @@ export const PrivacyPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAd
                     </section>
                 </div>
             </div>
+            <Footer setPage={setPage} onCreate={()=>setPage('editor')} />
         </div>
     );
 };

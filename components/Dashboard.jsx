@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, LayoutDashboard, LogOut, Loader2, Play, ExternalLink, Edit3, Trash2, Trophy, MessageCircle, Layout, Table, BarChart2, Download, ShoppingCart, CheckCircle, Code, Users, Lock, Copy } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Header from './Header';
+import Footer from './Footer';
 import { supabase } from '../lib/supabase';
 import { generateQuizHTML } from '../lib/htmlGenerator';
 import { generateSlug } from '../lib/utils';
@@ -360,6 +361,7 @@ const Dashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin }) => {
                     )}
                 </div>
             </div>
+            <Footer setPage={setPage} onCreate={()=>setPage('editor')} />
         </div>
     );
 };
