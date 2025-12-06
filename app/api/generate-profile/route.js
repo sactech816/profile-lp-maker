@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// OpenAIインスタンスを遅延初期化（ビルド時エラーを防ぐ）
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("❌ OpenAI API Key is missing!");
+  }
+  return new OpenAI({
+    apiKey: apiKey,
+  });
+}
 
 export async function POST(req) {
   try {
@@ -29,6 +36,7 @@ export async function POST(req) {
   ]
 }`;
 
+    const openai = getOpenAI();
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
