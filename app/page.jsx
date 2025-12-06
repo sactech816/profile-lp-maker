@@ -236,8 +236,10 @@ const App = () => {
             <LandingPage 
                 user={user}
                 setShowAuth={setShowAuth}
-                onNavigateToDashboard={() => {
-                    window.location.href = '/dashboard';
+                onNavigateToDashboard={() => navigateTo('dashboard')}
+                onCreate={() => {
+                    setEditingProfileSlug(null);
+                    navigateTo('profile-editor');
                 }}
             />
         )}
@@ -323,7 +325,14 @@ const App = () => {
                 user={user}
                 initialSlug={editingProfileSlug}
                 setShowAuth={setShowAuth}
-                onBack={()=>{ navigateTo('dashboard'); setEditingProfileSlug(null);}}
+                onBack={()=>{ 
+                    if (user) {
+                        navigateTo('dashboard');
+                    } else {
+                        navigateTo('landing');
+                    }
+                    setEditingProfileSlug(null);
+                }}
                 onSave={(data) => {
                     console.log('プロフィール保存完了:', data);
                 }}

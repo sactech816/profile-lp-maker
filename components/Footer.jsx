@@ -5,8 +5,16 @@ const Footer = ({ setPage, onCreate, user, setShowAuth }) => {
     const handleCreate = () => {
         if (onCreate) {
             onCreate();
-        } else {
+        } else if (setPage) {
             setPage('dashboard');
+        }
+    };
+
+    const handleNav = (page) => {
+        if (setPage) {
+            setPage(page);
+        } else {
+            window.location.href = `?page=${page}`;
         }
     };
 
@@ -30,19 +38,19 @@ const Footer = ({ setPage, onCreate, user, setShowAuth }) => {
                 <div>
                     <h3 className="text-white font-bold mb-4 border-b border-gray-700 pb-2 inline-block">メニュー</h3>
                     <ul className="space-y-3 text-sm">
-                        <li><button onClick={()=>setPage('dashboard')} className="hover:text-white transition-colors flex items-center gap-2">➤ ダッシュボード</button></li>
-                        <li><button onClick={()=>setPage('landing')} className="hover:text-white transition-colors flex items-center gap-2">➤ トップページ</button></li>
-                        <li><button onClick={()=>setPage('profile-howto')} className="hover:text-white transition-colors flex items-center gap-2">➤ 使い方</button></li>
-                        <li><button onClick={()=>setPage('profile-effective')} className="hover:text-white transition-colors flex items-center gap-2">➤ 効果的な利用方法</button></li>
+                        <li><button onClick={()=>handleNav('dashboard')} className="hover:text-white transition-colors flex items-center gap-2">➤ ダッシュボード</button></li>
+                        <li><button onClick={()=>handleNav('landing')} className="hover:text-white transition-colors flex items-center gap-2">➤ トップページ</button></li>
+                        <li><button onClick={()=>handleNav('profile-howto')} className="hover:text-white transition-colors flex items-center gap-2">➤ 使い方</button></li>
+                        <li><button onClick={()=>handleNav('profile-effective')} className="hover:text-white transition-colors flex items-center gap-2">➤ 効果的な利用方法</button></li>
                     </ul>
                 </div>
 
                 <div>
                     <h3 className="text-white font-bold mb-4 border-b border-gray-700 pb-2 inline-block">サポート・規約</h3>
                     <ul className="space-y-3 text-sm">
-                        <li><button onClick={()=>setPage('contact')} className="hover:text-white transition-colors">お問い合わせ</button></li>
-                        <li><button onClick={()=>setPage('legal')} className="hover:text-white transition-colors">特定商取引法に基づく表記</button></li>
-                        <li><button onClick={()=>setPage('privacy')} className="hover:text-white transition-colors">プライバシーポリシー</button></li>
+                        <li><button onClick={()=>handleNav('contact')} className="hover:text-white transition-colors">お問い合わせ</button></li>
+                        <li><button onClick={()=>handleNav('legal')} className="hover:text-white transition-colors">特定商取引法に基づく表記</button></li>
+                        <li><button onClick={()=>handleNav('privacy')} className="hover:text-white transition-colors">プライバシーポリシー</button></li>
                     </ul>
                 </div>
             </div>

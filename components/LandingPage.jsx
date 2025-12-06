@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Smartphone, Code, Share2, ArrowRight, CheckCircle, Eye, Wand2, BookOpen, Store, Briefcase } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-const LandingPage = ({ user, setShowAuth, onNavigateToDashboard }) => {
+const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -18,9 +18,9 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard }) => {
         onNavigateToDashboard();
       }
     } else {
-      // 未ログインならログイン画面を表示
-      if (setShowAuth) {
-        setShowAuth(true);
+      // 未ログインでもエディタページに直接遷移
+      if (onCreate) {
+        onCreate();
       }
     }
   };
@@ -170,10 +170,10 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard }) => {
         {/* CTAセクション */}
         <section className="mt-20 md:mt-32 text-center animate-fade-in delay-6">
           <div className="glass-card rounded-2xl p-8 md:p-12 shadow-xl max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-white drop-shadow-lg">
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-900 drop-shadow-lg">
               {user ? 'プロフィールを作成しましょう' : '今すぐ無料で始める'}
             </h2>
-            <p className="text-white mb-8 text-lg drop-shadow-md">
+            <p className="text-gray-800 mb-8 text-lg drop-shadow-md">
               {user 
                 ? 'ダッシュボードから、新しいプロフィールページを作成できます。'
                 : 'ログイン不要で、すぐにプロフィールページを作成できます。'
@@ -191,10 +191,42 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard }) => {
         </section>
 
         {/* フッター */}
-        <footer className="mt-20 text-center animate-fade-in delay-8">
-          <p className="text-sm text-white/90 drop-shadow-md">
-            &copy; {new Date().getFullYear()} プロフィールLPメーカー. All Rights Reserved.
-          </p>
+        <footer className="mt-20 bg-gray-900/50 backdrop-blur-sm rounded-2xl p-8 animate-fade-in delay-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-4 gap-8 mb-8">
+              <div className="col-span-1 md:col-span-2">
+                <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                  <Sparkles className="text-pink-500"/> Profile LP Maker
+                </h3>
+                <p className="text-sm text-gray-300 leading-relaxed mb-4">
+                  世界一美しいプロフィールページを、<br/>
+                  ノーコードで誰でも簡単に作成・公開できるプラットフォーム。
+                </p>
+              </div>
+              <div>
+                <h4 className="text-white font-bold mb-4 border-b border-gray-700 pb-2 inline-block">メニュー</h4>
+                <ul className="space-y-2 text-sm">
+                  <li><button onClick={() => onCreate && onCreate()} className="text-gray-300 hover:text-white transition-colors">無料で作成</button></li>
+                  <li><button onClick={() => setShowAuth && setShowAuth(true)} className="text-gray-300 hover:text-white transition-colors">ログイン</button></li>
+                  <li><button onClick={() => window.location.href = '?page=profile-howto'} className="text-gray-300 hover:text-white transition-colors">使い方</button></li>
+                  <li><button onClick={() => window.location.href = '?page=profile-effective'} className="text-gray-300 hover:text-white transition-colors">効果的な利用方法</button></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-white font-bold mb-4 border-b border-gray-700 pb-2 inline-block">サポート・規約</h4>
+                <ul className="space-y-2 text-sm">
+                  <li><button onClick={() => window.location.href = '?page=contact'} className="text-gray-300 hover:text-white transition-colors">お問い合わせ</button></li>
+                  <li><button onClick={() => window.location.href = '?page=legal'} className="text-gray-300 hover:text-white transition-colors">特定商取引法に基づく表記</button></li>
+                  <li><button onClick={() => window.location.href = '?page=privacy'} className="text-gray-300 hover:text-white transition-colors">プライバシーポリシー</button></li>
+                </ul>
+              </div>
+            </div>
+            <div className="border-t border-gray-700 pt-6 text-center">
+              <p className="text-xs text-gray-400">
+                &copy; {new Date().getFullYear()} プロフィールLPメーカー. All Rights Reserved.
+              </p>
+            </div>
+          </div>
         </footer>
       </div>
     </div>

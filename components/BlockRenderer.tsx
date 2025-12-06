@@ -272,13 +272,13 @@ function PricingBlock({ block }: { block: Extract<Block, { type: 'pricing' }> })
     <section className="animate-fade-in">
       <div className="space-y-6">
         <h3 className="text-2xl font-bold text-white drop-shadow-md text-center mb-6">料金プラン</h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-4">
           {block.data.plans.map((plan) => (
             <div
               key={plan.id}
               className={`glass-card rounded-2xl p-6 shadow-lg transition-all ${
                 plan.isRecommended
-                  ? 'ring-2 ring-yellow-400 scale-105 bg-gradient-to-br from-yellow-50 to-orange-50'
+                  ? 'ring-2 ring-yellow-400 bg-gradient-to-br from-yellow-50 to-orange-50'
                   : ''
               }`}
             >
@@ -323,9 +323,9 @@ function TestimonialBlock({ block }: { block: Extract<Block, { type: 'testimonia
     <section className="animate-fade-in">
       <div className="space-y-6">
         <h3 className="text-2xl font-bold text-white drop-shadow-md text-center mb-6">お客様の声</h3>
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
           {block.data.items.map((item) => (
-            <div key={item.id} className="glass-card rounded-2xl p-6 shadow-lg">
+            <div key={item.id} className="glass-card rounded-2xl p-6 shadow-lg w-full">
               <div className="flex items-start gap-4 mb-4">
                 <div className="flex-shrink-0">
                   {item.imageUrl ? (

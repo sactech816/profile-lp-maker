@@ -483,6 +483,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           slug,
           content: blocks,
           theme: theme,
+          settings: settings,
           user_id: user?.id || null,
           updated_at: new Date().toISOString()
         }, {
@@ -681,10 +682,79 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
         );
 
       case 'kindle':
+        const kindleImagePresets = [
+          'https://images-na.ssl-images-amazon.com/images/I/51aHbX9Q9zL._SX331_BO1,204,203,200_.jpg',
+          'https://images-na.ssl-images-amazon.com/images/I/51Y5Z5Z5Z5L._SX331_BO1,204,203,200_.jpg',
+          'https://images-na.ssl-images-amazon.com/images/I/51X5X5X5X5L._SX331_BO1,204,203,200_.jpg',
+          'https://images-na.ssl-images-amazon.com/images/I/51W5W5W5W5L._SX331_BO1,204,203,200_.jpg',
+          'https://images-na.ssl-images-amazon.com/images/I/51V5V5V5V5L._SX331_BO1,204,203,200_.jpg',
+        ];
         return (
           <div className="space-y-4">
             <Input label="ASINまたはAmazon URL" val={block.data.asin} onChange={v => updateBlock(block.id, { asin: v })} ph="例: B08XXXXXXX または https://amazon.co.jp/dp/B08XXXXXXX" />
-            <Input label="画像URL" val={block.data.imageUrl} onChange={v => updateBlock(block.id, { imageUrl: v })} ph="https://..." type="url" />
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">画像URL</label>
+              <div className="flex gap-2 mb-2">
+                <Input 
+                  label="" 
+                  val={block.data.imageUrl} 
+                  onChange={v => updateBlock(block.id, { imageUrl: v })} 
+                  ph="https://..." 
+                  type="url"
+                />
+                <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap self-end border-2 border-dashed border-indigo-300">
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="animate-spin" size={16}/> アップロード中...
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud size={16}/> 画像を選択
+                    </>
+                  )}
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file || !supabase) return;
+                      if (!user) {
+                        alert('画像をアップロードするにはログインが必要です');
+                        return;
+                      }
+                      setIsUploading(true);
+                      const fileExt = file.name.split('.').pop();
+                      const fileName = `kindle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                      const filePath = `${user.id}/${fileName}`;
+                      supabase.storage.from('profile-images').upload(filePath, file, { upsert: true })
+                        .then(({ error: uploadError }) => {
+                          if (uploadError) throw uploadError;
+                          const { data } = supabase.storage.from('profile-images').getPublicUrl(filePath);
+                          updateBlock(block.id, { imageUrl: data.publicUrl });
+                        })
+                        .catch((error: any) => alert('アップロードエラー: ' + error.message))
+                        .finally(() => setIsUploading(false));
+                    }}
+                    disabled={isUploading}
+                  />
+                </label>
+              </div>
+              <div className="mb-2">
+                <label className="text-xs font-bold text-gray-700 block mb-1">プリセット画像から選択</label>
+                <div className="flex flex-wrap gap-2">
+                  {kindleImagePresets.map((preset, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => updateBlock(block.id, { imageUrl: preset })}
+                      className="border-2 border-gray-200 rounded p-1 hover:border-indigo-500 transition-all"
+                    >
+                      <img src={preset} alt={`Preset ${idx + 1}`} className="w-16 h-20 object-cover rounded" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
             <Input label="タイトル" val={block.data.title} onChange={v => updateBlock(block.id, { title: v })} ph="書籍のタイトル" />
             <Textarea label="説明" val={block.data.description} onChange={v => updateBlock(block.id, { description: v })} rows={4} ph="書籍の説明文" />
             {block.data.imageUrl && (
@@ -700,6 +770,277 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           <div className="space-y-4">
             <Input label="タイトル" val={block.data.title} onChange={v => updateBlock(block.id, { title: v })} ph="例: メルマガ登録" />
             <Input label="ボタンテキスト" val={block.data.buttonText} onChange={v => updateBlock(block.id, { buttonText: v })} ph="例: 登録する" />
+          </div>
+        );
+
+      case 'faq':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-bold text-gray-900">FAQ項目 ({block.data.items.length}件)</span>
+              <button 
+                onClick={() => {
+                  setBlocks(prev => prev.map(b => 
+                    b.id === block.id && b.type === 'faq'
+                      ? { ...b, data: { items: [...b.data.items, { id: generateBlockId(), question: '', answer: '' }] } }
+                      : b
+                  ));
+                }}
+                className="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg font-bold hover:bg-indigo-100 flex items-center gap-1"
+              >
+                <Plus size={14}/> 追加
+              </button>
+            </div>
+            <div className="space-y-3">
+              {block.data.items.map((item, index) => (
+                <div key={item.id} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <GripVertical className="text-gray-400" size={14}/>
+                    <span className="text-xs font-bold text-gray-500">FAQ {index + 1}</span>
+                    <button 
+                      onClick={() => {
+                        setBlocks(prev => prev.map(b => 
+                          b.id === block.id && b.type === 'faq'
+                            ? { ...b, data: { items: b.data.items.filter((_, i) => i !== index) } }
+                            : b
+                        ));
+                      }}
+                      className="ml-auto p-1 text-red-400 hover:text-red-600"
+                      title="削除"
+                    >
+                      <Trash2 size={14}/>
+                    </button>
+                  </div>
+                  <Input label="質問" val={item.question} onChange={v => {
+                    setBlocks(prev => prev.map(b => 
+                      b.id === block.id && b.type === 'faq'
+                        ? { ...b, data: { items: b.data.items.map((it, i) => i === index ? { ...it, question: v } : it) } }
+                        : b
+                    ));
+                  }} ph="例: よくある質問は？" />
+                  <Textarea label="回答" val={item.answer} onChange={v => {
+                    setBlocks(prev => prev.map(b => 
+                      b.id === block.id && b.type === 'faq'
+                        ? { ...b, data: { items: b.data.items.map((it, i) => i === index ? { ...it, answer: v } : it) } }
+                        : b
+                    ));
+                  }} rows={3} ph="回答を入力してください" />
+                </div>
+              ))}
+              {block.data.items.length === 0 && (
+                <p className="text-center py-4 text-gray-400 text-sm">FAQ項目がありません</p>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'pricing':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-bold text-gray-900">料金プラン ({block.data.plans.length}件)</span>
+              <button 
+                onClick={() => {
+                  setBlocks(prev => prev.map(b => 
+                    b.id === block.id && b.type === 'pricing'
+                      ? { ...b, data: { plans: [...b.data.plans, { id: generateBlockId(), title: '', price: '', features: [], isRecommended: false }] } }
+                      : b
+                  ));
+                }}
+                className="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg font-bold hover:bg-indigo-100 flex items-center gap-1"
+              >
+                <Plus size={14}/> 追加
+              </button>
+            </div>
+            <div className="space-y-3">
+              {block.data.plans.map((plan, index) => (
+                <div key={plan.id} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <GripVertical className="text-gray-400" size={14}/>
+                    <span className="text-xs font-bold text-gray-500">プラン {index + 1}</span>
+                    <button 
+                      onClick={() => {
+                        setBlocks(prev => prev.map(b => 
+                          b.id === block.id && b.type === 'pricing'
+                            ? { ...b, data: { plans: b.data.plans.filter((_, i) => i !== index) } }
+                            : b
+                        ));
+                      }}
+                      className="ml-auto p-1 text-red-400 hover:text-red-600"
+                      title="削除"
+                    >
+                      <Trash2 size={14}/>
+                    </button>
+                  </div>
+                  <Input label="プラン名" val={plan.title} onChange={v => {
+                    setBlocks(prev => prev.map(b => 
+                      b.id === block.id && b.type === 'pricing'
+                        ? { ...b, data: { plans: b.data.plans.map((p, i) => i === index ? { ...p, title: v } : p) } }
+                        : b
+                    ));
+                  }} ph="例: ベーシックプラン" />
+                  <Input label="価格" val={plan.price} onChange={v => {
+                    setBlocks(prev => prev.map(b => 
+                      b.id === block.id && b.type === 'pricing'
+                        ? { ...b, data: { plans: b.data.plans.map((p, i) => i === index ? { ...p, price: v } : p) } }
+                        : b
+                    ));
+                  }} ph="例: ¥10,000/月" />
+                  <Textarea label="特徴（改行区切り）" val={plan.features.join('\n')} onChange={v => {
+                    setBlocks(prev => prev.map(b => 
+                      b.id === block.id && b.type === 'pricing'
+                        ? { ...b, data: { plans: b.data.plans.map((p, i) => i === index ? { ...p, features: v.split('\n').filter(f => f.trim()) } : p) } }
+                        : b
+                    ));
+                  }} rows={4} ph="特徴1&#10;特徴2&#10;特徴3" />
+                  <div className="flex items-center gap-2 mt-2">
+                    <input 
+                      type="checkbox" 
+                      checked={plan.isRecommended} 
+                      onChange={e => {
+                        setBlocks(prev => prev.map(b => 
+                          b.id === block.id && b.type === 'pricing'
+                            ? { ...b, data: { plans: b.data.plans.map((p, i) => i === index ? { ...p, isRecommended: e.target.checked } : p) } }
+                            : b
+                        ));
+                      }}
+                      className="w-4 h-4"
+                    />
+                    <label className="text-sm font-bold text-gray-900">おすすめプランにする</label>
+                  </div>
+                </div>
+              ))}
+              {block.data.plans.length === 0 && (
+                <p className="text-center py-4 text-gray-400 text-sm">料金プランがありません</p>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'testimonial':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-bold text-gray-900">お客様の声 ({block.data.items.length}件)</span>
+              <button 
+                onClick={() => {
+                  setBlocks(prev => prev.map(b => 
+                    b.id === block.id && b.type === 'testimonial'
+                      ? { ...b, data: { items: [...b.data.items, { id: generateBlockId(), name: '', role: '', comment: '', imageUrl: '' }] } }
+                      : b
+                  ));
+                }}
+                className="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg font-bold hover:bg-indigo-100 flex items-center gap-1"
+              >
+                <Plus size={14}/> 追加
+              </button>
+            </div>
+            <div className="space-y-3">
+              {block.data.items.map((item, index) => (
+                <div key={item.id} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <GripVertical className="text-gray-400" size={14}/>
+                    <span className="text-xs font-bold text-gray-500">お客様の声 {index + 1}</span>
+                    <button 
+                      onClick={() => {
+                        setBlocks(prev => prev.map(b => 
+                          b.id === block.id && b.type === 'testimonial'
+                            ? { ...b, data: { items: b.data.items.filter((_, i) => i !== index) } }
+                            : b
+                        ));
+                      }}
+                      className="ml-auto p-1 text-red-400 hover:text-red-600"
+                      title="削除"
+                    >
+                      <Trash2 size={14}/>
+                    </button>
+                  </div>
+                  <Input label="お名前" val={item.name} onChange={v => {
+                    setBlocks(prev => prev.map(b => 
+                      b.id === block.id && b.type === 'testimonial'
+                        ? { ...b, data: { items: b.data.items.map((it, i) => i === index ? { ...it, name: v } : it) } }
+                        : b
+                    ));
+                  }} ph="例: 山田 太郎" />
+                  <Input label="肩書き" val={item.role} onChange={v => {
+                    setBlocks(prev => prev.map(b => 
+                      b.id === block.id && b.type === 'testimonial'
+                        ? { ...b, data: { items: b.data.items.map((it, i) => i === index ? { ...it, role: v } : it) } }
+                        : b
+                    ));
+                  }} ph="例: IT企業社長" />
+                  <Textarea label="コメント" val={item.comment} onChange={v => {
+                    setBlocks(prev => prev.map(b => 
+                      b.id === block.id && b.type === 'testimonial'
+                        ? { ...b, data: { items: b.data.items.map((it, i) => i === index ? { ...it, comment: v } : it) } }
+                        : b
+                    ));
+                  }} rows={4} ph="お客様の声を入力してください" />
+                  <div className="mt-2">
+                    <label className="text-sm font-bold text-gray-900 block mb-2">画像URL（オプション）</label>
+                    <div className="flex gap-2">
+                      <Input 
+                        label="" 
+                        val={item.imageUrl || ''} 
+                        onChange={v => {
+                          setBlocks(prev => prev.map(b => 
+                            b.id === block.id && b.type === 'testimonial'
+                              ? { ...b, data: { items: b.data.items.map((it, i) => i === index ? { ...it, imageUrl: v } : it) } }
+                              : b
+                          ));
+                        }} 
+                        ph="画像URL (https://...)" 
+                        type="url"
+                      />
+                      <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap self-end border-2 border-dashed border-indigo-300">
+                        {isUploading ? (
+                          <>
+                            <Loader2 className="animate-spin" size={16}/> アップロード中...
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud size={16}/> 画像を選択
+                          </>
+                        )}
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          accept="image/*" 
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file || !supabase) return;
+                            if (!user) {
+                              alert('画像をアップロードするにはログインが必要です');
+                              return;
+                            }
+                            setIsUploading(true);
+                            const fileExt = file.name.split('.').pop();
+                            const fileName = `testimonial_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                            const filePath = `${user.id}/${fileName}`;
+                            supabase.storage.from('profile-images').upload(filePath, file, { upsert: true })
+                              .then(({ error: uploadError }) => {
+                                if (uploadError) throw uploadError;
+                                const { data } = supabase.storage.from('profile-images').getPublicUrl(filePath);
+                                setBlocks(prev => prev.map(b => 
+                                  b.id === block.id && b.type === 'testimonial'
+                                    ? { ...b, data: { items: b.data.items.map((it, i) => i === index ? { ...it, imageUrl: data.publicUrl } : it) } }
+                                    : b
+                                ));
+                              })
+                              .catch((error: any) => alert('アップロードエラー: ' + error.message))
+                              .finally(() => setIsUploading(false));
+                          }}
+                          disabled={isUploading}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {block.data.items.length === 0 && (
+                <p className="text-center py-4 text-gray-400 text-sm">お客様の声がありません</p>
+              )}
+            </div>
           </div>
         );
 
@@ -935,6 +1276,15 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
             </button>
             <button onClick={() => addBlock('lead_form')} className="bg-white border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 flex items-center gap-2">
               <Mail size={16}/> リード獲得
+            </button>
+            <button onClick={() => addBlock('faq')} className="bg-white border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 flex items-center gap-2">
+              <HelpCircle size={16}/> FAQ
+            </button>
+            <button onClick={() => addBlock('pricing')} className="bg-white border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 flex items-center gap-2">
+              <DollarSign size={16}/> 料金表
+            </button>
+            <button onClick={() => addBlock('testimonial')} className="bg-white border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 flex items-center gap-2">
+              <MessageSquare size={16}/> お客様の声
             </button>
           </div>
         </div>
