@@ -14,6 +14,7 @@ import { Block, generateBlockId, migrateOldContent } from '../lib/types';
 import { BlockRenderer } from './BlockRenderer';
 import { getAnalytics } from '../app/actions/analytics';
 import { QRCodeSVG } from 'qrcode.react';
+import { templates, Template } from '../constants/templates';
 
 // 入力コンポーネント
 const Input = ({label, val, onChange, ph, type = "text"}: {label: string; val: string; onChange: (v: string) => void; ph?: string; type?: string}) => (
@@ -73,6 +74,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [analytics, setAnalytics] = useState<{ views: number; clicks: number }>({ views: 0, clicks: 0 });
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
 
   // デフォルトのプロフィールコンテンツ
   const getDefaultContent = (): Block[] => [
@@ -900,6 +902,12 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
         <div className="p-6 border-b bg-gray-50">
           <div className="flex flex-wrap gap-2 mb-3">
             <button 
+              onClick={() => setShowTemplateModal(true)} 
+              className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 px-4 py-2 rounded-lg font-bold text-sm hover:from-blue-600 hover:to-cyan-600 flex items-center gap-2 shadow-md"
+            >
+              <FileText size={16}/> テンプレートから始める
+            </button>
+            <button 
               onClick={() => setShowAIModal(true)} 
               className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-4 py-2 rounded-lg font-bold text-sm hover:from-purple-600 hover:to-pink-600 flex items-center gap-2 shadow-md"
             >
@@ -1226,6 +1234,110 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
               >
                 QRコードをダウンロード
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* テンプレート選択モーダル */}
+      {showTemplateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl p-6 max-w-4xl w-full mx-4 my-8 shadow-xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-2xl text-gray-900 flex items-center gap-2">
+                <FileText className="text-indigo-600" size={24}/> テンプレートから始める
+              </h3>
+              <button 
+                onClick={() => setShowTemplateModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-full"
+              >
+                <X size={24}/>
+              </button>
+            </div>
+            
+            <p className="text-gray-600 mb-6">プロフィールの用途に合わせて、最適なテンプレートを選択してください。</p>
+            
+            <div className="grid md:grid-cols-3 gap-4">
+              {templates.map((template) => (
+                <div
+                  key={template.id}
+                  className="border-2 border-gray-200 rounded-xl overflow-hidden hover:border-indigo-500 transition-all cursor-pointer group"
+                  onClick={() => {
+                    if (blocks.length > 0 && !confirm('現在の入力内容は消えますがよろしいですか？')) {
+                      return;
+                    }
+                    
+                    // テンプレートのブロックを読み込む（IDを再生成して新しいインスタンスにする）
+                    const newBlocks = template.blocks.map(block => ({
+                      ...block,
+                      id: generateBlockId()
+                    }));
+                    
+                    // ネストされたIDも再生成
+                    const processedBlocks = newBlocks.map(block => {
+                      if (block.type === 'faq') {
+                        return {
+                          ...block,
+                          data: {
+                            items: block.data.items.map(item => ({
+                              ...item,
+                              id: generateBlockId()
+                            }))
+                          }
+                        };
+                      } else if (block.type === 'pricing') {
+                        return {
+                          ...block,
+                          data: {
+                            plans: block.data.plans.map(plan => ({
+                              ...plan,
+                              id: generateBlockId()
+                            }))
+                          }
+                        };
+                      } else if (block.type === 'testimonial') {
+                        return {
+                          ...block,
+                          data: {
+                            items: block.data.items.map(item => ({
+                              ...item,
+                              id: generateBlockId()
+                            }))
+                          }
+                        };
+                      }
+                      return block;
+                    });
+                    
+                    setBlocks(processedBlocks);
+                    setTheme(template.theme);
+                    setExpandedBlocks(new Set(processedBlocks.map(b => b.id)));
+                    setShowTemplateModal(false);
+                    alert(`「${template.name}」テンプレートを読み込みました！`);
+                  }}
+                >
+                  <div 
+                    className="h-32 w-full"
+                    style={{
+                      background: template.theme.gradient,
+                      backgroundSize: '400% 400%',
+                      animation: 'gradient 15s ease infinite'
+                    }}
+                  />
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-bold">
+                        {template.category}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-lg text-gray-900 mb-2">{template.name}</h4>
+                    <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                    <div className="text-xs text-gray-500">
+                      {template.blocks.length}個のブロック
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
