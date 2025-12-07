@@ -364,7 +364,10 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file, {
         upsert: true
       });
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw new Error(uploadError.message || '画像のアップロードに失敗しました');
+      }
 
       const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
       
@@ -376,7 +379,13 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
         updateBlock(blockId, { url: data.publicUrl });
       }
     } catch (error: any) {
-      alert('アップロードエラー: ' + error.message);
+      console.error('Image upload error:', error);
+      const errorMessage = error.message || '画像のアップロードに失敗しました';
+      if (errorMessage.includes('Bucket not found') || errorMessage.includes('bucket')) {
+        alert('背景画像のアップロードエラー: Supabase Storageのバケット「profile-uploads」が存在しないか、アクセス権限がありません。管理者にお問い合わせください。');
+      } else {
+        alert('アップロードエラー: ' + errorMessage);
+      }
     } finally {
       setIsUploading(false);
     }
@@ -400,12 +409,21 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file, {
         upsert: true
       });
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Background upload error:', uploadError);
+        throw new Error(uploadError.message || '背景画像のアップロードに失敗しました');
+      }
 
       const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
       setTheme(prev => ({ ...prev, backgroundImage: data.publicUrl }));
     } catch (error: any) {
-      alert('背景画像のアップロードエラー: ' + error.message);
+      console.error('Background image upload error:', error);
+      const errorMessage = error.message || '背景画像のアップロードに失敗しました';
+      if (errorMessage.includes('Bucket not found') || errorMessage.includes('bucket')) {
+        alert('背景画像のアップロードエラー: Supabase Storageのバケット「profile-uploads」が存在しないか、アクセス権限がありません。管理者にお問い合わせください。');
+      } else {
+        alert('背景画像のアップロードエラー: ' + errorMessage);
+      }
     } finally {
       setIsUploadingBackground(false);
     }
@@ -440,11 +458,23 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       });
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `AI生成に失敗しました (ステータス: ${res.status})`);
+        let errorMessage = 'AI生成に失敗しました';
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // JSON解析に失敗した場合はデフォルトメッセージを使用
+          errorMessage = `AI生成に失敗しました (ステータス: ${res.status})`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await res.json();
+      
+      // データの検証
+      if (!data || (!data.catchphrase && !data.introduction)) {
+        throw new Error('AIからの応答が不完全でした。もう一度お試しください。');
+      }
 
       // ヘッダーブロックを更新または作成
       let headerBlock = blocks.find(b => b.type === 'header');
@@ -793,11 +823,22 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                       const filePath = `${user.id}/${fileName}`;
                       supabase.storage.from('profile-uploads').upload(filePath, file, { upsert: true })
                         .then(({ error: uploadError }) => {
-                          if (uploadError) throw uploadError;
+                          if (uploadError) {
+                            console.error('Kindle upload error:', uploadError);
+                            throw new Error(uploadError.message || '画像のアップロードに失敗しました');
+                          }
                           const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
                           updateBlock(block.id, { imageUrl: data.publicUrl });
                         })
-                        .catch((error: any) => alert('アップロードエラー: ' + error.message))
+                        .catch((error: any) => {
+                          console.error('Kindle image upload error:', error);
+                          const errorMessage = error.message || '画像のアップロードに失敗しました';
+                          if (errorMessage.includes('Bucket not found') || errorMessage.includes('bucket')) {
+                            alert('アップロードエラー: Supabase Storageのバケット「profile-uploads」が存在しないか、アクセス権限がありません。管理者にお問い合わせください。');
+                          } else {
+                            alert('アップロードエラー: ' + errorMessage);
+                          }
+                        })
                         .finally(() => setIsUploading(false));
                     }}
                     disabled={isUploading}
@@ -1093,7 +1134,10 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                             const filePath = `${user.id}/${fileName}`;
                             supabase.storage.from('profile-uploads').upload(filePath, file, { upsert: true })
                               .then(({ error: uploadError }) => {
-                                if (uploadError) throw uploadError;
+                                if (uploadError) {
+                                  console.error('Testimonial upload error:', uploadError);
+                                  throw new Error(uploadError.message || '画像のアップロードに失敗しました');
+                                }
                                 const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
                                 setBlocks(prev => prev.map(b => 
                                   b.id === block.id && b.type === 'testimonial'
@@ -1101,7 +1145,15 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                                     : b
                                 ));
                               })
-                              .catch((error: any) => alert('アップロードエラー: ' + error.message))
+                              .catch((error: any) => {
+                                console.error('Testimonial image upload error:', error);
+                                const errorMessage = error.message || '画像のアップロードに失敗しました';
+                                if (errorMessage.includes('Bucket not found') || errorMessage.includes('bucket')) {
+                                  alert('アップロードエラー: Supabase Storageのバケット「profile-uploads」が存在しないか、アクセス権限がありません。管理者にお問い合わせください。');
+                                } else {
+                                  alert('アップロードエラー: ' + errorMessage);
+                                }
+                              })
                               .finally(() => setIsUploading(false));
                           }}
                           disabled={isUploading}
@@ -1113,13 +1165,13 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                       <div className="flex flex-wrap gap-2">
                         {[
                           // 男性イラスト3枚
-                          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces&auto=format',
-                          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces&auto=format',
-                          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=faces&auto=format',
+                          'https://i.pravatar.cc/150?img=12',
+                          'https://i.pravatar.cc/150?img=33',
+                          'https://i.pravatar.cc/150?img=47',
                           // 女性イラスト3枚
-                          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces&auto=format',
-                          'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces&auto=format',
-                          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces&auto=format',
+                          'https://i.pravatar.cc/150?img=5',
+                          'https://i.pravatar.cc/150?img=20',
+                          'https://i.pravatar.cc/150?img=32',
                         ].map((preset, idx) => (
                           <button
                             key={idx}
