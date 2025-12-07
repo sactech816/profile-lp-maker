@@ -586,14 +586,8 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
         theme: theme
       };
 
-      // 未ログインユーザーの場合は匿名IDを生成
-      let userId = user?.id || null;
-      if (!userId) {
-        // ローカルストレージから匿名IDを取得または生成
-        const anonymousId = localStorage.getItem('anonymous_user_id') || `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        localStorage.setItem('anonymous_user_id', anonymousId);
-        userId = anonymousId;
-      }
+      // ログインユーザーの場合のみuser_idを設定、未ログインの場合はnullにする
+      const userId = user?.id || null;
 
       const { data, error } = await supabase
         .from('profiles')
