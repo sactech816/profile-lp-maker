@@ -93,16 +93,70 @@ export async function POST(req) {
       return NextResponse.json({ error: '削除権限がありません' }, { status: 403 });
     }
 
-    // 削除実行
-    console.log('[DELETE-PROFILE] 削除実行中...');
-    const { error: deleteError } = await supabaseAdmin.from('profiles').delete().eq('id', id);
+    // 削除実行（外部キー制約のため、関連データを先に削除）
+    console.log('[DELETE-PROFILE] 関連データ削除中...');
+    
+    // 1. analyticsテーブルから関連データを削除
+    const { error: analyticsDeleteError } = await supabaseAdmin
+      .from('analytics')
+      .delete()
+      .eq('profile_id', id);
+    
+    if (analyticsDeleteError) {
+      console.log('[DELETE-PROFILE] アナリティクス削除エラー:', analyticsDeleteError);
+      // analyticsテーブルが存在しない場合は無視
+      if (!analyticsDeleteError.message.includes('does not exist')) {
+        throw analyticsDeleteError;
+      }
+    } else {
+      console.log('[DELETE-PROFILE] アナリティクス削除成功');
+    }
+    
+    // 2. profile_purchasesテーブルから関連データを削除（存在する場合）
+    const { error: purchasesDeleteError } = await supabaseAdmin
+      .from('profile_purchases')
+      .delete()
+      .eq('profile_id', id);
+    
+    if (purchasesDeleteError) {
+      console.log('[DELETE-PROFILE] 購入履歴削除エラー:', purchasesDeleteError);
+      // テーブルが存在しない場合は無視
+      if (!purchasesDeleteError.message.includes('does not exist')) {
+        throw purchasesDeleteError;
+      }
+    } else {
+      console.log('[DELETE-PROFILE] 購入履歴削除成功');
+    }
+    
+    // 3. leadsテーブルから関連データを削除（存在する場合）
+    const { error: leadsDeleteError } = await supabaseAdmin
+      .from('leads')
+      .delete()
+      .eq('profile_id', id);
+    
+    if (leadsDeleteError) {
+      console.log('[DELETE-PROFILE] リード削除エラー:', leadsDeleteError);
+      // テーブルが存在しない場合は無視
+      if (!leadsDeleteError.message.includes('does not exist')) {
+        throw leadsDeleteError;
+      }
+    } else {
+      console.log('[DELETE-PROFILE] リード削除成功');
+    }
+    
+    // 4. プロフィール本体を削除
+    console.log('[DELETE-PROFILE] プロフィール削除中...');
+    const { error: deleteError } = await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('id', id);
     
     if (deleteError) {
-      console.log('[DELETE-PROFILE] 削除エラー:', deleteError);
+      console.log('[DELETE-PROFILE] プロフィール削除エラー:', deleteError);
       throw deleteError;
     }
 
-    console.log('[DELETE-PROFILE] 削除成功');
+    console.log('[DELETE-PROFILE] 削除成功（すべて完了）');
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('[DELETE-PROFILE] キャッチされたエラー:', err);
