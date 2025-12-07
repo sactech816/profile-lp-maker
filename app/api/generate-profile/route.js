@@ -55,6 +55,8 @@ export async function POST(req) {
 
     const content = completion.choices[0]?.message?.content || '';
     
+    console.log('[AI生成] OpenAI APIからの生の応答:', content);
+    
     if (!content) {
       return NextResponse.json(
         { error: 'AIからの応答が空でした。もう一度お試しください。' },
@@ -73,20 +75,25 @@ export async function POST(req) {
     let result;
     try {
       result = JSON.parse(jsonStr);
+      console.log('[AI生成] パース成功:', result);
     } catch (parseError) {
-      console.error('JSON Parse Error:', parseError);
-      console.error('Content:', content);
+      console.error('[AI生成] JSON Parse Error:', parseError);
+      console.error('[AI生成] Content:', content);
       return NextResponse.json(
         { error: 'AIからの応答の解析に失敗しました。もう一度お試しください。' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({
+    const response = {
       catchphrase: result.catchphrase || '',
       introduction: result.introduction || '',
       recommendedLinks: result.recommendedLinks || [],
-    });
+    };
+    
+    console.log('[AI生成] 最終レスポンス:', response);
+
+    return NextResponse.json(response);
   } catch (err) {
     console.error('OpenAI API Error:', err);
     

@@ -508,11 +508,15 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       }
 
       const data = await res.json();
+      console.log('AI生成結果:', data);
       
       // データの検証
       if (!data || (!data.catchphrase && !data.introduction)) {
         throw new Error('AIからの応答が不完全でした。もう一度お試しください。');
       }
+
+      // 更新されたブロックのリストを保持
+      const updatedBlockIds: string[] = [];
 
       // ヘッダーブロックを更新または作成
       let headerBlock = blocks.find(b => b.type === 'header');
@@ -520,14 +524,17 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
         headerBlock = {
           id: generateBlockId(),
           type: 'header',
-          data: { avatar: '', name: '', title: '' }
+          data: { avatar: '', name: user?.email?.split('@')[0] || 'あなた', title: data.catchphrase || '' }
         };
         setBlocks(prev => [headerBlock!, ...prev]);
+        updatedBlockIds.push(headerBlock.id);
+      } else {
+        updateBlock(headerBlock.id, {
+          title: data.catchphrase,
+          name: headerBlock.data.name || user?.email?.split('@')[0] || 'あなた'
+        });
+        updatedBlockIds.push(headerBlock.id);
       }
-      updateBlock(headerBlock.id, {
-        title: data.catchphrase,
-        name: user?.email?.split('@')[0] || 'あなた'
-      });
 
       // テキストカードブロックを追加または更新
       let textCardBlock = blocks.find(b => b.type === 'text_card');
@@ -535,13 +542,17 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
         textCardBlock = {
           id: generateBlockId(),
           type: 'text_card',
-          data: { title: '自己紹介', text: '', align: 'center' }
+          data: { title: '自己紹介', text: data.introduction || '', align: 'center' }
         };
         setBlocks(prev => [...prev, textCardBlock!]);
+        updatedBlockIds.push(textCardBlock.id);
+      } else {
+        updateBlock(textCardBlock.id, {
+          text: data.introduction,
+          title: textCardBlock.data.title || '自己紹介'
+        });
+        updatedBlockIds.push(textCardBlock.id);
       }
-      updateBlock(textCardBlock.id, {
-        text: data.introduction
-      });
 
       // リンクブロックを追加または更新
       if (data.recommendedLinks && data.recommendedLinks.length > 0) {
@@ -550,18 +561,32 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           linksBlock = {
             id: generateBlockId(),
             type: 'links',
-            data: { links: [] }
+            data: { links: data.recommendedLinks }
           };
           setBlocks(prev => [...prev, linksBlock!]);
+          updatedBlockIds.push(linksBlock.id);
+        } else {
+          updateBlock(linksBlock.id, {
+            links: data.recommendedLinks
+          });
+          updatedBlockIds.push(linksBlock.id);
         }
-        updateBlock(linksBlock.id, {
-          links: data.recommendedLinks
-        });
       }
 
+      // 更新されたブロックを展開
+      setExpandedBlocks(prev => new Set([...prev, ...updatedBlockIds]));
+      
       setShowAIModal(false);
-      alert('AI生成が完了しました！');
+      
+      // 詳細な完了メッセージ
+      const updatedItems = [];
+      if (data.catchphrase) updatedItems.push('キャッチコピー');
+      if (data.introduction) updatedItems.push('自己紹介文');
+      if (data.recommendedLinks && data.recommendedLinks.length > 0) updatedItems.push(`推奨リンク(${data.recommendedLinks.length}件)`);
+      
+      alert(`AI生成が完了しました！\n\n生成された内容:\n${updatedItems.map(item => `• ${item}`).join('\n')}\n\nブロックを確認してください。`);
     } catch (error: any) {
+      console.error('AI生成エラー:', error);
       alert('AI生成エラー: ' + error.message);
     } finally {
       setIsGenerating(false);
@@ -637,14 +662,16 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           <div className="space-y-4">
             <div>
               <label className="text-sm font-bold text-gray-900 block mb-2">プロフィール画像</label>
-              <div className="flex gap-2">
-                <Input 
-                  label="" 
-                  val={block.data.avatar} 
-                  onChange={v => updateBlock(block.id, { avatar: v })} 
-                  ph="画像URL (https://...)" 
-                />
-                <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap self-end">
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <Input 
+                    label="" 
+                    val={block.data.avatar} 
+                    onChange={v => updateBlock(block.id, { avatar: v })} 
+                    ph="画像URL (https://...)" 
+                  />
+                </div>
+                <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap h-[50px]">
                   {isUploading ? <Loader2 className="animate-spin" size={16}/> : <UploadCloud size={16}/>}
                   <span>アップロード</span>
                   <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(block.id, e)} disabled={isUploading}/>
@@ -1693,6 +1720,17 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
               >
                 <X size={20}/>
               </button>
+            </div>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <h4 className="font-bold text-sm text-blue-900 mb-2 flex items-center gap-1">
+                <Sparkles size={14}/> AIが自動生成する内容
+              </h4>
+              <ul className="text-xs text-blue-800 space-y-1">
+                <li>• <strong>キャッチコピー</strong>: あなたの魅力を伝える一言</li>
+                <li>• <strong>自己紹介文</strong>: ターゲットに響く自己PR</li>
+                <li>• <strong>推奨リンク</strong>: おすすめのSNSリンク</li>
+              </ul>
             </div>
             
             <div className="space-y-4">
