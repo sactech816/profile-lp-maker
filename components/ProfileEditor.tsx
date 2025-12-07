@@ -1993,6 +1993,160 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           </div>
         </div>
       )}
+
+      {/* 保存成功モーダル */}
+      {showSuccessModal && savedSlug && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden">
+            {/* ヘッダー */}
+            <div className="bg-white bg-opacity-10 backdrop-blur-sm px-6 py-6 border-b border-white/20 relative">
+              <button 
+                onClick={() => setShowSuccessModal(false)}
+                className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-all text-white"
+              >
+                <X size={24}/>
+              </button>
+              <div className="flex items-center gap-3 text-white">
+                <div className="bg-green-400 rounded-full p-3">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">プロフィールLPを作成しました！</h2>
+                  <p className="text-sm text-white/80 mt-1">公開URLをコピーしてシェアできます</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 本文 */}
+            <div className="p-6 bg-white">
+              {/* 公開URL */}
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-gray-700 mb-2">公開URL</label>
+                <div className="flex items-center gap-2 bg-indigo-50 border-2 border-indigo-200 rounded-xl p-4">
+                  <input 
+                    type="text" 
+                    readOnly 
+                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/p/${savedSlug}`}
+                    className="flex-1 bg-transparent text-gray-800 font-mono text-sm outline-none"
+                  />
+                  <button
+                    onClick={() => {
+                      const url = `${window.location.origin}/p/${savedSlug}`;
+                      navigator.clipboard.writeText(url);
+                      alert('URLをコピーしました！');
+                    }}
+                    className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 whitespace-nowrap shadow-md"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    コピー
+                  </button>
+                </div>
+              </div>
+
+              {/* Pro機能の案内 */}
+              {user && (
+                <div className="mb-6 bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-2xl p-5">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="bg-orange-500 text-white rounded-full p-2 flex-shrink-0">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg text-gray-900 mb-2 flex items-center gap-2">
+                        応援・寄付でPro機能を開放
+                        <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">オプション</span>
+                      </h3>
+                      <p className="text-sm text-gray-700 mb-3">
+                        500円〜50,000円で、以下の追加機能が使えるようになります
+                      </p>
+                      <div className="grid md:grid-cols-2 gap-3 mb-4">
+                        <div className="bg-white rounded-lg p-3 border border-orange-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                            </svg>
+                            <h4 className="font-bold text-sm text-gray-900">HTMLダウンロード</h4>
+                          </div>
+                          <p className="text-xs text-gray-600">自分のサーバーにアップロード可能</p>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 border border-orange-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                            </svg>
+                            <h4 className="font-bold text-sm text-gray-900">埋め込みコード</h4>
+                          </div>
+                          <p className="text-xs text-gray-600">WordPressなどに埋め込み可能</p>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 border border-orange-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                            <h4 className="font-bold text-sm text-gray-900">優先サポート</h4>
+                          </div>
+                          <p className="text-xs text-gray-600">機能改善の優先対応</p>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 border border-orange-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            <h4 className="font-bold text-sm text-gray-900">その他の機能</h4>
+                          </div>
+                          <p className="text-xs text-gray-600">今後追加される機能も利用可能</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          // マイページで寄付・機能開放する処理（仮実装）
+                          alert('マイページで寄付・機能開放ページに遷移します（実装予定）');
+                        }}
+                        className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-6 py-3 rounded-xl font-bold hover:from-orange-600 hover:to-yellow-600 transition-all flex items-center justify-center gap-2 shadow-lg"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M3 3h18v2H3V3m0 4h18v2H3V7m0 4h18v2H3v-2m0 4h12v2H3v-2z" />
+                        </svg>
+                        マイページで寄付・機能開放する
+                      </button>
+                      <p className="text-xs text-gray-500 text-center mt-2">
+                        ※寄付は任意です。無料でも診断クイズの公開・シェアは可能です
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* アクションボタン */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => {
+                    window.open(`/p/${savedSlug}`, '_blank');
+                  }}
+                  className="flex-1 bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  プロフィールLPにアクセス
+                </button>
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-4 rounded-xl font-bold hover:bg-gray-200 transition-all"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
