@@ -210,11 +210,15 @@ const App = () => {
       if(!confirm('本当に削除しますか？')) return;
       if(!supabase) return;
       try {
+          console.log('[CLIENT] 削除処理開始:', { id });
+          
           const { data: { session } } = await supabase.auth.getSession();
           const token = session?.access_token;
+          console.log('[CLIENT] セッション取得:', { hasToken: !!token });
           
           // 未ログインユーザーの場合は匿名IDを使用
           const anonymousId = localStorage.getItem('anonymous_user_id');
+          console.log('[CLIENT] 匿名ID:', anonymousId);
           
           const headers = {
               'Content-Type': 'application/json'
@@ -224,21 +228,31 @@ const App = () => {
               headers['Authorization'] = `Bearer ${token}`;
           }
 
+          console.log('[CLIENT] APIリクエスト送信中...');
           const res = await fetch('/api/delete-profile', {
               method: 'POST',
               headers,
               body: JSON.stringify({ id, anonymousId })
           });
+          
+          console.log('[CLIENT] APIレスポンス:', { status: res.status, ok: res.ok });
           const result = await res.json().catch(() => ({}));
+          console.log('[CLIENT] レスポンスデータ:', result);
+          
           if (!res.ok) throw new Error(result?.error || '削除に失敗しました');
 
           alert('削除しました');
+          
+          console.log('[CLIENT] refetch実行:', { hasRefetch: !!refetch, refetchType: typeof refetch });
           if (refetch) {
               await refetch();
+              console.log('[CLIENT] refetch完了');
           } else {
+              console.log('[CLIENT] ページリロード');
               window.location.reload();
           }
       } catch(e) {
+          console.error('[CLIENT] 削除エラー:', e);
           alert('削除エラー: ' + e.message);
       }
   };
