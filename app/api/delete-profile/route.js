@@ -97,51 +97,66 @@ export async function POST(req) {
     console.log('[DELETE-PROFILE] 関連データ削除中...');
     
     // 1. analyticsテーブルから関連データを削除
-    const { error: analyticsDeleteError } = await supabaseAdmin
-      .from('analytics')
-      .delete()
-      .eq('profile_id', id);
-    
-    if (analyticsDeleteError) {
-      console.log('[DELETE-PROFILE] アナリティクス削除エラー:', analyticsDeleteError);
-      // analyticsテーブルが存在しない場合は無視
-      if (!analyticsDeleteError.message.includes('does not exist')) {
-        throw analyticsDeleteError;
+    try {
+      const { error: analyticsDeleteError } = await supabaseAdmin
+        .from('analytics')
+        .delete()
+        .eq('profile_id', id);
+      
+      if (analyticsDeleteError) {
+        console.log('[DELETE-PROFILE] アナリティクス削除エラー:', analyticsDeleteError.message);
+        // analyticsテーブルが存在しない場合は無視
+        if (!analyticsDeleteError.message.includes('does not exist') && 
+            !analyticsDeleteError.message.includes('schema cache')) {
+          throw analyticsDeleteError;
+        }
+      } else {
+        console.log('[DELETE-PROFILE] アナリティクス削除成功');
       }
-    } else {
-      console.log('[DELETE-PROFILE] アナリティクス削除成功');
+    } catch (e) {
+      console.log('[DELETE-PROFILE] アナリティクス削除スキップ:', e.message);
     }
     
     // 2. profile_purchasesテーブルから関連データを削除（存在する場合）
-    const { error: purchasesDeleteError } = await supabaseAdmin
-      .from('profile_purchases')
-      .delete()
-      .eq('profile_id', id);
-    
-    if (purchasesDeleteError) {
-      console.log('[DELETE-PROFILE] 購入履歴削除エラー:', purchasesDeleteError);
-      // テーブルが存在しない場合は無視
-      if (!purchasesDeleteError.message.includes('does not exist')) {
-        throw purchasesDeleteError;
+    try {
+      const { error: purchasesDeleteError } = await supabaseAdmin
+        .from('profile_purchases')
+        .delete()
+        .eq('profile_id', id);
+      
+      if (purchasesDeleteError) {
+        console.log('[DELETE-PROFILE] 購入履歴削除エラー:', purchasesDeleteError.message);
+        // テーブルが存在しない場合は無視
+        if (!purchasesDeleteError.message.includes('does not exist') && 
+            !purchasesDeleteError.message.includes('schema cache')) {
+          throw purchasesDeleteError;
+        }
+      } else {
+        console.log('[DELETE-PROFILE] 購入履歴削除成功');
       }
-    } else {
-      console.log('[DELETE-PROFILE] 購入履歴削除成功');
+    } catch (e) {
+      console.log('[DELETE-PROFILE] 購入履歴削除スキップ:', e.message);
     }
     
     // 3. leadsテーブルから関連データを削除（存在する場合）
-    const { error: leadsDeleteError } = await supabaseAdmin
-      .from('leads')
-      .delete()
-      .eq('profile_id', id);
-    
-    if (leadsDeleteError) {
-      console.log('[DELETE-PROFILE] リード削除エラー:', leadsDeleteError);
-      // テーブルが存在しない場合は無視
-      if (!leadsDeleteError.message.includes('does not exist')) {
-        throw leadsDeleteError;
+    try {
+      const { error: leadsDeleteError } = await supabaseAdmin
+        .from('leads')
+        .delete()
+        .eq('profile_id', id);
+      
+      if (leadsDeleteError) {
+        console.log('[DELETE-PROFILE] リード削除エラー:', leadsDeleteError.message);
+        // テーブルが存在しない場合は無視
+        if (!leadsDeleteError.message.includes('does not exist') && 
+            !leadsDeleteError.message.includes('schema cache')) {
+          throw leadsDeleteError;
+        }
+      } else {
+        console.log('[DELETE-PROFILE] リード削除成功');
       }
-    } else {
-      console.log('[DELETE-PROFILE] リード削除成功');
+    } catch (e) {
+      console.log('[DELETE-PROFILE] リード削除スキップ:', e.message);
     }
     
     // 4. プロフィール本体を削除
