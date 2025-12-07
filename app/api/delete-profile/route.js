@@ -4,12 +4,24 @@ import { ADMIN_EMAIL } from '@/lib/constants';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 function getSupabaseAdmin() {
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Supabaseの認証情報が不足しています');
+  if (!supabaseUrl) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URLが設定されていません。.env.localファイルを確認してください。');
   }
-  return createClient(supabaseUrl, serviceRoleKey);
+  
+  // サービスロールキーがある場合は管理者クライアントを使用
+  if (serviceRoleKey) {
+    return createClient(supabaseUrl, serviceRoleKey);
+  }
+  
+  // ない場合は匿名キーを使用（RLS有効）
+  if (!anonKey) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEYが設定されていません。.env.localファイルを確認してください。');
+  }
+  
+  return createClient(supabaseUrl, anonKey);
 }
 
 export async function POST(req) {
@@ -63,8 +75,15 @@ export async function POST(req) {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('delete-profile error:', err);
+    
+    // エラーメッセージをより詳細に
+    let errorMessage = err.message || '削除に失敗しました';
+    if (errorMessage.includes('SUPABASE')) {
+      errorMessage = '環境変数が正しく設定されていません。管理者にお問い合わせください。\n' + errorMessage;
+    }
+    
     return NextResponse.json(
-      { error: err.message || '削除に失敗しました' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

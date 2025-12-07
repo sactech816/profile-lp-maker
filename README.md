@@ -1,8 +1,20 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## 環境変数の設定
+
+プロジェクトを実行する前に、`.env.local`ファイルをプロジェクトのルートディレクトリに作成し、以下の環境変数を設定してください：
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+```
+
+これらの値は、Supabaseダッシュボードの **Settings > API** から取得できます。
+
 ## Getting Started
 
-First, run the development server:
+環境変数を設定した後、開発サーバーを起動します:
 
 ```bash
 npm run dev
