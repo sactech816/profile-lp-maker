@@ -60,7 +60,7 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
   // プロフィールの説明を取得
   const getProfileDescription = (profile) => {
     if (!profile.content || !Array.isArray(profile.content)) return '';
-    const textBlock = profile.content.find(b => b.type === 'text');
+    const textBlock = profile.content.find(b => b.type === 'text' || b.type === 'text_card');
     const description = textBlock?.data?.text || '';
     // 最初の100文字まで表示
     return description.length > 100 ? description.substring(0, 100) + '...' : description;
@@ -71,6 +71,13 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
     if (!profile.content || !Array.isArray(profile.content)) return null;
     const headerBlock = profile.content.find(b => b.type === 'header');
     return headerBlock?.data?.category || null;
+  };
+
+  // プロフィールのアバター画像を取得
+  const getProfileAvatar = (profile) => {
+    if (!profile.content || !Array.isArray(profile.content)) return null;
+    const headerBlock = profile.content.find(b => b.type === 'header');
+    return headerBlock?.data?.avatar || null;
   };
 
   // カテゴリーの表示名とスタイルを取得
@@ -292,6 +299,7 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
                 const categoryInfo = getCategoryInfo(category);
                 const profileName = getProfileName(profile);
                 const description = getProfileDescription(profile);
+                const avatarUrl = getProfileAvatar(profile);
                 
                 return (
                   <a
@@ -301,19 +309,42 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
                     rel="noopener noreferrer"
                     className="glass-card rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 cursor-pointer group"
                   >
-                    {/* カードヘッダー（グラデーション背景） */}
+                    {/* カードヘッダー（サムネイル画像 or グラデーション背景） */}
                     <div className={`relative h-32 flex items-center justify-center ${
-                      category === 'fortune' ? 'bg-gradient-to-br from-purple-400 to-pink-500' :
-                      category === 'business' ? 'bg-gradient-to-br from-blue-400 to-indigo-500' :
-                      category === 'study' ? 'bg-gradient-to-br from-green-400 to-teal-500' :
-                      'bg-gradient-to-br from-gray-400 to-gray-500'
+                      !avatarUrl ? (
+                        category === 'fortune' ? 'bg-gradient-to-br from-purple-400 to-pink-500' :
+                        category === 'business' ? 'bg-gradient-to-br from-blue-400 to-indigo-500' :
+                        category === 'study' ? 'bg-gradient-to-br from-green-400 to-teal-500' :
+                        'bg-gradient-to-br from-gray-400 to-gray-500'
+                      ) : 'bg-gray-200'
                     }`}>
-                      <div className="absolute top-4 right-4">
+                      <div className="absolute top-4 right-4 z-10">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${categoryInfo.color}`}>
                           {categoryInfo.label}
                         </span>
                       </div>
-                      <Sparkles className="text-white opacity-50" size={48}/>
+                      {avatarUrl ? (
+                        <img 
+                          src={avatarUrl} 
+                          alt={profileName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // 画像読み込み失敗時はフォールバック
+                            e.target.style.display = 'none';
+                            e.target.parentElement.classList.add(
+                              category === 'fortune' ? 'bg-gradient-to-br', 'from-purple-400', 'to-pink-500' :
+                              category === 'business' ? 'bg-gradient-to-br', 'from-blue-400', 'to-indigo-500' :
+                              category === 'study' ? 'bg-gradient-to-br', 'from-green-400', 'to-teal-500' :
+                              'bg-gradient-to-br', 'from-gray-400', 'to-gray-500'
+                            );
+                            const fallbackIcon = document.createElement('div');
+                            fallbackIcon.innerHTML = '<svg class="text-white opacity-50" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>';
+                            e.target.parentElement.appendChild(fallbackIcon.firstChild);
+                          }}
+                        />
+                      ) : (
+                        <Sparkles className="text-white opacity-50" size={48}/>
+                      )}
                     </div>
                     
                     {/* カードコンテンツ */}
