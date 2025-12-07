@@ -5,6 +5,7 @@ import { Block, migrateOldContent } from '@/lib/types';
 import { BlockRenderer } from '@/components/BlockRenderer';
 import { ProfileViewTracker } from '@/components/ProfileViewTracker';
 import { TrackingScripts } from '@/components/TrackingScripts';
+import Footer from '@/components/Footer';
 
 interface Profile {
   id: string;
@@ -139,15 +140,14 @@ export default async function ProfilePage({
               <BlockRenderer block={block} profileId={profile.id} />
             </div>
           ))}
-          
-          {/* フッター */}
-          <footer className="text-center py-6 animate-fade-in delay-10">
-            <p className="text-sm text-white/90 drop-shadow-md">
-              &copy; {new Date().getFullYear()} All Rights Reserved.
-            </p>
-          </footer>
         </div>
       </div>
+      <Footer 
+        setPage={null} 
+        onCreate={null} 
+        user={null} 
+        setShowAuth={null} 
+      />
     </>
   );
 }

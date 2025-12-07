@@ -20,7 +20,7 @@ const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, 
     const [myProfiles, setMyProfiles] = useState([]);
     const [purchases, setPurchases] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [viewMode, setViewMode] = useState('graph');
+    const [viewMode, setViewMode] = useState('table');
     const [processingId, setProcessingId] = useState(null);
     const [analyticsMap, setAnalyticsMap] = useState({});
 
@@ -220,12 +220,20 @@ const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, 
                     <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-2">
                         <LayoutDashboard/> ダッシュボード
                     </h1>
-                    <button 
-                        onClick={onLogout} 
-                        className="text-gray-500 hover:text-red-500 font-bold flex items-center gap-1 text-sm"
-                    >
-                        <LogOut size={16}/> ログアウト
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={handleCreate} 
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-colors"
+                        >
+                            <Plus size={16}/> LPの新規作成
+                        </button>
+                        <button 
+                            onClick={onLogout} 
+                            className="text-gray-500 hover:text-red-500 font-bold flex items-center gap-1 text-sm"
+                        >
+                            <LogOut size={16}/> ログアウト
+                        </button>
+                    </div>
                 </div>
 
                 <div className="grid lg:grid-cols-3 gap-8">
@@ -467,7 +475,7 @@ const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, 
                                                 </div>
 
                                                 <button 
-                                                    onClick={() => onDelete(profile.id)} 
+                                                    onClick={() => onDelete(profile.id, fetchMyProfiles)} 
                                                     className="w-full mb-2 bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
                                                 >
                                                     <Trash2 size={14}/> 削除

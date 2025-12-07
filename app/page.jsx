@@ -267,17 +267,21 @@ const App = () => {
                 setPage={(p) => navigateTo(p)} 
                 onLogout={async ()=>{ await supabase.auth.signOut(); navigateTo('landing');}} 
                 onEdit={(profile)=>{setEditingProfileSlug(profile.slug); navigateTo('profile-editor');}} 
-                onDelete={async (id) => {
+                onDelete={async (id, refetch) => {
                     if(!confirm('本当に削除しますか？')) return;
                     try {
                         const { error } = await supabase.from('profiles').delete().eq('id', id);
                         if(error) throw error;
                         alert('削除しました');
+                        // 削除後に再取得
+                        if (refetch) {
+                            await refetch();
+                        }
                     } catch(e) {
                         alert('削除エラー: ' + e.message);
                     }
                 }}
-                onCreate={(profile)=>{setEditingProfileSlug(profile.slug); navigateTo('profile-editor');}}
+                onCreate={()=>{setEditingProfileSlug(null); navigateTo('profile-editor');}}
             />
         )}
         

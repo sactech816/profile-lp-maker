@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { Sparkles } from 'lucide-react';
 
@@ -19,7 +21,7 @@ const Footer = ({ setPage, onCreate, user, setShowAuth }) => {
     };
 
     return (
-        <footer className="bg-gray-900 text-gray-400 py-12 mt-12 border-t border-gray-800">
+        <footer className="bg-gray-900/50 backdrop-blur-sm text-gray-400 py-12 mt-12 border-t border-gray-800 rounded-2xl mx-4 mb-4">
             <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-4 gap-8">
                 <div className="col-span-1 md:col-span-2">
                     <h2 className="text-white font-bold text-xl mb-4 flex items-center gap-2">
