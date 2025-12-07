@@ -1663,7 +1663,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                     backgroundRepeat: 'no-repeat'
                   }
                 : {
-                    background: theme.gradient || 'linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)',
+                    backgroundImage: theme.gradient || 'linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)',
                     backgroundSize: '400% 400%',
                     animation: 'gradient 15s ease infinite'
                   }
