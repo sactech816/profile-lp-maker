@@ -14,24 +14,14 @@ function getSupabaseAdmin() {
 
 export async function POST(req) {
   try {
-    const { id } = await req.json();
+    const { id, anonymousId } = await req.json();
     if (!id) {
       return NextResponse.json({ error: 'プロフィールIDがありません' }, { status: 400 });
     }
 
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
-    }
-
     const supabaseAdmin = getSupabaseAdmin();
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError || !userData?.user) {
-      return NextResponse.json({ error: 'ユーザー情報を確認できませんでした' }, { status: 401 });
-    }
-    const user = userData.user;
-
+    
+    // プロフィール情報を取得
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('id, user_id')
@@ -42,13 +32,31 @@ export async function POST(req) {
       return NextResponse.json({ error: 'プロフィールが見つかりませんでした' }, { status: 404 });
     }
 
-    const isOwner = !profile.user_id || profile.user_id === user.id;
-    const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    // 認証トークンをチェック
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
+    let user = null;
+    let isAdmin = false;
 
-    if (!isOwner && !isAdmin) {
+    if (token) {
+      // ログインユーザーの場合
+      const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+      if (!userError && userData?.user) {
+        user = userData.user;
+        isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      }
+    }
+
+    // 権限チェック
+    const isOwner = user && profile.user_id === user.id;
+    const isAnonymousOwner = !profile.user_id || (anonymousId && profile.user_id === anonymousId);
+
+    if (!isOwner && !isAdmin && !isAnonymousOwner) {
       return NextResponse.json({ error: '削除権限がありません' }, { status: 403 });
     }
 
+    // 削除実行
     const { error: deleteError } = await supabaseAdmin.from('profiles').delete().eq('id', id);
     if (deleteError) throw deleteError;
 

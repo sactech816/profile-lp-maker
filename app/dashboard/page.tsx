@@ -48,15 +48,22 @@ export default function DashboardPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      if (!token) throw new Error('ログインが必要です');
+      
+      // 未ログインユーザーの場合は匿名IDを使用
+      const anonymousId = localStorage.getItem('anonymous_user_id');
+      
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
       const res = await fetch('/api/delete-profile', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ id }),
+        headers,
+        body: JSON.stringify({ id, anonymousId }),
       });
       const result = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(result?.error || '削除に失敗しました');
