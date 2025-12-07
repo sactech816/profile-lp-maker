@@ -718,3 +718,47 @@ export const ProfileHowToPage = ({ onBack, setPage, user, onLogout, setShowAuth,
         </div>
     );
 };
+
+// --- Profile FAQ Page ---
+export const ProfileFaqPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAdmin }) => {
+    useEffect(() => { 
+        document.title = "よくある質問 | Profile LP Maker"; 
+        window.scrollTo(0, 0);
+    }, []);
+    const [openIndex, setOpenIndex] = useState(null);
+    const faqs = [
+        { category: "一般", q: "無料で使えますか？", a: "はい、プロフィールLPの作成・公開の基本機能はすべて無料でご利用いただけます。ブロック形式エディタ、AI自動生成、背景カスタマイズ、リアルタイムプレビューなど、すべて無料です。" },
+        { category: "一般", q: "商用利用は可能ですか？", a: "可能です。作成したプロフィールLPは、ご自身のビジネス（SNS拡散、集客、サービス紹介）で自由にご活用ください。" },
+        { category: "一般", q: "ログインは必要ですか？", a: "プロフィールLPの作成・公開はログインなしでも可能です。ただし、編集・削除・HTMLダウンロード機能を使用する場合はログインが必要です。" },
+        { category: "機能", q: "ブロック形式エディタとは？", a: "ヘッダー、テキストカード、画像、YouTube、リンク集などのブロックを自由に配置してプロフィールLPを作成できるエディタです。ドラッグ&ドロップで簡単にレイアウトを変更できます。" },
+        { category: "機能", q: "AI自動生成の精度は？", a: "職業・ターゲット・強みを入力するだけで、キャッチコピーや自己紹介文、リンク構成を自動生成します。生成後に自由に編集できるため、たたき台として非常に便利です。" },
+        { category: "機能", q: "背景はカスタマイズできますか？", a: "はい、5種類の動くグラデーションパターンから選択するか、カスタム画像をアップロードできます。プロフィールの雰囲気に合わせて自由に設定できます。" },
+        { category: "機能", q: "プレビュー機能はありますか？", a: "はい、作成中のプロフィールLPをリアルタイムで確認できます。保存前に見た目をチェックできるので安心です。" },
+        { category: "機能", q: "スマホでも見れますか？", a: "はい、完全レスポンシブ対応です。作成も閲覧もスマホで快適に行えます。" },
+        { category: "機能", q: "画像はどこに保存されますか？", a: "アップロードした画像はSupabase Storageで安全に管理されます。画像URLを直接指定することも可能です。" },
+        { category: "Pro機能", q: "Pro機能（寄付）とは？", a: "プロフィールごとに任意の金額（500円〜）を寄付いただくことで、「HTMLダウンロード」「埋め込みコード発行」機能が開放されます。自社サーバーに設置したい場合に便利です。" },
+        { category: "技術", q: "SEO対策はされていますか？", a: "はい、構造化データ、メタタグ、適切なタイトル設定など、基本的なSEO対策は実装済みです。" },
+        { category: "技術", q: "URLは変更できますか？", a: "プロフィールLPのURLは自動生成されますが、ログインして編集することで再生成することも可能です。" },
+    ];
+    return (
+        <div className="min-h-screen bg-gray-50 font-sans">
+            <Header setPage={setPage} user={user} onLogout={onLogout} setShowAuth={setShowAuth} isAdmin={isAdmin} />
+            <div className="max-w-3xl mx-auto py-12 px-4">
+                <button onClick={onBack} className="mb-6 flex items-center gap-1 text-gray-500 font-bold hover:text-indigo-600"><ArrowLeft size={16}/> 戻る</button>
+                <h1 className="text-3xl font-extrabold text-gray-900 mb-8 text-center">よくある質問</h1>
+                <div className="space-y-4">
+                    {faqs.map((faq, i) => (
+                        <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <button onClick={() => setOpenIndex(openIndex === i ? null : i)} className="w-full px-6 py-4 text-left font-bold text-gray-800 flex justify-between items-center hover:bg-gray-50">
+                                <span className="flex items-center gap-3"><span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded">{faq.category}</span>{faq.q}</span>
+                                {openIndex === i ? <ChevronUp size={20} className="text-gray-400"/> : <ChevronDown size={20} className="text-gray-400"/>}
+                            </button>
+                            {openIndex === i && <div className="px-6 py-4 bg-gray-50 text-gray-600 text-sm leading-relaxed border-t border-gray-100">{faq.a}</div>}
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <Footer setPage={setPage} onCreate={()=>setPage('profile-editor')} user={user} setShowAuth={setShowAuth} variant="light" />
+        </div>
+    );
+};

@@ -19,7 +19,7 @@ import {
     FaqPage, PricePage, HowToPage, 
     EffectiveUsePage, QuizLogicPage, 
     ContactPage, LegalPage, PrivacyPage,
-    ProfileEffectiveUsePage, ProfileHowToPage
+    ProfileEffectiveUsePage, ProfileHowToPage, ProfileFaqPage
 } from '../components/StaticPages';
 import { Loader2 } from 'lucide-react';
 
@@ -407,6 +407,18 @@ const App = () => {
             }
         }} setShowAuth={setShowAuth} />}
         {view === 'profile-howto' && <ProfileHowToPage onBack={()=>navigateTo('landing')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ 
+            if(!supabase) return;
+            try {
+                await supabase.auth.signOut(); 
+                setUser(null);
+                alert('ログアウトしました');
+                navigateTo('landing');
+            } catch(e) {
+                console.error('ログアウトエラー:', e);
+                alert('ログアウトに失敗しました');
+            }
+        }} setShowAuth={setShowAuth} />}
+        {view === 'profile-faq' && <ProfileFaqPage onBack={()=>navigateTo('landing')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ 
             if(!supabase) return;
             try {
                 await supabase.auth.signOut(); 

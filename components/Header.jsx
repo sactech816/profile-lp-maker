@@ -18,6 +18,12 @@ const Header = ({ setPage, user, onLogout, setShowAuth = null }) => {
                 </div>
 
                 <div className="hidden md:flex items-center gap-4 text-sm font-bold text-gray-600">
+                    <button onClick={()=>{setPage('profile-editor'); setIsMenuOpen(false);}} className="text-gray-600 hover:text-indigo-600 flex items-center gap-1">
+                        <PlusCircle size={16}/> 新規作成
+                    </button>
+                    <button onClick={()=>handleNav('contact')} className="text-gray-600 hover:text-indigo-600 flex items-center gap-1">
+                        <Mail size={16}/> お問い合わせ
+                    </button>
                     <button onClick={()=>handleNav('profile-howto')} className="text-gray-600 hover:text-indigo-600 flex items-center gap-1">
                         <HelpCircle size={16}/> 使い方
                     </button>
@@ -26,9 +32,6 @@ const Header = ({ setPage, user, onLogout, setShowAuth = null }) => {
                     </button>
                     {user ? (
                         <>
-                            <button onClick={()=>{setPage('profile-editor'); setIsMenuOpen(false);}} className="bg-indigo-600 text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-indigo-700 transition-colors">
-                                <PlusCircle size={16}/> LPの新規作成
-                            </button>
                             <button onClick={()=>handleNav('dashboard')} className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full flex items-center gap-2 hover:bg-indigo-100 transition-colors">
                                 <LayoutDashboard size={16}/> ダッシュボード
                             </button>
