@@ -10,7 +10,9 @@ const Footer = ({ setPage, onCreate, user, setShowAuth, variant = 'dark' }) => {
         if (onCreate) {
             onCreate();
         } else if (setPage) {
-            setPage('dashboard');
+            setPage('profile-editor');
+        } else {
+            window.location.href = 'https://lp.makers.tokyo/?page=profile-editor';
         }
     };
 

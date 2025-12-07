@@ -484,7 +484,7 @@ export const LegalPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAdmi
 // --- Privacy Page ---
 export const PrivacyPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAdmin }) => {
     useEffect(() => { 
-        document.title = "プライバシーポリシー | 診断クイズメーカー"; 
+        document.title = "プライバシーポリシー | プロフィールLPメーカー"; 
         window.scrollTo(0, 0);
     }, []);
     return (
@@ -494,7 +494,7 @@ export const PrivacyPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAd
                 <button onClick={onBack} className="mb-6 flex items-center gap-1 text-gray-500 font-bold hover:text-indigo-600"><ArrowLeft size={16}/> 戻る</button>
                 <h1 className="text-2xl font-extrabold text-gray-900 mb-8 flex items-center gap-2"><Shield className="text-gray-400"/> プライバシーポリシー</h1>
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-sm leading-relaxed space-y-6 text-gray-700">
-                    <p>診断クイズメーカー（以下、「当サービス」）は、ユーザーの個人情報の取扱いについて、以下のとおりプライバシーポリシー（以下、「本ポリシー」）を定めます。</p>
+                    <p>プロフィールLPメーカー（以下、「当サービス」）は、ユーザーの個人情報の取扱いについて、以下のとおりプライバシーポリシー（以下、「本ポリシー」）を定めます。</p>
                     
                     <section>
                         <h3 className="font-bold text-gray-900 mb-2">1. 個人情報の収集</h3>
@@ -691,6 +691,25 @@ export const ProfileHowToPage = ({ onBack, setPage, user, onLogout, setShowAuth,
                                     <li><strong>ログイン:</strong> ログインすると編集・削除・HTMLダウンロードが可能</li>
                                 </ul>
                             </div>
+                        </div>
+                    </section>
+                    
+                    <section>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <Shield className="text-indigo-600"/> 利用規約・免責事項
+                        </h2>
+                        <div className="space-y-4 text-sm text-gray-700">
+                            <p>「プロフィールLPメーカー」（以下、本サービス）をご利用いただく際の基本的なルールと免責事項です。ご利用前に必ずご確認ください。</p>
+                            <ol className="space-y-3 list-decimal list-inside">
+                                <li><strong>サービスの利用について:</strong> 本サービスは無料でプロフィールLPを作成・公開できるプラットフォームです。利用には本規約への同意が必要です。</li>
+                                <li><strong>コンテンツの権利と責任:</strong> 作成したLPの著作権は作成者に帰属します。個人・商用を問わず利用可能ですが、公序良俗違反・権利侵害・違法な内容の掲載は禁止します。違反コンテンツは予告なく削除する場合があります。</li>
+                                <li><strong>著作権について:</strong> 使用する画像・テキスト等は適切な権利を有するものをご利用ください。第三者素材の無断使用による責任は利用者が負います。本サービスのシステム・デザイン等の著作権は運営者に帰属します。</li>
+                                <li><strong>Pro機能（寄付）について:</strong> 500円〜の任意の寄付でPro機能が開放されます。デジタルコンテンツの性質上、寄付後の返金・キャンセルはできません。決済はStripeを通じて安全に行われます。</li>
+                                <li><strong>免責事項:</strong> 本サービスは現状有姿で提供され、正確性・完全性・有用性を保証しません。利用により生じる損害やサービス中断・データ消失等について運営者は責任を負いません。収集した個人情報の管理はLP作成者の責任とします。</li>
+                                <li><strong>サービスの変更・終了:</strong> 運営者は予告なくサービス内容の変更・追加・削除、または全部・一部の終了を行うことがあります。</li>
+                                <li><strong>規約の変更:</strong> 必要に応じて本規約を変更します。変更後も利用を継続した場合、変更後の規約に同意したものとみなします。</li>
+                                <li><strong>準拠法・管轄:</strong> 本規約は日本法に準拠し、紛争は運営者所在地を管轄する裁判所を専属管轄とします。</li>
+                            </ol>
                         </div>
                     </section>
                 </div>

@@ -95,6 +95,29 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const uploadOwnerId = user?.id || 'public';
 
+  // 共通アップロード関数（RLS回避のためサーバールート経由）
+  const uploadImageViaApi = async (file: File, prefix: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', uploadOwnerId);
+    formData.append('fileName', fileName);
+
+    const res = await fetch('/api/upload-image', { method: 'POST', body: formData });
+    if (!res.ok) {
+      let msg = 'アップロードに失敗しました';
+      try {
+        const data = await res.json();
+        msg = data.error || msg;
+      } catch (_) {}
+      throw new Error(msg);
+    }
+    const data = await res.json();
+    return data.publicUrl as string;
+  };
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const handleResize = () => {
@@ -366,30 +389,18 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
   // 画像アップロード（ブロック用）
   const handleImageUpload = async (blockId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !supabase) return;
+    if (!file) return;
 
     setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-      const filePath = `${uploadOwnerId}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file, {
-        upsert: true
-      });
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw new Error(uploadError.message || '画像のアップロードに失敗しました');
-      }
-
-      const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
+      const publicUrl = await uploadImageViaApi(file, 'img');
       
       // ブロックタイプに応じて更新
       const block = blocks.find(b => b.id === blockId);
       if (block?.type === 'header') {
-        updateBlock(blockId, { avatar: data.publicUrl });
+        updateBlock(blockId, { avatar: publicUrl });
       } else if (block?.type === 'image') {
-        updateBlock(blockId, { url: data.publicUrl });
+        updateBlock(blockId, { url: publicUrl });
       }
     } catch (error: any) {
       console.error('Image upload error:', error);
@@ -407,24 +418,12 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
   // 背景画像アップロード
   const handleBackgroundImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !supabase) return;
+    if (!file) return;
 
     setIsUploadingBackground(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `bg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-      const filePath = `${uploadOwnerId}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file, {
-        upsert: true
-      });
-      if (uploadError) {
-        console.error('Background upload error:', uploadError);
-        throw new Error(uploadError.message || '背景画像のアップロードに失敗しました');
-      }
-
-      const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
-      setTheme(prev => ({ ...prev, backgroundImage: data.publicUrl }));
+      const publicUrl = await uploadImageViaApi(file, 'bg');
+      setTheme(prev => ({ ...prev, backgroundImage: publicUrl }));
     } catch (error: any) {
       console.error('Background image upload error:', error);
       const errorMessage = error.message || '背景画像のアップロードに失敗しました';
@@ -821,19 +820,11 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                     accept="image/*" 
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (!file || !supabase) return;
+                      if (!file) return;
                       setIsUploading(true);
-                      const fileExt = file.name.split('.').pop();
-                      const fileName = `kindle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-                    const filePath = `${uploadOwnerId}/${fileName}`;
-                      supabase.storage.from('profile-uploads').upload(filePath, file, { upsert: true })
-                        .then(({ error: uploadError }) => {
-                          if (uploadError) {
-                            console.error('Kindle upload error:', uploadError);
-                            throw new Error(uploadError.message || '画像のアップロードに失敗しました');
-                          }
-                          const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
-                          updateBlock(block.id, { imageUrl: data.publicUrl });
+                      uploadImageViaApi(file, 'kindle')
+                        .then((publicUrl) => {
+                          updateBlock(block.id, { imageUrl: publicUrl });
                         })
                         .catch((error: any) => {
                           console.error('Kindle image upload error:', error);
@@ -915,19 +906,11 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                     accept="image/*" 
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
-                      if (!file || !supabase) return;
+                      if (!file) return;
                       setIsUploading(true);
                       try {
-                        const fileExt = file.name.split('.').pop();
-                        const fileName = `line_qr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-                      const filePath = `${uploadOwnerId}/${fileName}`;
-                        const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file, { upsert: true });
-                        if (uploadError) {
-                          console.error('LINE QR upload error:', uploadError);
-                          throw new Error(uploadError.message || '画像のアップロードに失敗しました');
-                        }
-                        const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
-                        updateBlock(block.id, { qrImageUrl: data.publicUrl });
+                        const publicUrl = await uploadImageViaApi(file, 'line_qr');
+                        updateBlock(block.id, { qrImageUrl: publicUrl });
                       } catch (error: any) {
                         console.error('LINE QR image upload error:', error);
                         const errorMessage = error.message || '画像のアップロードに失敗しました';
@@ -1189,21 +1172,13 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                           accept="image/*" 
                           onChange={(e) => {
                             const file = e.target.files?.[0];
-                            if (!file || !supabase) return;
+                            if (!file) return;
                             setIsUploading(true);
-                            const fileExt = file.name.split('.').pop();
-                            const fileName = `testimonial_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-                            const filePath = `${uploadOwnerId}/${fileName}`;
-                            supabase.storage.from('profile-uploads').upload(filePath, file, { upsert: true })
-                              .then(({ error: uploadError }) => {
-                                if (uploadError) {
-                                  console.error('Testimonial upload error:', uploadError);
-                                  throw new Error(uploadError.message || '画像のアップロードに失敗しました');
-                                }
-                                const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
+                            uploadImageViaApi(file, 'testimonial')
+                              .then((publicUrl) => {
                                 setBlocks(prev => prev.map(b => 
                                   b.id === block.id && b.type === 'testimonial'
-                                    ? { ...b, data: { items: b.data.items.map((it, i) => i === index ? { ...it, imageUrl: data.publicUrl } : it) } }
+                                    ? { ...b, data: { items: b.data.items.map((it, i) => i === index ? { ...it, imageUrl: publicUrl } : it) } }
                                     : b
                                 ));
                               })
