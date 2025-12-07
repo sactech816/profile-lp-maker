@@ -913,14 +913,14 @@ const Editor = ({ onBack, onSave, initialData, setPage, user, setShowAuth }) => 
 
                             <div className="mt-6 mb-6">
                                 <label className="text-sm font-bold text-gray-900 block mb-2">メイン画像</label>
-                                <div className="flex flex-col md:flex-row gap-2">
-                                    <input className="flex-grow border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white placeholder-gray-400" value={form.image_url||''} onChange={e=>setForm({...form, image_url:e.target.value})} placeholder="画像URL (https://...) またはアップロード"/>
-                                    <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap">
+                                <div className="flex gap-2 items-stretch">
+                                    <input className="flex-grow border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white placeholder-gray-400" value={form.image_url||''} onChange={e=>setForm({...form, image_url:e.target.value})} placeholder="画像URL (https://...)"/>
+                                    <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shrink-0">
                                         {isUploading ? <Loader2 className="animate-spin" size={16}/> : <UploadCloud size={16}/>}
                                         <span>アップロード</span>
                                         <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading}/>
                                     </label>
-                                    <button onClick={handleRandomImage} className="bg-gray-100 px-4 py-3 rounded-lg text-sm font-bold hover:bg-gray-200 flex items-center justify-center gap-1 whitespace-nowrap"><ImageIcon size={16}/> 自動</button>
+                                    <button onClick={handleRandomImage} className="bg-gray-100 px-4 py-3 rounded-lg text-sm font-bold hover:bg-gray-200 flex items-center justify-center gap-1 whitespace-nowrap shrink-0"><ImageIcon size={16}/> 自動</button>
                                 </div>
                                 {form.image_url && <img src={form.image_url} alt="Preview" className="h-32 w-full object-cover rounded-lg mt-2 border"/>}
                             </div>
@@ -1072,17 +1072,19 @@ const Editor = ({ onBack, onSave, initialData, setPage, user, setShowAuth }) => 
                                     <Textarea label="結果の説明文" val={r.description} onChange={v=>{const n=[...form.results];n[i].description=v;setForm({...form, results:n})}}/>
                                     <div className="bg-white p-4 rounded-xl border border-gray-200 mt-4">
                                         <p className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2"><Link size={14}/> 誘導ボタン設定 (任意)</p>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                            <Input label="リンク先URL" val={r.link_url} onChange={v=>{const n=[...form.results];n[i].link_url=v;setForm({...form, results:n})}} ph="https://..." />
-                                            <Input label="ボタン文言" val={r.link_text} onChange={v=>{const n=[...form.results];n[i].link_text=v;setForm({...form, results:n})}} ph="詳細を見る" />
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 pt-4 border-t border-gray-100">
-                                            <Input label="LINE登録URL" val={r.line_url} onChange={v=>{const n=[...form.results];n[i].line_url=v;setForm({...form, results:n})}} ph="https://line.me/..." />
-                                            <Input label="ボタン文言" val={r.line_text} onChange={v=>{const n=[...form.results];n[i].line_text=v;setForm({...form, results:n})}} ph="LINEで相談する" />
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-                                            <Input label="QRコード画像URL" val={r.qr_url} onChange={v=>{const n=[...form.results];n[i].qr_url=v;setForm({...form, results:n})}} ph="https://..." />
-                                            <Input label="ボタン文言" val={r.qr_text} onChange={v=>{const n=[...form.results];n[i].qr_text=v;setForm({...form, results:n})}} ph="QRコードを表示" />
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                                <Input label="リンク先URL" val={r.link_url} onChange={v=>{const n=[...form.results];n[i].link_url=v;setForm({...form, results:n})}} ph="https://..." />
+                                                <Input label="ボタン文言" val={r.link_text} onChange={v=>{const n=[...form.results];n[i].link_text=v;setForm({...form, results:n})}} ph="詳細を見る" />
+                                            </div>
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                                                <Input label="LINE登録URL" val={r.line_url} onChange={v=>{const n=[...form.results];n[i].line_url=v;setForm({...form, results:n})}} ph="https://line.me/..." />
+                                                <Input label="ボタン文言" val={r.line_text} onChange={v=>{const n=[...form.results];n[i].line_text=v;setForm({...form, results:n})}} ph="LINEで相談する" />
+                                            </div>
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                                                <Input label="QRコード画像URL" val={r.qr_url} onChange={v=>{const n=[...form.results];n[i].qr_url=v;setForm({...form, results:n})}} ph="https://..." />
+                                                <Input label="ボタン文言" val={r.qr_text} onChange={v=>{const n=[...form.results];n[i].qr_text=v;setForm({...form, results:n})}} ph="QRコードを表示" />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
