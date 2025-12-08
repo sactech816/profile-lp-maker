@@ -66,7 +66,7 @@ export async function saveAnalytics(
 
 export async function getAnalytics(profileId: string) {
   if (!supabase) {
-    console.warn('Supabase not available for analytics');
+    console.error('[Analytics] Supabase not available for analytics');
     return { views: 0, clicks: 0, avgScrollDepth: 0, avgTimeSpent: 0, readRate: 0, clickRate: 0 };
   }
 
@@ -82,16 +82,33 @@ export async function getAnalytics(profileId: string) {
 
     if (error) {
       console.error('[Analytics] Fetch error:', error);
+      console.error('[Analytics] Fetch error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return { views: 0, clicks: 0, avgScrollDepth: 0, avgTimeSpent: 0, readRate: 0, clickRate: 0 };
     }
 
     console.log('[Analytics] Fetched events:', allEvents?.length || 0);
+    if (allEvents && allEvents.length > 0) {
+      console.log('[Analytics] Sample event:', allEvents[0]);
+    }
 
     const views = allEvents?.filter(e => e.event_type === 'view') || [];
     const clicks = allEvents?.filter(e => e.event_type === 'click') || [];
     const scrolls = allEvents?.filter(e => e.event_type === 'scroll') || [];
     const times = allEvents?.filter(e => e.event_type === 'time') || [];
     const reads = allEvents?.filter(e => e.event_type === 'read') || [];
+
+    console.log('[Analytics] Event counts:', {
+      views: views.length,
+      clicks: clicks.length,
+      scrolls: scrolls.length,
+      times: times.length,
+      reads: reads.length
+    });
 
     // 平均スクロール深度を計算
     const scrollDepths = scrolls
@@ -119,7 +136,7 @@ export async function getAnalytics(profileId: string) {
     // クリック率を計算（クリック数 / ビュー数）
     const clickRate = views.length > 0 ? Math.round((clicks.length / views.length) * 100) : 0;
 
-    return {
+    const result = {
       views: views.length,
       clicks: clicks.length,
       avgScrollDepth,
@@ -127,8 +144,12 @@ export async function getAnalytics(profileId: string) {
       readRate,
       clickRate
     };
+
+    console.log('[Analytics] Calculated result:', result);
+    return result;
   } catch (error: any) {
-    console.error('Analytics fetch error:', error);
+    console.error('[Analytics] Fetch exception:', error);
+    console.error('[Analytics] Exception stack:', error.stack);
     return { views: 0, clicks: 0, avgScrollDepth: 0, avgTimeSpent: 0, readRate: 0, clickRate: 0 };
   }
 }

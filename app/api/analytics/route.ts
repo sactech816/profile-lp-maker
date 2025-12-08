@@ -33,23 +33,31 @@ export async function POST(request: NextRequest) {
 
     console.log('[Analytics API] Saving:', { profileId, eventType, eventData });
 
+    const insertData = {
+      profile_id: profileId,
+      event_type: eventType,
+      event_data: eventData || {},
+      content_type: 'profile',
+      created_at: new Date().toISOString()
+    };
+
+    console.log('[Analytics API] Insert data:', insertData);
+
     const { data, error } = await supabase
       .from('analytics')
-      .insert([
-        {
-          profile_id: profileId,
-          event_type: eventType,
-          event_data: eventData || {},
-          content_type: 'profile',
-          created_at: new Date().toISOString()
-        }
-      ])
+      .insert([insertData])
       .select();
 
     if (error) {
       console.error('[Analytics API] Save error:', error);
+      console.error('[Analytics API] Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return NextResponse.json(
-        { error: error.message },
+        { error: error.message, details: error.details },
         { status: 500 }
       );
     }
