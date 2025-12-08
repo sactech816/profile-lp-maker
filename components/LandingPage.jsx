@@ -9,39 +9,47 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
   const [isLoading, setIsLoading] = useState(true);
   const [createClickCount, setCreateClickCount] = useState(0);
   const [publicProfiles, setPublicProfiles] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalProfiles, setTotalProfiles] = useState(0);
+  const profilesPerPage = 9;
 
   useEffect(() => {
     setIsLoading(false);
     // 公開されているプロフィールを取得
     fetchPublicProfiles();
-  }, []);
+  }, [currentPage]);
 
   const fetchPublicProfiles = async () => {
     if (!supabase) return;
     try {
+      const from = (currentPage - 1) * profilesPerPage;
+      const to = from + profilesPerPage - 1;
+      
       // featured_on_topがtrueのプロフィールを取得
-      let { data, error } = await supabase
+      let { data, error, count } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('featured_on_top', true)
         .order('created_at', { ascending: false })
-        .limit(6);
+        .range(from, to);
       
       // featured_on_topカラムがない場合は、すべてのプロフィールを取得
       if (error && error.message?.includes('column')) {
         console.log('featured_on_topカラムがないため、すべてのプロフィールを取得します');
         const result = await supabase
           .from('profiles')
-          .select('*')
+          .select('*', { count: 'exact' })
           .order('created_at', { ascending: false })
-          .limit(6);
+          .range(from, to);
         data = result.data;
         error = result.error;
+        count = result.count;
       }
       
       if (!error && data) {
         console.log('プロフィールを取得しました:', data.length, '件');
         setPublicProfiles(data);
+        setTotalProfiles(count || 0);
       } else if (error) {
         console.error('プロフィール取得エラー:', error);
       }
@@ -305,8 +313,9 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
           </p>
           
           {publicProfiles.length > 0 ? (
-            <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-              {publicProfiles.map((profile) => {
+            <>
+              <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+                {publicProfiles.map((profile) => {
                 const category = getProfileCategory(profile);
                 const categoryInfo = getCategoryInfo(category);
                 const profileName = getProfileName(profile);
@@ -390,6 +399,52 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
                 );
               })}
             </div>
+            
+            {/* ページネーション */}
+            {totalProfiles > profilesPerPage && (
+              <div className="mt-12 flex justify-center items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg font-bold transition-all ${
+                    currentPage === 1
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'glass-card bg-white/90 hover:bg-white text-indigo-600 shadow-md hover:shadow-lg'
+                  }`}
+                >
+                  前へ
+                </button>
+                
+                <div className="flex gap-2">
+                  {Array.from({ length: Math.ceil(totalProfiles / profilesPerPage) }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-10 h-10 rounded-lg font-bold transition-all ${
+                        currentPage === page
+                          ? 'bg-indigo-600 text-white shadow-lg'
+                          : 'glass-card bg-white/90 hover:bg-white text-indigo-600 shadow-md hover:shadow-lg'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalProfiles / profilesPerPage), prev + 1))}
+                  disabled={currentPage === Math.ceil(totalProfiles / profilesPerPage)}
+                  className={`px-4 py-2 rounded-lg font-bold transition-all ${
+                    currentPage === Math.ceil(totalProfiles / profilesPerPage)
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'glass-card bg-white/90 hover:bg-white text-indigo-600 shadow-md hover:shadow-lg'
+                  }`}
+                >
+                  次へ
+                </button>
+              </div>
+            )}
+          </>
           ) : (
             <div className="glass-card rounded-2xl p-12 text-center">
               <Sparkles className="mx-auto mb-4 text-indigo-300" size={48}/>

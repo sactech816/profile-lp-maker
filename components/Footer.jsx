@@ -32,7 +32,7 @@ const Footer = ({ setPage, onCreate, user, setShowAuth, variant = 'dark' }) => {
                         <Sparkles className="text-pink-500"/> Profile LP Maker
                     </h2>
                     <p className={`text-sm leading-relaxed mb-6 ${isLight ? 'text-gray-600' : 'opacity-80'}`}>
-                        世界一美しいプロフィールページを、<br/>
+                        "あなた"らしいプロフィールページを、<br/>
                         ノーコードで誰でも簡単に作成・公開できるプラットフォーム。<br/>
                         あなたの魅力を伝える「集客導線」を作りましょう。
                     </p>
