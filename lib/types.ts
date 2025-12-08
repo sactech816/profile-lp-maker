@@ -12,6 +12,7 @@ export type HeaderBlockData = {
   avatar: string; // 空文字列の可能性あり
   name: string;
   title: string;
+  category?: string; // カテゴリ（オプショナル）
 };
 
 export type TextCardBlockData = {
@@ -121,6 +122,7 @@ export interface Profile {
   created_at?: string;
   updated_at?: string;
   settings?: ProfileSettings;
+  featured_on_top?: boolean;
 }
 
 // ユーティリティ関数：一意のIDを生成
@@ -165,7 +167,8 @@ export function migrateOldContent(oldContent: any): Block[] {
             data: {
               avatar: oldBlock.data?.avatarUrl || oldBlock.data?.avatar || '',
               name: oldBlock.data?.name || '',
-              title: oldBlock.data?.tagline || oldBlock.data?.title || ''
+              title: oldBlock.data?.tagline || oldBlock.data?.title || '',
+              category: oldBlock.data?.category || 'other'
             }
           } as Block;
         

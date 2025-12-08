@@ -75,9 +75,8 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
   const [isUploadingBackground, setIsUploadingBackground] = useState(false);
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
   const [hideLoginBanner, setHideLoginBanner] = useState(false);
-  const [settings, setSettings] = useState<{ gtmId?: string; fbPixelId?: string; lineTagId?: string; showOnPortal?: boolean }>({});
+  const [settings, setSettings] = useState<{ gtmId?: string; fbPixelId?: string; lineTagId?: string }>({});
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showOnPortal, setShowOnPortal] = useState(true); // デフォルトはtrue
   const [showQRModal, setShowQRModal] = useState(false);
   const [analytics, setAnalytics] = useState<{ 
     views: number; 
@@ -96,6 +95,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
   });
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [featuredOnTop, setFeaturedOnTop] = useState(true);
   const uploadOwnerId = user?.id || 'public';
 
   // 共通アップロード関数（RLS回避のためサーバールート経由）
@@ -141,7 +141,8 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       data: {
         avatar: '',
         name: 'あなたの名前',
-        title: 'キャッチコピーを入力してください'
+        title: 'キャッチコピーを入力してください',
+        category: 'other'
       }
     },
     {
@@ -215,18 +216,19 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
               // theme以外の設定を保存
               const { theme: _, ...otherSettings } = loadedSettings;
               setSettings(otherSettings);
-              // showOnPortalを設定（デフォルトはtrue）
-              setShowOnPortal(otherSettings.showOnPortal !== false);
             } else {
               setSettings(loadedSettings);
-              // showOnPortalを設定（デフォルトはtrue）
-              setShowOnPortal(loadedSettings.showOnPortal !== false);
             }
           }
           
           // 後方互換性: 古いデータでthemeが直接カラムにある場合
           if (data.theme && typeof data.theme === 'object' && (!data.settings || !data.settings.theme)) {
             setTheme(data.theme);
+          }
+          
+          // featured_on_topを読み込む（デフォルトはtrue）
+          if (typeof data.featured_on_top === 'boolean') {
+            setFeaturedOnTop(data.featured_on_top);
           }
           
           // アナリティクスを取得
@@ -254,7 +256,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           return {
             id: generateBlockId(),
             type: 'header',
-            data: { avatar: '', name: '', title: '' }
+            data: { avatar: '', name: '', title: '', category: 'other' }
           };
         case 'text_card':
           return {
@@ -610,8 +612,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
       // themeをsettingsに含める
       const settingsWithTheme = {
         ...settings,
-        theme: theme,
-        showOnPortal: showOnPortal
+        theme: theme
       };
 
       // ログインユーザーの場合のみuser_idを設定、未ログインの場合はnullにする
@@ -622,7 +623,8 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
         slug,
         content: blocks,
         settings: settingsWithTheme,
-        userId
+        userId,
+        featuredOnTop
       });
 
       if (result.error) {
@@ -672,11 +674,11 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
               <label className="text-sm font-bold text-gray-900 block mb-2">プロフィール画像</label>
               <div className="flex gap-2 items-end">
                 <div className="flex-1">
-                  <Input 
-                    label="" 
-                    val={block.data.avatar} 
-                    onChange={v => updateBlock(block.id, { avatar: v })} 
-                    ph="画像URL (https://...)" 
+                  <Input
+                    label=""
+                    val={block.data.avatar}
+                    onChange={v => updateBlock(block.id, { avatar: v })}
+                    ph="画像URL (https://...)"
                   />
                 </div>
                 <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap h-[50px]">
@@ -691,6 +693,19 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
             </div>
             <Input label="名前" val={block.data.name} onChange={v => updateBlock(block.id, { name: v })} ph="あなたの名前" />
             <Textarea label="キャッチコピー（肩書き）" val={block.data.title} onChange={v => updateBlock(block.id, { title: v })} rows={2} />
+            <div className="mb-4">
+              <label className="text-sm font-bold text-gray-900 block mb-2">カテゴリ</label>
+              <select 
+                className="w-full border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white transition-shadow"
+                value={block.data.category || 'other'}
+                onChange={(e) => updateBlock(block.id, { category: e.target.value })}
+              >
+                <option value="fortune">占い</option>
+                <option value="business">ビジネス</option>
+                <option value="study">学習</option>
+                <option value="other">その他</option>
+              </select>
+            </div>
           </div>
         );
 
@@ -1854,15 +1869,14 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                 onChange={v => setSettings(prev => ({ ...prev, lineTagId: v }))} 
                 ph="例: @xxxxx" 
               />
-
-              {/* トップページ掲載設定 */}
-              <div className="pt-3 border-t border-gray-100">
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600 hover:text-gray-800 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={showOnPortal}
-                    onChange={(e) => setShowOnPortal(e.target.checked)}
-                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                  <input 
+                    type="checkbox" 
+                    checked={featuredOnTop}
+                    onChange={e => setFeaturedOnTop(e.target.checked)}
+                    className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
                   />
                   <span>トップページに掲載する</span>
                 </label>

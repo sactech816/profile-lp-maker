@@ -29,7 +29,8 @@ export const templates: Template[] = [
         data: {
           avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces',
           name: '田中 誠',
-          title: '経営戦略パートナー｜年商10億企業の裏方'
+          title: '経営戦略パートナー｜年商10億企業の裏方',
+          category: 'business'
         }
       },
       {
@@ -137,7 +138,8 @@ export const templates: Template[] = [
         data: {
           avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces',
           name: '佐藤 みらい',
-          title: 'ベストセラー作家｜累計3万部突破'
+          title: 'ベストセラー作家｜累計3万部突破',
+          category: 'other'
         }
       },
       {
@@ -205,7 +207,8 @@ export const templates: Template[] = [
         data: {
           avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces',
           name: '鈴木 陽子',
-          title: 'ライフコーチ｜あなたらしい生き方をサポート'
+          title: 'ライフコーチ｜あなたらしい生き方をサポート',
+          category: 'other'
         }
       },
       {

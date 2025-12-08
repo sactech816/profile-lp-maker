@@ -19,27 +19,29 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
   const fetchPublicProfiles = async () => {
     if (!supabase) return;
     try {
-      // settings->showOnPortalがtrueのプロフィールを取得
+      // まずis_publicカラムがあるか試す
       let { data, error } = await supabase
         .from('profiles')
         .select('*')
+        .eq('is_public', true)
         .order('created_at', { ascending: false })
-        .limit(20); // 多めに取得してフィルタリング
+        .limit(6);
+      
+      // is_publicカラムがない場合は、すべてのプロフィールを取得
+      if (error && error.message?.includes('column')) {
+        console.log('is_publicカラムがないため、すべてのプロフィールを取得します');
+        const result = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(6);
+        data = result.data;
+        error = result.error;
+      }
       
       if (!error && data) {
-        // showOnPortalがtrue（またはundefined/null）のプロフィールをフィルタリング
-        const filteredData = data.filter(profile => {
-          // settingsがない、またはshowOnPortalがundefined/true の場合は表示
-          if (!profile.settings) return true;
-          if (typeof profile.settings === 'object') {
-            // showOnPortalがfalseの場合のみ非表示
-            return profile.settings.showOnPortal !== false;
-          }
-          return true;
-        }).slice(0, 6); // 最終的に6件まで
-        
-        console.log('プロフィールを取得しました:', filteredData.length, '件');
-        setPublicProfiles(filteredData);
+        console.log('プロフィールを取得しました:', data.length, '件');
+        setPublicProfiles(data);
       } else if (error) {
         console.error('プロフィール取得エラー:', error);
       }

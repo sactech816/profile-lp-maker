@@ -8,6 +8,7 @@ export async function saveProfile(data: {
   content: Block[];
   settings: any;
   userId: string | null;
+  featuredOnTop?: boolean;
 }) {
   if (!supabase) {
     return { error: 'データベースに接続されていません' };
@@ -21,6 +22,7 @@ export async function saveProfile(data: {
         content: data.content,
         settings: data.settings,
         user_id: data.userId,
+        featured_on_top: data.featuredOnTop ?? true,
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'slug'
