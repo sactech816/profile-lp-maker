@@ -12,6 +12,37 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 
 これらの値は、Supabaseダッシュボードの **Settings > API** から取得できます。
 
+## Supabaseメールテンプレートの設定
+
+新規アカウント作成時の認証メールを正しく設定するため、以下の手順でSupabaseダッシュボードからメールテンプレートを設定してください：
+
+1. Supabaseダッシュボードにログイン
+2. **Authentication** → **Email Templates** に移動
+3. **Confirm signup** テンプレートを選択
+4. 以下のように適切な内容に変更してください：
+
+**件名の例:**
+```
+【診断クイズメーカー】メールアドレスの確認
+```
+
+**本文の例:**
+```html
+<h2>診断クイズメーカーへようこそ！</h2>
+<p>アカウント登録ありがとうございます。</p>
+<p>以下のボタンをクリックして、メールアドレスの確認を完了してください：</p>
+<p><a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 8px;">メールアドレスを確認する</a></p>
+<p>このリンクは24時間有効です。</p>
+<p>もしこのメールに心当たりがない場合は、無視していただいて結構です。</p>
+```
+
+5. **Save** をクリックして保存
+
+### 注意事項
+- `{{ .ConfirmationURL }}` は必ず含めてください（これが認証リンクになります）
+- メールの内容は、アプリケーションの目的（診断クイズの作成）に合わせて記述してください
+- 診断クイズのロジックなど、無関係な内容は削除してください
+
 ## Getting Started
 
 環境変数を設定した後、開発サーバーを起動します:

@@ -18,7 +18,13 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
                 : await supabase.auth.signUp({ 
                     email, 
                     password,
-                    options: { emailRedirectTo: typeof window !== 'undefined' ? window.location.origin : undefined }
+                    options: { 
+                        emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : undefined,
+                        data: {
+                            app_name: '診断クイズメーカー',
+                            purpose: 'account_verification'
+                        }
+                    }
                   });
             
             if (error) throw error;
