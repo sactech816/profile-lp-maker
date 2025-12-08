@@ -13,35 +13,53 @@ export async function saveAnalytics(
   }
 ) {
   if (!supabase) {
-    console.warn('Supabase not available for analytics');
+    console.error('[Analytics] Supabase not available for analytics');
+    console.error('[Analytics] NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Not set');
+    console.error('[Analytics] NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Not set');
     return { error: 'Database not available' };
+  }
+
+  // UUIDの形式チェック
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(profileId)) {
+    console.error('[Analytics] Invalid UUID format:', profileId);
+    return { error: 'Invalid profile ID format' };
   }
 
   try {
     console.log('[Analytics] Saving:', { profileId, eventType, eventData });
     
+    const insertData = {
+      profile_id: profileId,
+      event_type: eventType,
+      event_data: eventData || {},
+      content_type: 'profile', // プロフィールLPのアナリティクスとして記録
+      created_at: new Date().toISOString()
+    };
+    
+    console.log('[Analytics] Insert data:', insertData);
+    
     const { data, error } = await supabase
       .from('analytics')
-      .insert([
-        {
-          profile_id: profileId,
-          event_type: eventType,
-          event_data: eventData || {},
-          content_type: 'profile', // プロフィールLPのアナリティクスとして記録
-          created_at: new Date().toISOString()
-        }
-      ])
+      .insert([insertData])
       .select();
 
     if (error) {
       console.error('[Analytics] Save error:', error);
+      console.error('[Analytics] Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return { error: error.message };
     }
 
     console.log('[Analytics] Saved successfully:', data);
-    return { success: true };
+    return { success: true, data };
   } catch (error: any) {
     console.error('[Analytics] Exception:', error);
+    console.error('[Analytics] Exception stack:', error.stack);
     return { error: error.message };
   }
 }

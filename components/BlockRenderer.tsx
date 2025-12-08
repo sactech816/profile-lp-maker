@@ -133,7 +133,15 @@ export function BlockRenderer({ block, profileId }: { block: Block; profileId?: 
             const handleClick = async () => {
               if (profileId && profileId !== 'demo') {
                 console.log('[LinkClick] Tracking click:', link.url);
-                await saveAnalytics(profileId, 'click', { url: link.url });
+                try {
+                  const result = await saveAnalytics(profileId, 'click', { url: link.url });
+                  console.log('[LinkClick] Tracked:', result);
+                  if (result.error) {
+                    console.error('[LinkClick] Tracking error:', result.error);
+                  }
+                } catch (error) {
+                  console.error('[LinkClick] Tracking exception:', error);
+                }
               }
             };
 
@@ -214,7 +222,15 @@ export function BlockRenderer({ block, profileId }: { block: Block; profileId?: 
                   onClick={async () => {
                     if (profileId && profileId !== 'demo') {
                       console.log('[KindleClick] Tracking click:', amazonUrl);
-                      await saveAnalytics(profileId, 'click', { url: amazonUrl });
+                      try {
+                        const result = await saveAnalytics(profileId, 'click', { url: amazonUrl });
+                        console.log('[KindleClick] Tracked:', result);
+                        if (result.error) {
+                          console.error('[KindleClick] Tracking error:', result.error);
+                        }
+                      } catch (error) {
+                        console.error('[KindleClick] Tracking exception:', error);
+                      }
                     }
                   }}
                   className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-lg shadow-lg transition-all transform hover:scale-105 flex items-center gap-2"
@@ -408,7 +424,15 @@ function LineCardBlock({ block, profileId }: { block: Extract<Block, { type: 'li
   const handleClick = async () => {
     if (profileId && profileId !== 'demo') {
       console.log('[LineClick] Tracking click:', block.data.url);
-      await saveAnalytics(profileId, 'click', { url: block.data.url });
+      try {
+        const result = await saveAnalytics(profileId, 'click', { url: block.data.url });
+        console.log('[LineClick] Tracked:', result);
+        if (result.error) {
+          console.error('[LineClick] Tracking error:', result.error);
+        }
+      } catch (error) {
+        console.error('[LineClick] Tracking exception:', error);
+      }
     }
     window.open(block.data.url, '_blank', 'noopener,noreferrer');
   };

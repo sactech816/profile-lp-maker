@@ -13,8 +13,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // UUIDの形式チェック
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(profileId)) {
+      console.error('[Analytics API] Invalid UUID format:', profileId);
+      return NextResponse.json(
+        { error: 'Invalid profile ID format' },
+        { status: 400 }
+      );
+    }
+
     if (!supabase) {
-      console.warn('Supabase not available for analytics');
+      console.warn('[Analytics API] Supabase not available for analytics');
       return NextResponse.json(
         { error: 'Database not available' },
         { status: 503 }
