@@ -1871,14 +1871,17 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
               />
               
               <div className="border-t border-gray-200 pt-4 mt-4">
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                <label className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900 group">
                   <input 
                     type="checkbox" 
                     checked={featuredOnTop}
                     onChange={e => setFeaturedOnTop(e.target.checked)}
-                    className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+                    className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500 mt-0.5"
                   />
-                  <span>トップページに掲載する</span>
+                  <div>
+                    <span className="font-medium">トップページに掲載する</span>
+                    <p className="text-xs text-gray-500 mt-0.5">ポータルサイトのトップページに表示されます</p>
+                  </div>
                 </label>
               </div>
               

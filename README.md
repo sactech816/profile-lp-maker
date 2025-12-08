@@ -12,6 +12,17 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 
 これらの値は、Supabaseダッシュボードの **Settings > API** から取得できます。
 
+## Supabaseデータベースのセットアップ
+
+プロジェクトを実行する前に、以下のSQLファイルをSupabaseダッシュボードで実行してください：
+
+1. **アナリティクステーブルの作成**
+   - `supabase_analytics_setup.sql` をSupabaseダッシュボードの **SQL Editor** で実行
+
+2. **featured_on_topカラムの追加**
+   - `add_featured_on_top_column.sql` をSupabaseダッシュボードの **SQL Editor** で実行
+   - このカラムは、プロフィールをトップページに掲載するかどうかを制御します
+
 ## Supabaseメールテンプレートの設定
 
 新規アカウント作成時の認証メールを正しく設定するため、以下の手順でSupabaseダッシュボードからメールテンプレートを設定してください：
