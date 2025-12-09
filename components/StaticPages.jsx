@@ -440,7 +440,7 @@ export const LegalPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAdmi
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4">
                         <div className="font-bold text-gray-500">運営統括責任者</div>
-                        <div className="md:col-span-2 text-gray-900">宇城利浩/div>
+                        <div className="md:col-span-2 text-gray-900">宇城利浩</div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4">
                         <div className="font-bold text-gray-500">所在地</div>
@@ -449,6 +449,8 @@ export const LegalPage = ({ onBack, setPage, user, onLogout, setShowAuth, isAdmi
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4">
                         <div className="font-bold text-gray-500">お問い合わせ先</div>
                         <div className="md:col-span-2 text-gray-900">
+                            [電話番号]<br/>
+                            [メールアドレス]<br/>
                             またはお問い合わせフォームよりご連絡ください。
                         </div>
                     </div>
