@@ -15,6 +15,7 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
     const [resetEmailAddress, setResetEmailAddress] = useState('');
     const [canResend, setCanResend] = useState(false);
     const [resendCountdown, setResendCountdown] = useState(0);
+    const [sessionReady, setSessionReady] = useState(false);
     
     // パスワード表示/非表示の状態
     const [showPassword, setShowPassword] = useState(false);
@@ -25,6 +26,70 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
     useEffect(() => {
         setIsChangePasswordMode(isPasswordReset);
     }, [isPasswordReset]);
+    
+    // パスワードリセットモードの場合、セッションを確立
+    useEffect(() => {
+        const establishSession = async () => {
+            if (!isPasswordReset || !supabase) return;
+            
+            console.log('🔧 パスワードリセットモード: セッション確立を開始');
+            
+            // まず現在のセッションを確認
+            const { data: currentSession } = await supabase.auth.getSession();
+            if (currentSession?.session) {
+                console.log('✅ 既存のセッションが見つかりました');
+                setSessionReady(true);
+                return;
+            }
+            
+            // URLからトークンを取得
+            const hash = window.location.hash;
+            const search = window.location.search;
+            
+            const hashParams = new URLSearchParams(hash.substring(1));
+            let accessToken = hashParams.get('access_token');
+            let refreshToken = hashParams.get('refresh_token');
+            
+            if (!accessToken) {
+                const searchParams = new URLSearchParams(search);
+                accessToken = searchParams.get('access_token');
+                refreshToken = searchParams.get('refresh_token');
+            }
+            
+            console.log('🔍 トークン検索結果:', { 
+                hasAccessToken: !!accessToken, 
+                hasRefreshToken: !!refreshToken 
+            });
+            
+            if (accessToken) {
+                try {
+                    console.log('🔄 セッションを確立中...');
+                    const { data, error } = await supabase.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken || ''
+                    });
+                    
+                    if (error) {
+                        console.error('❌ セッション確立エラー:', error);
+                    } else {
+                        console.log('✅ セッション確立成功');
+                        if (data.user) {
+                            setUser(data.user);
+                        }
+                        setSessionReady(true);
+                    }
+                } catch (e) {
+                    console.error('❌ セッション確立例外:', e);
+                }
+            } else {
+                console.warn('⚠️ トークンが見つかりません');
+                // トークンがない場合でも画面は表示（エラーは後で表示）
+                setSessionReady(true);
+            }
+        };
+        
+        establishSession();
+    }, [isPasswordReset, setUser]);
     
     // 再送信タイマー
     useEffect(() => {
@@ -286,10 +351,29 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
             if (!sessionData.session) {
                 console.log('セッションがありません。URLからトークンを取得して再確立を試みます。');
                 
-                // URLのハッシュからトークンを取得
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const accessToken = hashParams.get('access_token');
-                const refreshToken = hashParams.get('refresh_token');
+                // URLのハッシュとクエリパラメータの両方をチェック
+                const hash = window.location.hash;
+                const search = window.location.search;
+                
+                console.log('現在のURL hash:', hash);
+                console.log('現在のURL search:', search);
+                
+                // ハッシュからトークンを取得
+                const hashParams = new URLSearchParams(hash.substring(1));
+                let accessToken = hashParams.get('access_token');
+                let refreshToken = hashParams.get('refresh_token');
+                
+                // ハッシュにない場合はクエリパラメータをチェック
+                if (!accessToken) {
+                    const searchParams = new URLSearchParams(search);
+                    accessToken = searchParams.get('access_token');
+                    refreshToken = searchParams.get('refresh_token');
+                }
+                
+                console.log('取得したトークン:', { 
+                    hasAccessToken: !!accessToken, 
+                    hasRefreshToken: !!refreshToken 
+                });
                 
                 if (accessToken) {
                     console.log('URLからアクセストークンを検出しました');
@@ -309,6 +393,7 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                     console.log('セッションを再確立しました:', sessionSetData.session ? 'あり' : 'なし');
                 } else {
                     console.error('URLにアクセストークンが見つかりません');
+                    console.log('完全なURL:', window.location.href);
                     alert('パスワードリセットのセッションが見つかりません。\n\nパスワードリセットメールのリンクをもう一度クリックしてください。');
                     setLoading(false);
                     return;
@@ -399,6 +484,22 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
 
     // パスワード変更モード（メールリンクから来た場合）
     if (isChangePasswordMode) {
+        // セッション確立中はローディング表示
+        if (!sessionReady) {
+            return (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl relative animate-fade-in">
+                        <div className="flex flex-col items-center justify-center space-y-4">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                            <p className="text-sm text-gray-600 text-center">
+                                セッションを確立中...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
         return (
             <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
                 <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl relative animate-fade-in">

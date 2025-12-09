@@ -56,6 +56,47 @@ const App = () => {
           // ハッシュまたはクエリパラメータでtype=recoveryをチェック
           if ((hash && hash.includes('type=recovery')) || searchParams.get('type') === 'recovery') {
               console.log('🔑 パスワードリセットリンクを検出しました');
+              
+              // トークンを取得してセッションを確立
+              const hashParams = new URLSearchParams(hash.substring(1));
+              let accessToken = hashParams.get('access_token');
+              let refreshToken = hashParams.get('refresh_token');
+              
+              // ハッシュにない場合はクエリパラメータをチェック
+              if (!accessToken) {
+                  accessToken = searchParams.get('access_token');
+                  refreshToken = searchParams.get('refresh_token');
+              }
+              
+              console.log('トークン情報:', { 
+                  hasAccessToken: !!accessToken, 
+                  hasRefreshToken: !!refreshToken,
+                  hash: hash,
+                  search: window.location.search
+              });
+              
+              // トークンがある場合はセッションを確立
+              if (accessToken && supabase) {
+                  try {
+                      console.log('セッションを確立中...');
+                      const { data, error } = await supabase.auth.setSession({
+                          access_token: accessToken,
+                          refresh_token: refreshToken || ''
+                      });
+                      
+                      if (error) {
+                          console.error('セッション確立エラー:', error);
+                      } else {
+                          console.log('セッション確立成功:', data.session ? 'あり' : 'なし');
+                          if (data.user) {
+                              setUser(data.user);
+                          }
+                      }
+                  } catch (e) {
+                      console.error('セッション確立例外:', e);
+                  }
+              }
+              
               setShowPasswordReset(true);
               setShowAuth(true);
               // ハッシュはクリアしない（AuthModalでセッション確立に必要）
@@ -66,13 +107,20 @@ const App = () => {
           if(supabase) {
               const {data:{session}} = await supabase.auth.getSession();
               setUser(session?.user||null);
-              supabase.auth.onAuthStateChange((event, session) => {
+              supabase.auth.onAuthStateChange(async (event, session) => {
                 console.log('🔔 認証状態変更:', event, session?.user?.email);
                 setUser(session?.user || null);
                 
                 // PASSWORD_RECOVERYイベントを検出
                 if (event === 'PASSWORD_RECOVERY') {
                     console.log('🔑 パスワードリカバリーイベントを検出');
+                    console.log('セッション情報:', session);
+                    
+                    // セッションがある場合はユーザーを設定
+                    if (session?.user) {
+                        setUser(session.user);
+                    }
+                    
                     setShowPasswordReset(true);
                     setShowAuth(true);
                 }
@@ -85,6 +133,13 @@ const App = () => {
                     const paymentStatus = currentSearch.get('payment');
                     if (paymentStatus === 'success' || paymentStatus === 'cancel') {
                         console.log('⏸️ 決済処理中のため、リダイレクトをスキップ');
+                        return;
+                    }
+                    
+                    // パスワードリセット中はリダイレクトしない
+                    const hash = window.location.hash;
+                    if (hash && hash.includes('type=recovery')) {
+                        console.log('⏸️ パスワードリセット中のため、リダイレクトをスキップ');
                         return;
                     }
                     
