@@ -2319,7 +2319,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                           window.location.href = '/dashboard';
                         } else {
                           // 未ログインの場合はログイン画面を表示
-                          setShowSuccessModal(false);
+                          setShowSuccessModal(null);
                           setShowAuth?.(true);
                         }
                       }}
