@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-// Stripeインスタンスを遅延初期化（ビルド時エラーを防ぐ）
-function getStripe() {
-  const apiKey = process.env.STRIPE_SECRET_KEY;
-  if (!apiKey) {
-    throw new Error("❌ Stripe API Key is missing!");
-  }
-  return new Stripe(apiKey);
+const apiKey = process.env.STRIPE_SECRET_KEY;
+if (!apiKey) {
+  console.error("❌ Stripe API Key is missing!");
 }
+
+const stripe = new Stripe(apiKey || '');
 
 export async function POST(req) {
   try {
@@ -16,7 +14,7 @@ export async function POST(req) {
     
     // ★サーバー側でも安全のため価格チェック（無効なら1000円にする）
     let finalPrice = parseInt(price);
-    if (isNaN(finalPrice) || finalPrice < 500 || finalPrice > 50000) {
+    if (isNaN(finalPrice) || finalPrice < 10 || finalPrice > 100000) {
         finalPrice = 1000;
     }
 
@@ -33,7 +31,6 @@ export async function POST(req) {
 
     console.log(`🚀 Starting Checkout: ${profileName} / ${finalPrice}JPY / User:${userId}`);
 
-    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -50,8 +47,8 @@ export async function POST(req) {
         },
       ],
       mode: 'payment',
-      success_url: `${origin}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}&profile_id=${profileId}`,
-      cancel_url: `${origin}/dashboard?payment=cancel`,
+      success_url: `${origin}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}&profile_id=${profileId}&redirect=dashboard`,
+      cancel_url: `${origin}/dashboard?payment=cancel&redirect=dashboard`,
       metadata: {
         userId: userId,
         profileId: profileId,
