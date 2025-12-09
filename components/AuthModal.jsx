@@ -218,20 +218,27 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                 ? 'https://lp.makers.tokyo/' 
                 : `${currentOrigin}/`;
             
-            console.log('パスワードリセットメール送信:', email, 'リダイレクト先:', redirectUrl);
+            console.log('=== パスワードリセット デバッグ情報 ===');
+            console.log('メールアドレス:', email);
+            console.log('現在のオリジン:', currentOrigin);
+            console.log('リダイレクトURL:', redirectUrl);
+            console.log('Supabase URL:', supabase.supabaseUrl);
             
             const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: redirectUrl,
+                redirectTo: redirectUrl
             });
             
             // エラーハンドリングの強化
             if (error) {
                 // セキュリティのため、詳細なエラーは表示せず一般的なメッセージを表示
                 console.error('Password reset error:', error);
+                console.error('Error details:', JSON.stringify(error, null, 2));
                 // ただし、ユーザーには成功メッセージを表示（メールアドレスの存在を推測されないため）
             } else {
-                console.log('パスワードリセットメール送信成功:', data);
+                console.log('パスワードリセットメール送信成功');
+                console.log('Response data:', JSON.stringify(data, null, 2));
             }
+            console.log('=====================================');
             
             // 成功時の処理
             setResetSent(true);

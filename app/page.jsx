@@ -51,12 +51,15 @@ const App = () => {
           // パスワードリセット用のURLハッシュをチェック
           // Supabaseは #access_token=...&type=recovery の形式でリダイレクトする
           const hash = window.location.hash;
-          if (hash && hash.includes('type=recovery')) {
+          const searchParams = new URLSearchParams(window.location.search);
+          
+          // ハッシュまたはクエリパラメータでtype=recoveryをチェック
+          if ((hash && hash.includes('type=recovery')) || searchParams.get('type') === 'recovery') {
               console.log('🔑 パスワードリセットリンクを検出しました');
               setShowPasswordReset(true);
               setShowAuth(true);
               // ハッシュをクリア（履歴に残さない）
-              window.history.replaceState(null, '', window.location.pathname + window.location.search);
+              window.history.replaceState(null, '', window.location.pathname);
           }
 
           // ユーザーセッションの確認
@@ -66,6 +69,13 @@ const App = () => {
               supabase.auth.onAuthStateChange((event, session) => {
                 console.log('🔔 認証状態変更:', event, session?.user?.email);
                 setUser(session?.user || null);
+                
+                // PASSWORD_RECOVERYイベントを検出
+                if (event === 'PASSWORD_RECOVERY') {
+                    console.log('🔑 パスワードリカバリーイベントを検出');
+                    setShowPasswordReset(true);
+                    setShowAuth(true);
+                }
                 
                 // ログイン成功時のリダイレクト制御
                 if (event === 'SIGNED_IN' && session?.user) {
