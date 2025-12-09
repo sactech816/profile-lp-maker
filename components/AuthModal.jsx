@@ -48,7 +48,7 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                 : await supabase.auth.signUp({ 
                     email, 
                     password,
-                    options: { emailRedirectTo: typeof window !== 'undefined' ? window.location.origin : undefined }
+                    options: { emailRedirectTo: 'https://lp.makers.tokyo/' }
                   });
             
             if (error) {
@@ -205,11 +205,9 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
         }
         setLoading(true);
         try {
-            // リダイレクトURLをルートに設定（パスワードリセット処理を確実に行うため）
+            // リダイレクトURLを明示的にlp.makers.tokyoに設定
             // Supabaseは自動的に #access_token=...&type=recovery をURLに追加します
-            const redirectUrl = typeof window !== 'undefined' 
-                ? `${window.location.origin}` 
-                : undefined;
+            const redirectUrl = 'https://lp.makers.tokyo/';
             
             console.log('パスワードリセットメール送信:', email, 'リダイレクト先:', redirectUrl);
             
