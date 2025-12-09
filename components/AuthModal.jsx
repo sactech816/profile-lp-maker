@@ -46,24 +46,59 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
             const hash = window.location.hash;
             const search = window.location.search;
             
+            // まずPKCEフロー（新しい方式）のtoken_hashをチェック
+            const searchParams = new URLSearchParams(search);
+            const tokenHash = searchParams.get('token_hash');
+            const type = searchParams.get('type');
+            
+            console.log('🔍 URLパラメータ:', { 
+                hasTokenHash: !!tokenHash,
+                type: type,
+                fullSearch: search
+            });
+            
+            if (tokenHash && type === 'recovery') {
+                try {
+                    console.log('🔄 PKCEフローでセッションを確立中...');
+                    const { data, error } = await supabase.auth.verifyOtp({
+                        token_hash: tokenHash,
+                        type: 'recovery'
+                    });
+                    
+                    if (error) {
+                        console.error('❌ セッション確立エラー:', error);
+                        alert('セッションの確立に失敗しました。\n\nパスワードリセットメールのリンクをもう一度クリックしてください。');
+                    } else {
+                        console.log('✅ セッション確立成功');
+                        if (data.user) {
+                            setUser(data.user);
+                        }
+                        setSessionReady(true);
+                        return;
+                    }
+                } catch (e) {
+                    console.error('❌ セッション確立例外:', e);
+                }
+            }
+            
+            // 旧方式（access_token）もチェック（後方互換性のため）
             const hashParams = new URLSearchParams(hash.substring(1));
             let accessToken = hashParams.get('access_token');
             let refreshToken = hashParams.get('refresh_token');
             
             if (!accessToken) {
-                const searchParams = new URLSearchParams(search);
                 accessToken = searchParams.get('access_token');
                 refreshToken = searchParams.get('refresh_token');
             }
             
-            console.log('🔍 トークン検索結果:', { 
+            console.log('🔍 トークン検索結果（旧方式）:', { 
                 hasAccessToken: !!accessToken, 
                 hasRefreshToken: !!refreshToken 
             });
             
             if (accessToken) {
                 try {
-                    console.log('🔄 セッションを確立中...');
+                    console.log('🔄 旧方式でセッションを確立中...');
                     const { data, error } = await supabase.auth.setSession({
                         access_token: accessToken,
                         refresh_token: refreshToken || ''
@@ -345,7 +380,7 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
             console.log('パスワード更新を開始します');
             
             // セッションの確認
-            const { data: sessionData } = await supabase.auth.getSession();
+            let { data: sessionData } = await supabase.auth.getSession();
             console.log('現在のセッション:', sessionData.session ? 'あり' : 'なし');
             
             if (!sessionData.session) {
@@ -358,45 +393,94 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                 console.log('現在のURL hash:', hash);
                 console.log('現在のURL search:', search);
                 
-                // ハッシュからトークンを取得
-                const hashParams = new URLSearchParams(hash.substring(1));
-                let accessToken = hashParams.get('access_token');
-                let refreshToken = hashParams.get('refresh_token');
+                // まずPKCEフロー（新しい方式）のtoken_hashをチェック
+                const searchParams = new URLSearchParams(search);
+                const tokenHash = searchParams.get('token_hash');
+                const type = searchParams.get('type');
                 
-                // ハッシュにない場合はクエリパラメータをチェック
-                if (!accessToken) {
-                    const searchParams = new URLSearchParams(search);
-                    accessToken = searchParams.get('access_token');
-                    refreshToken = searchParams.get('refresh_token');
-                }
-                
-                console.log('取得したトークン:', { 
-                    hasAccessToken: !!accessToken, 
-                    hasRefreshToken: !!refreshToken 
+                console.log('取得したトークン（PKCE）:', { 
+                    hasTokenHash: !!tokenHash,
+                    type: type
                 });
                 
-                if (accessToken) {
-                    console.log('URLからアクセストークンを検出しました');
-                    // トークンを使ってセッションを設定
-                    const { data: sessionSetData, error: sessionError } = await supabase.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: refreshToken || ''
+                if (tokenHash && type === 'recovery') {
+                    console.log('PKCEフローのトークンを検出しました');
+                    // PKCEフローでセッションを設定
+                    const { data: sessionSetData, error: sessionError } = await supabase.auth.verifyOtp({
+                        token_hash: tokenHash,
+                        type: 'recovery'
                     });
                     
                     if (sessionError) {
                         console.error('セッション設定エラー:', sessionError);
-                        alert('セッションの確立に失敗しました。\n\nパスワードリセットメールのリンクをもう一度クリックしてください。');
+                        alert('セッションの確立に失敗しました。\n\nエラー: ' + sessionError.message + '\n\nパスワードリセットメールのリンクをもう一度クリックしてください。');
                         setLoading(false);
                         return;
                     }
                     
-                    console.log('セッションを再確立しました:', sessionSetData.session ? 'あり' : 'なし');
+                    console.log('セッションを再確立しました（PKCE）:', sessionSetData.session ? 'あり' : 'なし');
+                    
+                    // セッションが確立されたか再確認
+                    const { data: newSessionData } = await supabase.auth.getSession();
+                    if (!newSessionData.session) {
+                        console.error('セッション確立後もセッションが見つかりません');
+                        alert('セッションの確立に失敗しました。\n\nパスワードリセットメールのリンクをもう一度クリックしてください。');
+                        setLoading(false);
+                        return;
+                    }
+                    console.log('セッション再確認: OK');
+                    sessionData = newSessionData;
                 } else {
-                    console.error('URLにアクセストークンが見つかりません');
-                    console.log('完全なURL:', window.location.href);
-                    alert('パスワードリセットのセッションが見つかりません。\n\nパスワードリセットメールのリンクをもう一度クリックしてください。');
-                    setLoading(false);
-                    return;
+                    // 旧方式（access_token）もチェック（後方互換性のため）
+                    const hashParams = new URLSearchParams(hash.substring(1));
+                    let accessToken = hashParams.get('access_token');
+                    let refreshToken = hashParams.get('refresh_token');
+                    
+                    // ハッシュにない場合はクエリパラメータをチェック
+                    if (!accessToken) {
+                        accessToken = searchParams.get('access_token');
+                        refreshToken = searchParams.get('refresh_token');
+                    }
+                    
+                    console.log('取得したトークン（旧方式）:', { 
+                        hasAccessToken: !!accessToken, 
+                        hasRefreshToken: !!refreshToken 
+                    });
+                    
+                    if (accessToken) {
+                        console.log('URLからアクセストークンを検出しました（旧方式）');
+                        // トークンを使ってセッションを設定
+                        const { data: sessionSetData, error: sessionError } = await supabase.auth.setSession({
+                            access_token: accessToken,
+                            refresh_token: refreshToken || ''
+                        });
+                        
+                        if (sessionError) {
+                            console.error('セッション設定エラー:', sessionError);
+                            alert('セッションの確立に失敗しました。\n\nパスワードリセットメールのリンクをもう一度クリックしてください。');
+                            setLoading(false);
+                            return;
+                        }
+                        
+                        console.log('セッションを再確立しました（旧方式）:', sessionSetData.session ? 'あり' : 'なし');
+                        
+                        // セッションが確立されたか再確認
+                        const { data: newSessionData } = await supabase.auth.getSession();
+                        if (!newSessionData.session) {
+                            console.error('セッション確立後もセッションが見つかりません');
+                            alert('セッションの確立に失敗しました。\n\nパスワードリセットメールのリンクをもう一度クリックしてください。');
+                            setLoading(false);
+                            return;
+                        }
+                        console.log('セッション再確認: OK');
+                        sessionData = newSessionData;
+                    } else {
+                        console.error('URLにトークンが見つかりません');
+                        console.log('完全なURL:', window.location.href);
+                        alert('パスワードリセットのセッションが見つかりません。\n\nパスワードリセットメールのリンクをもう一度クリックしてください。');
+                        setLoading(false);
+                        return;
+                    }
                 }
             }
             
