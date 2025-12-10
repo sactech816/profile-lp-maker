@@ -46,6 +46,7 @@ const Footer = ({ setPage, onCreate, user, setShowAuth, variant = 'dark' }) => {
                     <ul className="space-y-3 text-sm">
                         <li><button onClick={()=>handleNav('dashboard')} className={`${isLight ? 'text-gray-700 hover:text-indigo-600' : 'text-gray-300 hover:text-white'} transition-colors flex items-center gap-2`}>➤ ダッシュボード</button></li>
                         <li><button onClick={()=>handleNav('landing')} className={`${isLight ? 'text-gray-700 hover:text-indigo-600' : 'text-gray-300 hover:text-white'} transition-colors flex items-center gap-2`}>➤ トップページ</button></li>
+                        <li><button onClick={()=>handleNav('announcements')} className={`${isLight ? 'text-gray-700 hover:text-indigo-600' : 'text-gray-300 hover:text-white'} transition-colors flex items-center gap-2`}>➤ お知らせ</button></li>
                         <li><button onClick={()=>handleNav('profile-howto')} className={`${isLight ? 'text-gray-700 hover:text-indigo-600' : 'text-gray-300 hover:text-white'} transition-colors flex items-center gap-2`}>➤ 使い方</button></li>
                         <li><button onClick={()=>handleNav('profile-effective')} className={`${isLight ? 'text-gray-700 hover:text-indigo-600' : 'text-gray-300 hover:text-white'} transition-colors flex items-center gap-2`}>➤ 効果的な利用方法</button></li>
                     </ul>
