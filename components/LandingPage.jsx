@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Smartphone, Code, Share2, ArrowRight, CheckCircle, Eye, Wand2, BookOpen, Store, Briefcase, ExternalLink, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import Header from './Header';
+import AnnouncementBanner from './AnnouncementBanner';
 
 const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -154,6 +155,12 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
 
   return (
     <div className="profile-page-wrapper min-h-screen">
+      {/* お知らせバナー */}
+      <AnnouncementBanner 
+        serviceType="profile"
+        onNavigateToAnnouncements={() => handleSetPage('announcements')}
+      />
+      
       {/* ヘッダーを追加 */}
       <Header 
         setPage={handleSetPage}

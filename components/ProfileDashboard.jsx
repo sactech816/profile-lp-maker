@@ -5,6 +5,7 @@ import { User, LayoutDashboard, LogOut, Loader2, ExternalLink, Edit3, Trash2, Ta
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Header from './Header';
 import Footer from './Footer';
+import AnnouncementBanner from './AnnouncementBanner';
 import { supabase } from '../lib/supabase';
 import { generateSlug } from '../lib/utils';
 import { generateProfileHTML } from '../lib/profileHtmlGenerator';
@@ -356,6 +357,10 @@ const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, 
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
+            <AnnouncementBanner 
+                serviceType="profile"
+                onNavigateToAnnouncements={() => setPage('announcements')}
+            />
             <Header setPage={setPage} user={user} onLogout={onLogout} />
             <div className="max-w-6xl mx-auto py-6 md:py-12 px-4">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
