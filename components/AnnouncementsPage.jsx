@@ -44,7 +44,8 @@ const AnnouncementsPage = ({ onBack, isAdmin, setPage, user, onLogout, setShowAu
             let query = supabase
                 .from('announcements')
                 .select('*')
-                .order('announcement_date', { ascending: false });
+                .order('announcement_date', { ascending: false })
+                .order('created_at', { ascending: false });
 
             // サービスタイプでフィルタリング（現在のサービス または 全サービス共通）
             // 管理者も一般ユーザーも、現在のサービスに関連するお知らせのみ表示
