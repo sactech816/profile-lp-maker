@@ -38,8 +38,10 @@ function doPost(e) {
         '登録日時',
         '最終ログイン日時',
         'メール確認日時',
-        'プロフィール作成数',
-        '購入数',
+        '診断クイズ作成数',
+        '診断クイズ購入数',
+        'LPプロフィール作成数',
+        'LPプロフィール購入数',
         'エクスポート日時'
       ];
       sheet.appendRow(headers);
@@ -64,14 +66,16 @@ function doPost(e) {
         user.created_at,
         user.last_sign_in_at,
         user.confirmed_at,
-        user.profile_count,
-        user.purchase_count,
+        user.quiz_count || 0,
+        user.quiz_purchase_count || 0,
+        user.profile_count || 0,
+        user.profile_purchase_count || 0,
         new Date(exportedAt).toLocaleString('ja-JP')
       ]);
     });
     
     // 列幅を自動調整
-    sheet.autoResizeColumns(1, 8);
+    sheet.autoResizeColumns(1, 10);
     
     // 成功レスポンスを返す
     return ContentService.createTextOutput(JSON.stringify({
@@ -167,8 +171,10 @@ Apps Scriptの実行権限を再度承認してください：
 | 登録日時 | アカウント作成日時 |
 | 最終ログイン日時 | 最後にログインした日時 |
 | メール確認日時 | メールアドレスを確認した日時 |
-| プロフィール作成数 | 作成したプロフィールの数 |
-| 購入数 | Pro機能の購入回数 |
+| 診断クイズ作成数 | 作成した診断クイズの数 |
+| 診断クイズ購入数 | 診断クイズPro機能の購入回数 |
+| LPプロフィール作成数 | 作成したLPプロフィールの数 |
+| LPプロフィール購入数 | LPプロフィールPro機能の購入回数 |
 | エクスポート日時 | データをエクスポートした日時 |
 
 ## セキュリティに関する注意
