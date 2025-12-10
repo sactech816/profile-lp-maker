@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, User, LayoutDashboard, TrendingUp, Menu, X, LogOut, HelpCircle, FileText, Lightbulb, Mail, Shield, Scale, PlusCircle } from 'lucide-react';
+import { Sparkles, User, LayoutDashboard, TrendingUp, Menu, X, LogOut, HelpCircle, FileText, Lightbulb, Mail, Shield, Scale, PlusCircle, Bell } from 'lucide-react';
 
 const Header = ({ setPage, user, onLogout, setShowAuth = null }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,6 +20,9 @@ const Header = ({ setPage, user, onLogout, setShowAuth = null }) => {
                 <div className="hidden md:flex items-center gap-4 text-sm font-bold text-gray-600">
                     <button onClick={()=>{setPage('profile-editor'); setIsMenuOpen(false);}} className="text-gray-600 hover:text-indigo-600 flex items-center gap-1">
                         <PlusCircle size={16}/> 新規作成
+                    </button>
+                    <button onClick={()=>handleNav('announcements')} className="text-gray-600 hover:text-indigo-600 flex items-center gap-1">
+                        <Bell size={16}/> お知らせ
                     </button>
                     <button onClick={()=>handleNav('contact')} className="text-gray-600 hover:text-indigo-600 flex items-center gap-1">
                         <Mail size={16}/> お問い合わせ
@@ -60,6 +63,7 @@ const Header = ({ setPage, user, onLogout, setShowAuth = null }) => {
                     <button onClick={()=>handleNav('dashboard')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-indigo-600 font-bold"><LayoutDashboard size={20}/> ダッシュボード</button>
                     
                     <p className="text-xs font-bold text-gray-400 mt-4 mb-2">コンテンツページ</p>
+                    <button onClick={()=>handleNav('announcements')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-indigo-600 font-bold"><Bell size={20}/> お知らせ</button>
                     <button onClick={()=>handleNav('profile-howto')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-gray-700 font-bold"><HelpCircle size={20}/> 使い方</button>
                     <button onClick={()=>handleNav('profile-effective')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-gray-700 font-bold"><Lightbulb size={20}/> 効果的な利用方法</button>
                     <button onClick={()=>handleNav('contact')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-gray-700 font-bold"><Mail size={20}/> お問い合わせ</button>

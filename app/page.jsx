@@ -15,6 +15,7 @@ import QuizPlayer from '../components/QuizPlayer';
 import Editor from '../components/Editor';
 import ProfileEditor from '../components/ProfileEditor';
 import LandingPage from '../components/LandingPage';
+import AnnouncementsPage from '../components/AnnouncementsPage';
 import { 
     FaqPage, PricePage, HowToPage, 
     EffectiveUsePage, QuizLogicPage, 
@@ -564,6 +565,28 @@ const App = () => {
                 alert('ログアウトに失敗しました');
             }
         }} setShowAuth={setShowAuth} />}
+        
+        {/* お知らせページ */}
+        {view === 'announcements' && <AnnouncementsPage 
+            onBack={()=>navigateTo('landing')} 
+            isAdmin={isAdmin} 
+            setPage={(p) => navigateTo(p)} 
+            user={user} 
+            onLogout={async ()=>{ 
+                if(!supabase) return;
+                try {
+                    await supabase.auth.signOut(); 
+                    setUser(null);
+                    alert('ログアウトしました');
+                    navigateTo('landing');
+                } catch(e) {
+                    console.error('ログアウトエラー:', e);
+                    alert('ログアウトに失敗しました');
+                }
+            }} 
+            setShowAuth={setShowAuth}
+            serviceType="profile"
+        />}
         
         {/* お問い合わせ・規約関連 */}
         {view === 'contact' && <ContactPage onBack={()=>navigateTo('landing')} isAdmin={isAdmin} setPage={(p) => navigateTo(p)} user={user} onLogout={async ()=>{ 
