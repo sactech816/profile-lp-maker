@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: usersError.message }, { status: 500 });
     }
 
-    // プロフィール数を集計
+    // LPプロフィール数を集計
     const { data: profiles, error: profilesError } = await supabaseAdmin
       .from('profiles')
       .select('user_id, id');
@@ -59,15 +59,39 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 購入履歴を集計
-    const { data: purchases, error: purchasesError } = await supabaseAdmin
+    // 診断クイズ数を集計
+    const { data: quizzes, error: quizzesError } = await supabaseAdmin
+      .from('quizzes')
+      .select('user_id, id');
+    
+    const quizCounts: Record<string, number> = {};
+    if (quizzes) {
+      quizzes.forEach(quiz => {
+        quizCounts[quiz.user_id] = (quizCounts[quiz.user_id] || 0) + 1;
+      });
+    }
+
+    // LPプロフィール購入履歴を集計
+    const { data: profilePurchases, error: profilePurchasesError } = await supabaseAdmin
       .from('profile_purchases')
       .select('user_id, id');
     
-    const purchaseCounts: Record<string, number> = {};
-    if (purchases) {
-      purchases.forEach(purchase => {
-        purchaseCounts[purchase.user_id] = (purchaseCounts[purchase.user_id] || 0) + 1;
+    const profilePurchaseCounts: Record<string, number> = {};
+    if (profilePurchases) {
+      profilePurchases.forEach(purchase => {
+        profilePurchaseCounts[purchase.user_id] = (profilePurchaseCounts[purchase.user_id] || 0) + 1;
+      });
+    }
+
+    // 診断クイズ購入履歴を集計
+    const { data: quizPurchases, error: quizPurchasesError } = await supabaseAdmin
+      .from('purchases')
+      .select('user_id, id');
+    
+    const quizPurchaseCounts: Record<string, number> = {};
+    if (quizPurchases) {
+      quizPurchases.forEach(purchase => {
+        quizPurchaseCounts[purchase.user_id] = (quizPurchaseCounts[purchase.user_id] || 0) + 1;
       });
     }
 
@@ -78,8 +102,10 @@ export async function GET(request: NextRequest) {
       '登録日時',
       '最終ログイン日時',
       'メール確認日時',
-      'プロフィール作成数',
-      '購入数'
+      '診断クイズ作成数',
+      '診断クイズ購入数',
+      'LPプロフィール作成数',
+      'LPプロフィール購入数'
     ];
 
     // CSVデータを生成
@@ -90,8 +116,10 @@ export async function GET(request: NextRequest) {
         user.created_at ? new Date(user.created_at).toLocaleString('ja-JP') : '',
         user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString('ja-JP') : '',
         user.confirmed_at ? new Date(user.confirmed_at).toLocaleString('ja-JP') : '',
+        quizCounts[user.id] || 0,
+        quizPurchaseCounts[user.id] || 0,
         profileCounts[user.id] || 0,
-        purchaseCounts[user.id] || 0
+        profilePurchaseCounts[user.id] || 0
       ];
     });
 
