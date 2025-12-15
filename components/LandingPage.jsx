@@ -112,11 +112,15 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
     return categories[category] || categories.other;
   };
 
-  const handleGetStarted = () => {
+  const handleGetStarted = (templateId = null) => {
     if (user) {
-      // ログイン済みならダッシュボードへ
+      // ログイン済みならダッシュボードへ（テンプレートIDを渡す）
       if (onNavigateToDashboard) {
         onNavigateToDashboard();
+      }
+      // ダッシュボードに遷移後、テンプレートIDがあればエディタで使用
+      if (onCreate && templateId) {
+        onCreate(templateId);
       }
     } else {
       // 未ログインの場合
@@ -131,7 +135,7 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
       } else {
         // それ以外はエディタページに直接遷移
         if (onCreate) {
-          onCreate();
+          onCreate(templateId);
         }
       }
     }
@@ -180,46 +184,92 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
         <section className="text-center mb-20 md:mb-32 animate-fade-in">
           <div className="mb-8">
             <h2 className="text-4xl md:text-6xl font-bold text-white drop-shadow-lg mb-6 leading-tight">
-              "あなた"らしいプロフィールを、<br className="md:hidden"/>3分で。
+              名刺・SNS・紹介に使える<br/>
+              プロフィールLPを<br/>
+              <span className="text-yellow-300">「ひな形」から最短ルートで作成</span>
             </h2>
             <p className="text-lg md:text-xl text-white font-semibold px-4 drop-shadow-md mb-4 leading-relaxed">
-              エンジニアでなくても、スマホだけで。<br className="md:hidden"/>
-              あなたの魅力を伝える「集客導線」を作りましょう。
+              文章の型は用意済み。<br/>
+              あなたは、自分に合わせて内容を書き換えるだけ。
             </p>
             <p className="text-base md:text-lg text-white/90 px-4 drop-shadow-md mb-8">
-              SNSや作品投稿サイトのリンクをまとめて、ひとつのページに。<br className="hidden md:block"/>
-              ずっと無料で使えるプロフィールリンクまとめツール。
+              「何を書けばいいかわからない」を解消し<br/>
+              自分専用のLPをスムーズに公開できます。
             </p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex justify-center">
             <button
               onClick={handleGetStarted}
-              className="glass-card bg-white/95 hover:bg-white text-indigo-600 px-8 py-4 rounded-full font-bold text-lg shadow-xl transition-all transform hover:scale-105 flex items-center gap-2 w-full sm:w-auto justify-center"
+              className="glass-card bg-white/95 hover:bg-white text-indigo-600 px-8 py-4 rounded-full font-bold text-lg shadow-xl transition-all transform hover:scale-105 flex items-center gap-2"
             >
-              {user ? (
-                <>
-                  <Sparkles size={20}/>
-                  ダッシュボードへ
-                </>
-              ) : (
-                <>
-                  <Sparkles size={20}/>
-                  無料で始める
-                </>
-              )}
+              <Sparkles size={20}/>
+              新規作成
               <ArrowRight size={20}/>
             </button>
-            
-            <a
-              href="/p/demo-user"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="glass-card bg-white/80 hover:bg-white/95 text-gray-700 px-8 py-4 rounded-full font-bold text-lg shadow-xl transition-all transform hover:scale-105 flex items-center gap-2 w-full sm:w-auto justify-center"
-            >
-              <Eye size={20}/>
-              デモページを見る
-            </a>
+          </div>
+        </section>
+
+        {/* テンプレート選択セクション */}
+        <section className="mb-20 md:mb-32 animate-fade-in delay-1">
+          <h3 className="text-2xl md:text-3xl font-bold text-white text-center mb-4 drop-shadow-lg">
+            テンプレートを選択してください
+          </h3>
+          <p className="text-center text-white/90 mb-12 text-sm md:text-base">
+            用途に合わせて最適なテンプレートをお選びください
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+            {/* ビジネス用テンプレート */}
+            <div className="glass-card rounded-2xl p-6 md:p-8 text-center shadow-lg hover:shadow-xl transition-all transform hover:scale-105 cursor-pointer group" onClick={() => handleGetStarted('business-consultant')}>
+              <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
+                <Briefcase className="text-blue-600" size={32}/>
+              </div>
+              <h4 className="text-xl font-bold mb-3 accent-color">
+                ビジネス用
+              </h4>
+              <p className="text-gray-700 leading-relaxed text-sm md:text-base mb-6">
+                営業・商談・名刺交換で使える<br/>
+                プロフェッショナル向けテンプレート
+              </p>
+              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold transition-colors">
+                このテンプレートで作成
+              </button>
+            </div>
+
+            {/* 自己紹介用テンプレート */}
+            <div className="glass-card rounded-2xl p-6 md:p-8 text-center shadow-lg hover:shadow-xl transition-all transform hover:scale-105 cursor-pointer group" onClick={() => handleGetStarted('creator-portfolio')}>
+              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
+                <Heart className="text-green-600" size={32}/>
+              </div>
+              <h4 className="text-xl font-bold mb-3 accent-color">
+                自己紹介用
+              </h4>
+              <p className="text-gray-700 leading-relaxed text-sm md:text-base mb-6">
+                SNS・ブログ・コミュニティで使える<br/>
+                カジュアルな自己紹介テンプレート
+              </p>
+              <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition-colors">
+                このテンプレートで作成
+              </button>
+            </div>
+
+            {/* 項目フルセットテンプレート */}
+            <div className="glass-card rounded-2xl p-6 md:p-8 text-center shadow-lg hover:shadow-xl transition-all transform hover:scale-105 cursor-pointer group" onClick={() => handleGetStarted('marketer-fullpackage')}>
+              <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
+                <Sparkles className="text-purple-600" size={32}/>
+              </div>
+              <h4 className="text-xl font-bold mb-3 accent-color">
+                項目フルセット
+              </h4>
+              <p className="text-gray-700 leading-relaxed text-sm md:text-base mb-6">
+                全ての項目が含まれた<br/>
+                充実したプロフィールテンプレート
+              </p>
+              <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-bold transition-colors">
+                このテンプレートで作成
+              </button>
+            </div>
           </div>
         </section>
 

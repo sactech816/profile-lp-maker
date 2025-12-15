@@ -346,10 +346,10 @@ const ProfileDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin, 
     };
 
   // 新規プロフィール作成
-  const handleCreate = () => {
+  const handleCreate = (templateId = null) => {
     // エディタ画面へ遷移（新規作成はエディタ側で処理）
     if (onCreate) {
-      onCreate({});
+      onCreate({ templateId });
     } else if (setPage) {
       setPage('dashboard/editor/new');
     }

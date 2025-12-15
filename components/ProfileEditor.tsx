@@ -185,6 +185,68 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
     }
   }, [selectedBlockId]);
 
+  // テンプレート自動読み込み
+  useEffect(() => {
+    // 新規作成時のみテンプレートを自動読み込み
+    if (!initialSlug && typeof window !== 'undefined') {
+      const templateId = sessionStorage.getItem('selectedTemplateId');
+      if (templateId) {
+        // テンプレートを検索
+        const template = templates.find(t => t.id === templateId);
+        if (template) {
+          // テンプレートのブロックを読み込む（IDを再生成）
+          const newBlocks = template.blocks.map(block => ({
+            ...block,
+            id: generateBlockId()
+          }));
+          
+          // ネストされたIDも再生成
+          const processedBlocks = newBlocks.map(block => {
+            if (block.type === 'faq') {
+              return {
+                ...block,
+                data: {
+                  items: block.data.items.map(item => ({
+                    ...item,
+                    id: generateBlockId()
+                  }))
+                }
+              };
+            } else if (block.type === 'pricing') {
+              return {
+                ...block,
+                data: {
+                  plans: block.data.plans.map(plan => ({
+                    ...plan,
+                    id: generateBlockId()
+                  }))
+                }
+              };
+            } else if (block.type === 'testimonial') {
+              return {
+                ...block,
+                data: {
+                  items: block.data.items.map(item => ({
+                    ...item,
+                    id: generateBlockId()
+                  }))
+                }
+              };
+            }
+            return block;
+          });
+          
+          setBlocks(processedBlocks);
+          setTheme(template.theme);
+          setExpandedBlocks(new Set(processedBlocks.map(b => b.id)));
+          
+          // テンプレートIDをクリア
+          sessionStorage.removeItem('selectedTemplateId');
+        }
+      }
+    }
+  }, [initialSlug]);
+
   // Supabaseからデータを読み込む
   useEffect(() => {
     const loadProfile = async () => {

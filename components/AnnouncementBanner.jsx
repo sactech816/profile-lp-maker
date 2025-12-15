@@ -89,16 +89,16 @@ const AnnouncementBanner = ({ serviceType = 'profile', onNavigateToAnnouncements
 
                 {/* 中央: お知らせ内容 */}
                 <div 
-                    className="flex-1 flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity"
+                    className="flex-1 flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity min-w-0"
                     onClick={handleClick}
                 >
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                         {isGlobalAnnouncement && (
-                            <span className="text-xs bg-white/20 px-2 py-0.5 rounded font-bold">
+                            <span className="text-xs bg-white/20 px-2 py-0.5 rounded font-bold flex-shrink-0">
                                 重要
                             </span>
                         )}
-                        <span className="font-bold text-sm md:text-base">
+                        <span className="font-bold text-sm md:text-base truncate">
                             {announcement.title}
                         </span>
                     </div>

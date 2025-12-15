@@ -437,8 +437,12 @@ const App = () => {
                 user={user}
                 setShowAuth={setShowAuth}
                 onNavigateToDashboard={() => navigateTo('dashboard')}
-                onCreate={() => {
+                onCreate={(templateId) => {
                     setEditingProfileSlug(null);
+                    // テンプレートIDがある場合は状態に保存
+                    if (templateId) {
+                        sessionStorage.setItem('selectedTemplateId', templateId);
+                    }
                     navigateTo('profile-editor');
                 }}
             />
