@@ -1952,7 +1952,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           </div>
           <div className="flex items-center gap-2 mb-2">
             <Palette className="text-indigo-600" size={20}/>
-            <h3 className="font-bold text-base md:text-lg text-gray-900">ブロック追加（クリックで追加。ブロックを開き入力してください）</h3>
+            <h3 className="font-bold text-base md:text-lg text-gray-900">作成方法を選択（必要なブロック追加でオリジナル作成）</h3>
           </div>
           <div className="flex flex-wrap gap-2">
             <button onClick={() => addBlock('header')} className="bg-white border border-gray-200 px-3 md:px-4 py-2 rounded-lg font-bold text-xs md:text-sm hover:bg-gray-50 flex items-center gap-1 md:gap-2">
