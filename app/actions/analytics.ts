@@ -10,7 +10,8 @@ export async function saveAnalytics(
     scrollDepth?: number; 
     timeSpent?: number; 
     readPercentage?: number;
-  }
+  },
+  contentType?: 'profile' | 'business'
 ) {
   if (!supabase) {
     console.error('[Analytics] Supabase not available for analytics');
@@ -33,7 +34,7 @@ export async function saveAnalytics(
       profile_id: profileId,
       event_type: eventType,
       event_data: eventData || {},
-      content_type: 'profile', // プロフィールLPのアナリティクスとして記録
+      content_type: contentType || 'profile', // デフォルトはプロフィールLP
       created_at: new Date().toISOString()
     };
     

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import { saveAnalytics } from '@/app/actions/analytics';
-import { saveBusinessAnalytics } from '@/app/actions/business';
 
 export function ProfileViewTracker({ 
   profileId, 
@@ -31,13 +30,10 @@ export function ProfileViewTracker({
 
     console.log('[ProfileViewTracker] Initializing for profile:', profileId, 'contentType:', contentType);
 
-    // アナリティクス保存関数を選択
-    const saveAnalyticsFunc = contentType === 'business' ? saveBusinessAnalytics : saveAnalytics;
-
     // ページビューを記録（初回のみ）
     if (!viewTrackedRef.current) {
       viewTrackedRef.current = true;
-      saveAnalyticsFunc(profileId, 'view').then((result) => {
+      saveAnalytics(profileId, 'view', undefined, contentType).then((result) => {
         console.log('[ProfileViewTracker] View tracked:', result);
         if (result.error) {
           console.error('[ProfileViewTracker] View tracking error:', result.error);
@@ -59,7 +55,7 @@ export function ProfileViewTracker({
       [25, 50, 75, 100].forEach(milestone => {
         if (scrollDepth >= milestone && !scrollTrackedRef.current.has(milestone)) {
           scrollTrackedRef.current.add(milestone);
-          saveAnalyticsFunc(profileId, 'scroll', { scrollDepth: milestone }).then((result) => {
+          saveAnalytics(profileId, 'scroll', { scrollDepth: milestone }, contentType).then((result) => {
             console.log('[ProfileViewTracker] Scroll milestone tracked:', milestone, result);
             if (result.error) {
               console.error('[ProfileViewTracker] Scroll tracking error:', result.error);
@@ -75,7 +71,7 @@ export function ProfileViewTracker({
     const checkReadRate = () => {
       if (!readTrackedRef.current && maxScrollRef.current >= 50) {
         readTrackedRef.current = true;
-        saveAnalyticsFunc(profileId, 'read', { readPercentage: maxScrollRef.current }).then((result) => {
+        saveAnalytics(profileId, 'read', { readPercentage: maxScrollRef.current }, contentType).then((result) => {
           console.log('[ProfileViewTracker] Read tracked:', maxScrollRef.current, result);
           if (result.error) {
             console.error('[ProfileViewTracker] Read tracking error:', result.error);
@@ -112,7 +108,7 @@ export function ProfileViewTracker({
     const timeInterval = setInterval(() => {
       const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
       if (timeSpent >= 30) {
-        saveAnalyticsFunc(profileId, 'time', { timeSpent }).then((result) => {
+        saveAnalytics(profileId, 'time', { timeSpent }, contentType).then((result) => {
           console.log('[ProfileViewTracker] Time tracked:', timeSpent, result);
           if (result.error) {
             console.error('[ProfileViewTracker] Time tracking error:', result.error);
@@ -136,7 +132,7 @@ export function ProfileViewTracker({
       // クリーンアップ時に最終データを記録
       const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
       if (timeSpent > 3) { // 3秒以上滞在した場合のみ記録
-        saveAnalyticsFunc(profileId, 'time', { timeSpent }).then((result) => {
+        saveAnalytics(profileId, 'time', { timeSpent }, contentType).then((result) => {
           console.log('[ProfileViewTracker] Final time tracked:', timeSpent, result);
           if (result.error) {
             console.error('[ProfileViewTracker] Final time tracking error:', result.error);
