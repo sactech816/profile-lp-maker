@@ -289,6 +289,9 @@ export function BlockRenderer({ block, profileId, contentType = 'profile' }: { b
     case 'two_column':
       return <TwoColumnBlock block={block} />;
 
+    case 'google_map':
+      return <GoogleMapBlock block={block} />;
+
     default:
       return null;
   }
@@ -846,6 +849,66 @@ function TwoColumnBlock({ block }: { block: Extract<Block, { type: 'two_column' 
               </ul>
             )}
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Googleマップブロックコンポーネント
+function GoogleMapBlock({ block }: { block: Extract<Block, { type: 'google_map' }> }) {
+  const height = block.data.height || '400px';
+  
+  // URLのバリデーション（google.comドメインのみ許可）
+  const isValidGoogleMapsUrl = (url: string): boolean => {
+    if (!url) return false;
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.includes('google.com');
+    } catch {
+      return false;
+    }
+  };
+
+  if (!block.data.embedUrl || !isValidGoogleMapsUrl(block.data.embedUrl)) {
+    return (
+      <section className="animate-fade-in">
+        <div className="glass-card rounded-2xl p-6 shadow-lg text-center">
+          <p className="text-gray-600">地図のURLが設定されていません</p>
+          <p className="text-sm text-gray-500 mt-2">Google Mapsの埋め込みURLを設定してください</p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="animate-fade-in">
+      <div className="glass-card rounded-2xl p-6 shadow-lg">
+        {(block.data.title || block.data.address) && (
+          <div className="mb-4 text-center">
+            {block.data.title && (
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {block.data.title}
+              </h3>
+            )}
+            {block.data.address && (
+              <p className="text-gray-700 text-sm">
+                {block.data.address}
+              </p>
+            )}
+          </div>
+        )}
+        <div className="relative w-full overflow-hidden rounded-xl" style={{ height }}>
+          <iframe
+            src={block.data.embedUrl}
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title={block.data.title || '地図'}
+          />
         </div>
       </div>
     </section>

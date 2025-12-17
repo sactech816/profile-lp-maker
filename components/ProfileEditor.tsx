@@ -6,7 +6,7 @@ import {
     X, Link, UploadCloud, Eye, User, FileText, GripVertical,
     ChevronUp, ChevronDown, Image as ImageIcon, Youtube, MoveUp, MoveDown, Sparkles,
     ChevronRight, Palette, Image as ImageIcon2, BookOpen, Mail, Settings, QrCode, BarChart2,
-    HelpCircle, DollarSign, MessageSquare, ChevronDown as ChevronDownIcon, Star, Twitter
+    HelpCircle, DollarSign, MessageSquare, ChevronDown as ChevronDownIcon, Star, Twitter, MapPin
 } from 'lucide-react';
 import { generateSlug, validateNickname, isAdmin as checkIsAdmin } from '../lib/utils';
 import { supabase } from '../lib/supabase';
@@ -416,6 +416,12 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
             id: generateBlockId(),
             type: 'quiz',
             data: { quizId: '', quizSlug: '', title: '' }
+          };
+        case 'google_map':
+          return {
+            id: generateBlockId(),
+            type: 'google_map',
+            data: { address: '', embedUrl: '', title: '所在地', height: '400px' }
           };
         default:
           return {
@@ -1624,6 +1630,59 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
           </div>
         );
 
+      case 'google_map':
+        return (
+          <div className="space-y-4">
+            <Input 
+              label="タイトル（オプション）" 
+              val={block.data.title || ''} 
+              onChange={v => updateBlock(block.id, { title: v })} 
+              ph="例: 所在地" 
+            />
+            <Input 
+              label="住所（オプション）" 
+              val={block.data.address || ''} 
+              onChange={v => updateBlock(block.id, { address: v })} 
+              ph="例: 〒150-0001 東京都渋谷区..." 
+            />
+            <Textarea 
+              label="Google Maps埋め込みURL" 
+              val={block.data.embedUrl || ''} 
+              onChange={v => updateBlock(block.id, { embedUrl: v })} 
+              rows={3}
+              ph="https://www.google.com/maps/embed?pb=..." 
+            />
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+              <p className="font-bold text-blue-900 mb-2">📍 Google Maps埋め込みURLの取得方法</p>
+              <ol className="text-blue-800 space-y-1 list-decimal list-inside">
+                <li>Google Mapsで場所を検索</li>
+                <li>「共有」ボタンをクリック</li>
+                <li>「地図を埋め込む」タブを選択</li>
+                <li>HTMLコードをコピー</li>
+                <li>HTMLコード内の<code className="bg-blue-100 px-1 rounded">src="..."</code>のURL部分のみを貼り付け</li>
+              </ol>
+            </div>
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">高さ</label>
+              <select 
+                className="w-full border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                value={block.data.height || '400px'}
+                onChange={e => updateBlock(block.id, { height: e.target.value })}
+              >
+                <option value="300px">300px（小）</option>
+                <option value="400px">400px（中）</option>
+                <option value="500px">500px（大）</option>
+              </select>
+            </div>
+            {block.data.embedUrl && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
+                <p className="font-bold">✓ 地図が設定されました</p>
+                <p className="text-xs mt-1">プレビューで確認してください</p>
+              </div>
+            )}
+          </div>
+        );
+
       default:
         return null;
     }
@@ -1991,6 +2050,9 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
             <button onClick={() => addBlock('quiz')} className="bg-white border border-gray-200 px-3 md:px-4 py-2 rounded-lg font-bold text-xs md:text-sm hover:bg-gray-50 flex items-center gap-1 md:gap-2">
               <Sparkles size={14} className="md:w-4 md:h-4"/> <span>診断クイズ</span>
             </button>
+            <button onClick={() => addBlock('google_map')} className="bg-white border border-gray-200 px-3 md:px-4 py-2 rounded-lg font-bold text-xs md:text-sm hover:bg-gray-50 flex items-center gap-1 md:gap-2">
+              <MapPin size={14} className="md:w-4 md:h-4"/> <span>地図</span>
+            </button>
           </div>
         </div>
 
@@ -2027,6 +2089,7 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
                         {block.type === 'pricing' && '料金表'}
                         {block.type === 'testimonial' && 'お客様の声'}
                         {block.type === 'quiz' && '診断クイズ'}
+                        {block.type === 'google_map' && '地図'}
                       </span>
                     </button>
                   </div>

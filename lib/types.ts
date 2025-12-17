@@ -138,6 +138,14 @@ export type TwoColumnBlockData = {
   listItems?: string[]; // リストアイテム（オプション）
 };
 
+// Googleマップブロックデータ
+export type GoogleMapBlockData = {
+  address?: string; // 住所（オプション）
+  embedUrl: string; // Google Maps埋め込みURL
+  title?: string; // 地図のタイトル（オプション）
+  height?: string; // 高さ（デフォルト: '400px'）
+};
+
 // ブロックの型定義（Union型）
 export type Block = 
   | { id: string; type: 'header'; data: HeaderBlockData }
@@ -155,7 +163,8 @@ export type Block =
   | { id: string; type: 'hero'; data: HeroBlockData }
   | { id: string; type: 'features'; data: FeaturesBlockData }
   | { id: string; type: 'cta_section'; data: CTASectionBlockData }
-  | { id: string; type: 'two_column'; data: TwoColumnBlockData };
+  | { id: string; type: 'two_column'; data: TwoColumnBlockData }
+  | { id: string; type: 'google_map'; data: GoogleMapBlockData };
 
 // プロフィール設定の型定義
 export type ProfileSettings = {
