@@ -213,7 +213,7 @@ const BusinessDashboard = ({ user, onEdit, onDelete, setPage, onLogout, isAdmin,
                 return;
             }
             
-            await fetchMyProfiles();
+            await fetchMyProjects();
             
             // 購入履歴を取得（テーブルが存在しない場合はスキップ）
             console.log('🔍 購入履歴を取得中... user.id:', user.id);
