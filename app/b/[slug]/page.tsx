@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 import type { Metadata } from 'next';
 import { Block, migrateOldContent } from '@/lib/types';
 import { BlockRenderer } from '@/components/BlockRenderer';
@@ -7,7 +7,7 @@ import { ProfileViewTracker } from '@/components/ProfileViewTracker';
 import { TrackingScripts } from '@/components/TrackingScripts';
 import Link from 'next/link';
 
-interface Profile {
+interface BusinessProject {
   id: string;
   slug: string;
   content: Block[];
@@ -22,8 +22,8 @@ interface Profile {
   };
 }
 
-// サンプルプロフィールのデータ
-const sampleProfiles = {
+// サンプルビジネスLPのデータ
+const sampleProjects = {
   'sample-business': {
     id: 'sample-business',
     slug: 'sample-business',
@@ -157,13 +157,15 @@ const sampleProfiles = {
   }
 };
 
-// プロフィールデータを取得（slug または nickname で検索）
-async function getProfile(slug: string): Promise<Profile | null> {
-  if (!supabase) return null;
+// ビジネスプロジェクトデータを取得
+async function getBusinessProject(slug: string): Promise<BusinessProject | null> {
+  // #region agent log
+  fetch('http://127.0.0.1:7243/ingest/0315c81c-6cd6-42a2-8f4a-ffa0f6597758',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'b-slug-page.tsx:161',message:'getBusinessProject ENTRY',data:{slug},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'G'})}).catch(()=>{});
+  // #endregion
   
-  // サンプルプロフィールの場合
-  if (slug in sampleProfiles) {
-    const sample = sampleProfiles[slug as keyof typeof sampleProfiles];
+  // サンプルビジネスLPの場合
+  if (slug in sampleProjects) {
+    const sample = sampleProjects[slug as keyof typeof sampleProjects];
     const { generateBlockId } = await import('@/lib/types');
     
     const blocksWithIds = sample.blocks.map(block => ({
@@ -181,7 +183,37 @@ async function getProfile(slug: string): Promise<Profile | null> {
     };
   }
   
-  // デモページの場合はランダムテンプレートを返す
+  // Server用Supabaseクライアントを作成
+  const supabase = await createServerSupabaseClient();
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7243/ingest/0315c81c-6cd6-42a2-8f4a-ffa0f6597758',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'b-slug-page.tsx:185',message:'BEFORE database query',data:{hasSupabase:!!supabase,slug},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'F,H'})}).catch(()=>{});
+  // #endregion
+  
+  if (!supabase) {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/0315c81c-6cd6-42a2-8f4a-ffa0f6597758',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'b-slug-page.tsx:190',message:'No supabase client',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'F'})}).catch(()=>{});
+    // #endregion
+    return null;
+  }
+  
+  // business_projectsテーブルから取得
+  const { data, error } = await supabase
+    .from('business_projects')
+    .select('id, slug, content, settings')
+    .eq('slug', slug)
+    .single();
+
+  // #region agent log
+  fetch('http://127.0.0.1:7243/ingest/0315c81c-6cd6-42a2-8f4a-ffa0f6597758',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'b-slug-page.tsx:200',message:'AFTER database query',data:{hasError:!!error,errorMsg:error?.message,errorCode:error?.code,hasData:!!data,dataId:data?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'H'})}).catch(()=>{});
+  // #endregion
+
+  if (error || !data) return null;
+  return data as BusinessProject;
+}
+
+// デモページ用の関数（削除）
+async function getDemoProject_OLD(slug: string): Promise<BusinessProject | null> {
   if (slug === 'demo-user') {
     const { templates } = await import('@/constants/templates');
     const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
@@ -231,20 +263,9 @@ async function getProfile(slug: string): Promise<Profile | null> {
       slug: 'demo-user',
       content: demoBlocks,
       settings: {}
-    } as Profile;
+    } as BusinessProject;
   }
-  
-  // slug または nickname で検索
-  const { data: allData, error: allError } = await supabase
-    .from('profiles')
-    .select('id, slug, nickname, content, settings')
-    .or(`slug.eq.${slug},nickname.eq.${slug}`);
-
-  if (allError || !allData || allData.length === 0) return null;
-  
-  // 複数ある場合は最初のものを返す
-  const data = allData[0];
-  return data as Profile;
+  return null;
 }
 
 // メタデータを生成
@@ -254,50 +275,49 @@ export async function generateMetadata({
   params: Promise<{ slug: string }> 
 }): Promise<Metadata> {
   const { slug } = await params;
-  const profile = await getProfile(slug);
+  const project = await getBusinessProject(slug);
   
-  if (!profile) {
+  if (!project) {
     return {
-      title: 'プロフィールページ',
-      description: 'プロフィールランディングページ',
+      title: 'ビジネスLP',
+      description: 'ビジネスランディングページ',
     };
   }
   
   // 後方互換性のため、マイグレーション
-  const migratedContent = migrateOldContent(profile.content);
+  const migratedContent = migrateOldContent(project.content);
   const headerBlock = migratedContent.find((b): b is Extract<Block, { type: 'header' }> => b.type === 'header');
-  const name = headerBlock?.data.name || 'プロフィール';
-  const description = headerBlock?.data.title || 'プロフィールランディングページ';
+  const name = headerBlock?.data.name || 'ビジネスLP';
+  const description = headerBlock?.data.title || 'ビジネスランディングページ';
   const avatar = headerBlock?.data.avatar || null;
   
   // ベースURLを取得（環境変数から、またはデフォルト値）
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lp.makers.tokyo';
   const ogImage = avatar ? avatar : `${baseUrl}/og-image.png`;
-  const profileUrl = `${baseUrl}/p/${slug}`;
+  const projectUrl = `${baseUrl}/b/${slug}`;
   
   return {
-    title: `${name} - プロフィールページ | プロフィールLPメーカー`,
-    description: `${description} | プロフィールLPメーカーで作成されたプロフィールページ。SNSリンクまとめ、無料で使えるプロフィールリンクツール。`,
+    title: `${name} - ビジネスLP | ビジネスLPメーカー`,
+    description: `${description} | ビジネスLPメーカーで作成されたビジネスランディングページ。`,
     keywords: [
       name,
-      'プロフィール',
-      'プロフィールページ',
-      'SNSリンクまとめ',
-      'プロフィールリンク',
-      'リンクまとめ',
-      'プロフィールLPメーカー',
+      'ビジネスLP',
+      'ランディングページ',
+      'チラシ',
+      'ビジネス',
+      'ビジネスLPメーカー',
     ],
     authors: [{ name }],
     creator: name,
-    publisher: 'プロフィールLPメーカー',
+    publisher: 'ビジネスLPメーカー',
     alternates: {
-      canonical: profileUrl,
+      canonical: projectUrl,
     },
     openGraph: {
-      title: `${name} - プロフィールページ`,
+      title: `${name} - ビジネスLP`,
       description,
-      url: profileUrl,
-      siteName: 'プロフィールLPメーカー',
+      url: projectUrl,
+      siteName: 'ビジネスLPメーカー',
       locale: 'ja_JP',
       images: [
         {
@@ -307,11 +327,11 @@ export async function generateMetadata({
           alt: name,
         },
       ],
-      type: 'profile',
+      type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${name} - プロフィールページ`,
+      title: `${name} - ビジネスLP`,
       description,
       images: [ogImage],
     },
@@ -330,39 +350,39 @@ export async function generateMetadata({
 }
 
 
-export default async function ProfilePage({ 
+export default async function BusinessLPPage({ 
   params 
 }: { 
   params: Promise<{ slug: string }> 
 }) {
   const { slug } = await params;
-  const profile = await getProfile(slug);
+  const project = await getBusinessProject(slug);
 
-  if (!profile) {
+  if (!project) {
     notFound();
   }
 
   // 後方互換性のため、マイグレーション
-  const migratedContent = migrateOldContent(profile.content);
+  const migratedContent = migrateOldContent(project.content);
 
-  // サンプルプロフィールかどうかを判定
-  const isSampleProfile = slug.startsWith('sample-');
+  // サンプルビジネスLPかどうかを判定
+  const isSampleProject = slug.startsWith('sample-');
   
   return (
     <>
-      <ProfileViewTracker profileId={profile.id} />
-      <TrackingScripts settings={profile.settings} />
+      <ProfileViewTracker profileId={project.id} contentType="business" />
+      <TrackingScripts settings={project.settings} />
       
-      {/* サンプルプロフィール選択バー */}
-      {isSampleProfile && (
+      {/* サンプルビジネスLP選択バー */}
+      {isSampleProject && (
         <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50 shadow-md">
           <div className="container mx-auto max-w-4xl px-4 py-3">
             <p className="text-xs text-gray-600 mb-2 text-center">
-              📌 サンプルプロフィール - クリックして他のサンプルを見る
+              📌 サンプルビジネスLP - クリックして他のサンプルを見る
             </p>
             <div className="flex gap-2 justify-center flex-wrap">
               <Link
-                href="/p/sample-business"
+                href="/b/sample-business"
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                   slug === 'sample-business'
                     ? 'bg-indigo-600 text-white shadow-lg'
@@ -372,7 +392,7 @@ export default async function ProfilePage({
                 ビジネス向け
               </Link>
               <Link
-                href="/p/sample-creator"
+                href="/b/sample-creator"
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                   slug === 'sample-creator'
                     ? 'bg-indigo-600 text-white shadow-lg'
@@ -382,7 +402,7 @@ export default async function ProfilePage({
                 クリエイター向け
               </Link>
               <Link
-                href="/p/sample-shop"
+                href="/b/sample-shop"
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                   slug === 'sample-shop'
                     ? 'bg-indigo-600 text-white shadow-lg'
@@ -396,11 +416,11 @@ export default async function ProfilePage({
         </div>
       )}
       
-      <div className="container mx-auto max-w-lg p-4 md:p-8">
+      <div className="container mx-auto max-w-4xl p-4 md:p-8">
         <div className="w-full space-y-6 md:space-y-8">
           {migratedContent.map((block, index) => (
             <div key={block.id || index} className={index > 0 ? `delay-${Math.min(index, 10)}` : ''}>
-              <BlockRenderer block={block} profileId={profile.id} />
+              <BlockRenderer block={block} profileId={project.id} contentType="business" />
             </div>
           ))}
         </div>
@@ -409,7 +429,7 @@ export default async function ProfilePage({
       {/* コピーライトとリンク */}
       <footer className="text-center py-6 animate-fade-in delay-10">
         <p className="text-sm text-white/90 drop-shadow-md mb-2">
-          &copy; {new Date().getFullYear()} プロフィールLPメーカー. All rights reserved.
+          &copy; {new Date().getFullYear()} ビジネスLPメーカー. All rights reserved.
         </p>
         <a 
           href="https://lp.makers.tokyo/" 
@@ -417,10 +437,10 @@ export default async function ProfilePage({
           rel="noopener noreferrer"
           className="text-sm text-white/80 hover:text-white/100 drop-shadow-md transition-colors underline inline-block mb-2"
         >
-          プロフィールLPメーカーで作成
+          ビジネスLPメーカーで作成
         </a>
         <p className="text-xs text-white/70 drop-shadow-md">
-          無料でSNSプロフィールリンクをまとめる
+          ビジネスLP・チラシを簡単作成
         </p>
       </footer>
     </>

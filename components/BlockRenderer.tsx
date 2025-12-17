@@ -26,7 +26,7 @@ function extractYouTubeId(url: string): string | null {
   return match && match[2].length === 11 ? match[2] : null;
 }
 
-export function BlockRenderer({ block, profileId }: { block: Block; profileId?: string }) {
+export function BlockRenderer({ block, profileId, contentType = 'profile' }: { block: Block; profileId?: string; contentType?: 'profile' | 'business' }) {
   switch (block.type) {
     case 'header':
       return (
@@ -276,6 +276,18 @@ export function BlockRenderer({ block, profileId }: { block: Block; profileId?: 
 
     case 'quiz':
       return <QuizBlock block={block} />;
+
+    case 'hero':
+      return <HeroBlock block={block} profileId={profileId} />;
+
+    case 'features':
+      return <FeaturesBlock block={block} />;
+
+    case 'cta_section':
+      return <CTASectionBlock block={block} profileId={profileId} />;
+
+    case 'two_column':
+      return <TwoColumnBlock block={block} />;
 
     default:
       return null;
@@ -638,6 +650,202 @@ function QuizBlock({ block }: { block: Extract<Block, { type: 'quiz' }> }) {
         )}
         <div className="relative w-full">
           <QuizPlayer quiz={quiz} onBack={handleBack} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ヒーローセクションブロックコンポーネント
+function HeroBlock({ block, profileId }: { block: Extract<Block, { type: 'hero' }>; profileId?: string }) {
+  const handleCtaClick = async () => {
+    if (profileId && profileId !== 'demo' && block.data.ctaUrl) {
+      console.log('[HeroClick] Tracking CTA click:', block.data.ctaUrl);
+      try {
+        const result = await saveAnalytics(profileId, 'click', { url: block.data.ctaUrl });
+        console.log('[HeroClick] Tracked:', result);
+        if (result.error) {
+          console.error('[HeroClick] Tracking error:', result.error);
+        }
+      } catch (error) {
+        console.error('[HeroClick] Tracking exception:', error);
+      }
+    }
+  };
+
+  const backgroundStyle: React.CSSProperties = {};
+  if (block.data.backgroundImage) {
+    backgroundStyle.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${block.data.backgroundImage})`;
+    backgroundStyle.backgroundSize = 'cover';
+    backgroundStyle.backgroundPosition = 'center';
+  } else if (block.data.backgroundColor) {
+    backgroundStyle.background = block.data.backgroundColor;
+  } else {
+    backgroundStyle.background = 'linear-gradient(-45deg, #1e293b, #334155, #475569, #334155)';
+  }
+
+  return (
+    <section className="animate-fade-in -mx-4 md:-mx-6 mb-6">
+      <div className="relative py-16 md:py-24 px-6" style={backgroundStyle}>
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-5xl font-black text-white mb-4 drop-shadow-lg">
+            {block.data.headline || 'あなたのキャッチコピーをここに'}
+          </h2>
+          <p className="text-lg md:text-xl text-white mb-8 drop-shadow-md">
+            {block.data.subheadline || 'サブテキストを入力してください'}
+          </p>
+          
+          {block.data.imageUrl && (
+            <div className="flex justify-center mb-8">
+              <img 
+                src={block.data.imageUrl} 
+                alt="Hero" 
+                className="rounded-lg shadow-2xl w-48 md:w-64 object-cover"
+                style={{ filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.25))' }}
+              />
+            </div>
+          )}
+
+          {block.data.ctaText && block.data.ctaUrl && (
+            <a
+              href={block.data.ctaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleCtaClick}
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg py-4 px-8 rounded-full shadow-lg transition-all transform hover:scale-105"
+            >
+              {block.data.ctaText}
+            </a>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// 特徴・ベネフィットブロックコンポーネント
+function FeaturesBlock({ block }: { block: Extract<Block, { type: 'features' }> }) {
+  if (!block.data.items || block.data.items.length === 0) {
+    return null;
+  }
+
+  const columns = block.data.columns || 3;
+  const gridClass = columns === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3';
+
+  return (
+    <section className="animate-fade-in">
+      <div className="space-y-6">
+        {block.data.title && (
+          <h3 className="text-2xl md:text-3xl font-bold text-white drop-shadow-md text-center mb-8">
+            {block.data.title}
+          </h3>
+        )}
+        <div className={`grid grid-cols-1 ${gridClass} gap-6`}>
+          {block.data.items.map((item) => (
+            <div key={item.id} className="glass-card rounded-2xl p-6 shadow-lg text-center">
+              {item.icon && (
+                <div className="text-4xl mb-3">
+                  {item.icon.startsWith('http') ? (
+                    <img src={item.icon} alt={item.title} className="w-12 h-12 mx-auto" />
+                  ) : (
+                    <span>{item.icon}</span>
+                  )}
+                </div>
+              )}
+              <h4 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h4>
+              <p className="text-gray-700 text-sm leading-relaxed">{item.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// CTAセクションブロックコンポーネント
+function CTASectionBlock({ block, profileId }: { block: Extract<Block, { type: 'cta_section' }>; profileId?: string }) {
+  const handleClick = async () => {
+    if (profileId && profileId !== 'demo' && block.data.buttonUrl) {
+      console.log('[CTAClick] Tracking CTA click:', block.data.buttonUrl);
+      try {
+        const result = await saveAnalytics(profileId, 'click', { url: block.data.buttonUrl });
+        console.log('[CTAClick] Tracked:', result);
+        if (result.error) {
+          console.error('[CTAClick] Tracking error:', result.error);
+        }
+      } catch (error) {
+        console.error('[CTAClick] Tracking exception:', error);
+      }
+    }
+  };
+
+  const backgroundStyle: React.CSSProperties = {};
+  if (block.data.backgroundGradient) {
+    backgroundStyle.background = block.data.backgroundGradient;
+  } else if (block.data.backgroundColor) {
+    backgroundStyle.backgroundColor = block.data.backgroundColor;
+  } else {
+    backgroundStyle.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  }
+
+  return (
+    <section className="animate-fade-in -mx-4 md:-mx-6 mb-6">
+      <div className="py-12 md:py-16 px-6 text-center" style={backgroundStyle}>
+        <div className="max-w-3xl mx-auto">
+          <h3 className="text-2xl md:text-4xl font-bold text-white mb-4">
+            {block.data.title || 'CTAタイトル'}
+          </h3>
+          <p className="text-lg text-white/90 mb-8">
+            {block.data.description || '説明文を入力してください'}
+          </p>
+          <a
+            href={block.data.buttonUrl || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleClick}
+            className="inline-block bg-white text-purple-600 font-bold text-lg py-4 px-8 rounded-full shadow-lg hover:bg-gray-100 transition-all transform hover:scale-105"
+          >
+            {block.data.buttonText || 'ボタンテキスト'}
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// 2カラムレイアウトブロックコンポーネント
+function TwoColumnBlock({ block }: { block: Extract<Block, { type: 'two_column' }> }) {
+  const isImageLeft = block.data.layout === 'image-left';
+
+  return (
+    <section className="animate-fade-in">
+      <div className="glass-card rounded-2xl p-6 md:p-8 shadow-lg">
+        <div className={`flex flex-col ${isImageLeft ? 'md:flex-row' : 'md:flex-row-reverse'} gap-6 md:gap-8 items-center`}>
+          <div className="w-full md:w-1/2">
+            <img 
+              src={block.data.imageUrl || 'https://via.placeholder.com/600x400'} 
+              alt={block.data.title}
+              className="w-full rounded-lg shadow-md object-cover"
+            />
+          </div>
+          <div className="w-full md:w-1/2">
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+              {block.data.title || 'タイトルを入力'}
+            </h3>
+            <p className="text-gray-700 leading-relaxed mb-4 whitespace-pre-line">
+              {block.data.text || 'テキストを入力してください'}
+            </p>
+            {block.data.listItems && block.data.listItems.length > 0 && (
+              <ul className="space-y-2">
+                {block.data.listItems.map((item, index) => (
+                  <li key={index} className="flex items-start gap-2 text-gray-700">
+                    <span className="text-green-500 mt-1">✓</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
     </section>

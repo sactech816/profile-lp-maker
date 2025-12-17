@@ -94,6 +94,50 @@ export type QuizBlockData = {
   title?: string; // オプション: カスタムタイトル
 };
 
+// ヒーローセクションブロックデータ
+export type HeroBlockData = {
+  headline: string; // メインキャッチコピー
+  subheadline: string; // サブテキスト
+  imageUrl?: string; // ヒーロー画像URL（書籍カバーなど）
+  ctaText?: string; // CTAボタンテキスト
+  ctaUrl?: string; // CTAボタンURL
+  backgroundImage?: string; // 背景画像URL
+  backgroundColor?: string; // 背景色（グラデーション含む）
+};
+
+// 特徴・ベネフィットブロックデータ
+export type FeatureItem = {
+  id: string;
+  icon?: string; // アイコン（絵文字またはURL）
+  title: string;
+  description: string;
+};
+
+export type FeaturesBlockData = {
+  title?: string; // セクションタイトル
+  items: FeatureItem[]; // 特徴アイテム（最大6個推奨）
+  columns: 2 | 3; // カラム数
+};
+
+// CTAセクションブロックデータ
+export type CTASectionBlockData = {
+  title: string; // CTAタイトル
+  description: string; // 説明文
+  buttonText: string; // ボタンテキスト
+  buttonUrl: string; // ボタンURL
+  backgroundColor?: string; // 背景色
+  backgroundGradient?: string; // 背景グラデーション
+};
+
+// 2カラムレイアウトブロックデータ
+export type TwoColumnBlockData = {
+  layout: 'image-left' | 'image-right'; // レイアウト
+  imageUrl: string; // 画像URL
+  title: string; // タイトル
+  text: string; // テキスト
+  listItems?: string[]; // リストアイテム（オプション）
+};
+
 // ブロックの型定義（Union型）
 export type Block = 
   | { id: string; type: 'header'; data: HeaderBlockData }
@@ -107,7 +151,11 @@ export type Block =
   | { id: string; type: 'faq'; data: FAQBlockData }
   | { id: string; type: 'pricing'; data: PricingBlockData }
   | { id: string; type: 'testimonial'; data: TestimonialBlockData }
-  | { id: string; type: 'quiz'; data: QuizBlockData };
+  | { id: string; type: 'quiz'; data: QuizBlockData }
+  | { id: string; type: 'hero'; data: HeroBlockData }
+  | { id: string; type: 'features'; data: FeaturesBlockData }
+  | { id: string; type: 'cta_section'; data: CTASectionBlockData }
+  | { id: string; type: 'two_column'; data: TwoColumnBlockData };
 
 // プロフィール設定の型定義
 export type ProfileSettings = {

@@ -2,8 +2,15 @@
 
 import { useEffect, useRef } from 'react';
 import { saveAnalytics } from '@/app/actions/analytics';
+import { saveBusinessAnalytics } from '@/app/actions/business';
 
-export function ProfileViewTracker({ profileId }: { profileId: string }) {
+export function ProfileViewTracker({ 
+  profileId, 
+  contentType = 'profile' 
+}: { 
+  profileId: string;
+  contentType?: 'profile' | 'business';
+}) {
   const startTimeRef = useRef<number>(Date.now());
   const maxScrollRef = useRef<number>(0);
   const scrollTrackedRef = useRef<Set<number>>(new Set());
@@ -22,12 +29,15 @@ export function ProfileViewTracker({ profileId }: { profileId: string }) {
       return;
     }
 
-    console.log('[ProfileViewTracker] Initializing for profile:', profileId);
+    console.log('[ProfileViewTracker] Initializing for profile:', profileId, 'contentType:', contentType);
+
+    // アナリティクス保存関数を選択
+    const saveAnalyticsFunc = contentType === 'business' ? saveBusinessAnalytics : saveAnalytics;
 
     // ページビューを記録（初回のみ）
     if (!viewTrackedRef.current) {
       viewTrackedRef.current = true;
-      saveAnalytics(profileId, 'view').then((result) => {
+      saveAnalyticsFunc(profileId, 'view').then((result) => {
         console.log('[ProfileViewTracker] View tracked:', result);
         if (result.error) {
           console.error('[ProfileViewTracker] View tracking error:', result.error);
@@ -49,7 +59,7 @@ export function ProfileViewTracker({ profileId }: { profileId: string }) {
       [25, 50, 75, 100].forEach(milestone => {
         if (scrollDepth >= milestone && !scrollTrackedRef.current.has(milestone)) {
           scrollTrackedRef.current.add(milestone);
-          saveAnalytics(profileId, 'scroll', { scrollDepth: milestone }).then((result) => {
+          saveAnalyticsFunc(profileId, 'scroll', { scrollDepth: milestone }).then((result) => {
             console.log('[ProfileViewTracker] Scroll milestone tracked:', milestone, result);
             if (result.error) {
               console.error('[ProfileViewTracker] Scroll tracking error:', result.error);
@@ -65,7 +75,7 @@ export function ProfileViewTracker({ profileId }: { profileId: string }) {
     const checkReadRate = () => {
       if (!readTrackedRef.current && maxScrollRef.current >= 50) {
         readTrackedRef.current = true;
-        saveAnalytics(profileId, 'read', { readPercentage: maxScrollRef.current }).then((result) => {
+        saveAnalyticsFunc(profileId, 'read', { readPercentage: maxScrollRef.current }).then((result) => {
           console.log('[ProfileViewTracker] Read tracked:', maxScrollRef.current, result);
           if (result.error) {
             console.error('[ProfileViewTracker] Read tracking error:', result.error);
@@ -102,7 +112,7 @@ export function ProfileViewTracker({ profileId }: { profileId: string }) {
     const timeInterval = setInterval(() => {
       const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
       if (timeSpent >= 30) {
-        saveAnalytics(profileId, 'time', { timeSpent }).then((result) => {
+        saveAnalyticsFunc(profileId, 'time', { timeSpent }).then((result) => {
           console.log('[ProfileViewTracker] Time tracked:', timeSpent, result);
           if (result.error) {
             console.error('[ProfileViewTracker] Time tracking error:', result.error);
@@ -126,7 +136,7 @@ export function ProfileViewTracker({ profileId }: { profileId: string }) {
       // クリーンアップ時に最終データを記録
       const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
       if (timeSpent > 3) { // 3秒以上滞在した場合のみ記録
-        saveAnalytics(profileId, 'time', { timeSpent }).then((result) => {
+        saveAnalyticsFunc(profileId, 'time', { timeSpent }).then((result) => {
           console.log('[ProfileViewTracker] Final time tracked:', timeSpent, result);
           if (result.error) {
             console.error('[ProfileViewTracker] Final time tracking error:', result.error);
@@ -136,7 +146,7 @@ export function ProfileViewTracker({ profileId }: { profileId: string }) {
         });
       }
     };
-  }, [profileId]);
+  }, [profileId, contentType]);
 
   return null;
 }
