@@ -186,7 +186,7 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
             <h2 className="text-4xl md:text-6xl font-bold text-white drop-shadow-lg mb-6 leading-tight">
               名刺・SNS・紹介に使える<br/>
               プロフィールLPを<br/>
-              <span className="text-yellow-300">最短ルートで作成</span>
+              <span className="text-yellow-300">簡単に最短ルートで作成</span>
             </h2>
             <p className="text-lg md:text-xl text-white font-semibold px-4 drop-shadow-md mb-4 leading-relaxed">
               文章の型は用意済み。<br/>
