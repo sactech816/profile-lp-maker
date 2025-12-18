@@ -17,33 +17,35 @@ const Header = ({ setPage, user, onLogout, setShowAuth = null }) => {
                     <Sparkles className="text-pink-500"/> Profile LP Maker
                 </div>
 
-                {/* PC版：主要なボタンを外部に配置 */}
-                <div className="hidden md:flex items-center gap-4 text-sm font-bold text-gray-600">
-                    <button onClick={()=>{setPage('profile-editor'); setIsMenuOpen(false);}} className="text-gray-600 hover:text-indigo-600 flex items-center gap-1">
-                        <PlusCircle size={16}/> 新規作成
-                    </button>
-                    {user ? (
-                        <>
-                            <button onClick={()=>handleNav('dashboard')} className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full flex items-center gap-2 hover:bg-indigo-100 transition-colors">
-                                <LayoutDashboard size={16}/> マイページ
-                            </button>
-                            <button onClick={()=>{onLogout(); setIsMenuOpen(false);}} className="text-gray-600 hover:text-red-600 flex items-center gap-1">
-                                <LogOut size={16}/> ログアウト
-                            </button>
-                        </>
-                    ) : (
-                        setShowAuth && (
-                            <button onClick={()=>setShowAuth(true)} className="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center gap-2">
-                                <User size={16}/> ログイン
-                            </button>
-                        )
-                    )}
-                </div>
+                <div className="flex items-center gap-4">
+                    {/* PC版：主要なボタンを外部に配置 */}
+                    <div className="hidden md:flex items-center gap-4 text-sm font-bold text-gray-600">
+                        <button onClick={()=>{setPage('profile-editor'); setIsMenuOpen(false);}} className="text-gray-600 hover:text-indigo-600 flex items-center gap-1">
+                            <PlusCircle size={16}/> 新規作成
+                        </button>
+                        {user ? (
+                            <>
+                                <button onClick={()=>handleNav('dashboard')} className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full flex items-center gap-2 hover:bg-indigo-100 transition-colors">
+                                    <LayoutDashboard size={16}/> マイページ
+                                </button>
+                                <button onClick={()=>{onLogout(); setIsMenuOpen(false);}} className="text-gray-600 hover:text-red-600 flex items-center gap-1">
+                                    <LogOut size={16}/> ログアウト
+                                </button>
+                            </>
+                        ) : (
+                            setShowAuth && (
+                                <button onClick={()=>setShowAuth(true)} className="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center gap-2">
+                                    <User size={16}/> ログイン
+                                </button>
+                            )
+                        )}
+                    </div>
 
-                {/* ハンバーガーメニューボタン（PCとスマホ両方で表示） */}
-                <button className="text-gray-600 p-2" onClick={()=>setIsMenuOpen(!isMenuOpen)}>
-                    {isMenuOpen ? <X size={28}/> : <Menu size={28}/>}
-                </button>
+                    {/* ハンバーガーメニューボタン（PCとスマホ両方で表示） */}
+                    <button className="text-gray-600 p-2" onClick={()=>setIsMenuOpen(!isMenuOpen)}>
+                        {isMenuOpen ? <X size={28}/> : <Menu size={28}/>}
+                    </button>
+                </div>
             </div>
 
             {isMenuOpen && (
