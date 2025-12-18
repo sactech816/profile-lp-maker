@@ -1993,8 +1993,9 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
         <div className="p-4 md:p-6 border-b bg-gray-50">
           <div className="flex items-center gap-2 mb-2">
             <Palette className="text-indigo-600" size={20}/>
-            <h3 className="font-bold text-base md:text-lg text-gray-900">作成方法を選択（テンプレートかAIで自動作成を選択）</h3>
+            <h3 className="font-bold text-base md:text-lg text-gray-900">作成方法を選択（テンプレート、AIで自動作成、ブロック追加）</h3>
           </div>
+          <label className="text-sm font-bold text-gray-900 block mb-2">テンプレートから始める、AIで自動作成</label>
           <div className="flex flex-wrap gap-2 mb-3">
             <button 
               onClick={() => setShowTemplateModal(true)} 
@@ -2010,9 +2011,8 @@ const ProfileEditor = ({ onBack, onSave, initialSlug, user, setShowAuth }: Profi
             </button>
           </div>
           <div className="flex items-center gap-2 mb-2">
-            <Palette className="text-indigo-600" size={20}/>
-            <h3 className="font-bold text-base md:text-lg text-gray-900">作成方法を選択（必要なブロック追加でオリジナル作成）</h3>
-          </div>
+          <label className="text-sm font-bold text-gray-900 block mb-2">必要なブロック追加でオリジナル作成</label>
+           </div>
           <div className="flex flex-wrap gap-2">
             <button onClick={() => addBlock('header')} className="bg-white border border-gray-200 px-3 md:px-4 py-2 rounded-lg font-bold text-xs md:text-sm hover:bg-gray-50 flex items-center gap-1 md:gap-2">
               <User size={14} className="md:w-4 md:h-4"/> <span>ヘッダー</span>
