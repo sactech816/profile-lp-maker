@@ -441,3 +441,6 @@ Write-Host "=== 検証完了 ===" -ForegroundColor Cyan
 
 **バージョン**: 1.0.0
 
+
+
+

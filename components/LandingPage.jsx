@@ -568,7 +568,7 @@ const LandingPage = ({ user, setShowAuth, onNavigateToDashboard, onCreate }) => 
             
             <details className="glass-card rounded-xl p-6 shadow-lg group">
               <summary className="font-bold text-lg text-gray-900 cursor-pointer list-none flex items-center justify-between">
-                <span>litlinkやprofu.linkとの違いは？</span>
+                <span>他のリンクまとめツールとの違いは？</span>
                 <span className="text-indigo-600 group-open:rotate-180 transition-transform">▼</span>
               </summary>
               <p className="mt-4 text-gray-700 leading-relaxed">
