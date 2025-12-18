@@ -59,6 +59,7 @@ const Header = ({ setPage, user, onLogout, setShowAuth = null }) => {
                     <button onClick={()=>handleNav('announcements')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-indigo-600 font-bold"><Bell size={20}/> お知らせ</button>
                     <button onClick={()=>handleNav('profile-howto')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-gray-700 font-bold"><HelpCircle size={20}/> 使い方</button>
                     <button onClick={()=>handleNav('profile-effective')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-gray-700 font-bold"><Lightbulb size={20}/> 効果的な利用方法</button>
+                    <button onClick={()=>handleNav('profile-faq')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-gray-700 font-bold"><HelpCircle size={20}/> よくある質問</button>
                     <button onClick={()=>handleNav('contact')} className="flex items-center gap-3 py-3 border-b border-gray-100 text-gray-700 font-bold"><Mail size={20}/> お問い合わせ</button>
                     
                     <p className="text-xs font-bold text-gray-400 mt-6 mb-2">サポート・規約</p>
